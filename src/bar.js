@@ -82,7 +82,8 @@ export default class Bar {
             height: this.height,
             rx: this.corner_radius,
             ry: this.corner_radius,
-            class: 'bar',
+            class: 'bar ' + (this.task.bar_custom_class || ''),
+            style: (this.task.bar_custom_style || ''),
             append_to: this.bar_group
         });
 
