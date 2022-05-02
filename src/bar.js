@@ -181,9 +181,11 @@ export default class Bar {
                 return;
             }
 
+            if (!this.gantt.options.disallow_popup) {
             this.show_popup();
             this.gantt.unselect_all();
             this.group.classList.add('active');
+            }
         });
 
         $.on(this.group, 'dblclick', (e) => {
