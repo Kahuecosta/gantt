@@ -87,6 +87,7 @@ export default class Gantt {
             popup_trigger: 'click',
             custom_popup_html: null,
             language: 'en',
+            margin_bottom: 100,
         };
         this.options = Object.assign({}, default_options, options);
     }
@@ -318,8 +319,10 @@ export default class Gantt {
             append_to: this.layers.grid,
         });
 
+        const space_height = this.options.padding + this.options.margin_bottom;
+
         $.attr(this.$svg, {
-            height: grid_height + this.options.padding + 100,
+            height: grid_height + space_height,
             width: '100%',
         });
     }
