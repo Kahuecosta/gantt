@@ -85,20 +85,24 @@
 		]
 		var gantt_chart = new Gantt(".gantt-target", tasks, {
 			on_click: function (task) {
-				console.log(task);
+				console.log('on_click', task);
+			},
+			on_dblclick: function (task) {
+				console.log('dblclick', task);
 			},
 			on_date_change: function(task, start, end) {
-				console.log(task, start, end);
+				console.log('on_date_change', task, start, end);
 			},
 			on_progress_change: function(task, progress) {
-				console.log(task, progress);
+				console.log('on_progress_change', task, progress);
 			},
 			on_view_change: function(mode) {
-				console.log(mode);
+				console.log('on_view_change', mode);
 			},
 			view_mode: 'Month',
 			language: 'en',
-			margin_bottom: -26
+			margin_bottom: -26,
+			disallow_popup: false,
 		});
 		console.log(gantt_chart);
 	</script>

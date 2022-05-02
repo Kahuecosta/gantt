@@ -88,6 +88,7 @@ export default class Gantt {
             custom_popup_html: null,
             language: 'en',
             margin_bottom: 100,
+            disallow_popup: false,
         };
         this.options = Object.assign({}, default_options, options);
     }
