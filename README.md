@@ -57,8 +57,11 @@ var gantt = new Gantt("#gantt", tasks, {
     padding: 18,
     view_mode: 'Day',
     date_format: 'YYYY-MM-DD',
+    popup_trigger: 'focus click',
     custom_popup_html: null,
-    margin_bottom: 100
+    language: 'en',
+    margin_bottom: 100,
+    disallow_popup: false,
 });
 ```
 
