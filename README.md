@@ -57,7 +57,7 @@ var gantt = new Gantt("#gantt", tasks, {
     padding: 18,
     view_mode: 'Day',
     date_format: 'YYYY-MM-DD',
-    popup_trigger: 'focus click',
+    popup_trigger: 'click',
     custom_popup_html: null,
     language: 'en',
     margin_bottom: 100,
