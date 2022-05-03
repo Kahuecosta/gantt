@@ -281,13 +281,13 @@ export default class Gantt {
         const { QUARTER_DAY, HALF_DAY, DAY, WEEK, MONTH, YEAR } = VIEW_MODE;
 
         if (this.view_is([QUARTER_DAY, HALF_DAY, DAY])) {
-            return 7;
+            return 14;
         } else if (this.view_is(WEEK)) {
-            return 4;
+            return 5;
         } else if (this.view_is(MONTH)) {
             return 6;
         } else if (this.view_is(YEAR)) {
-            return 2;
+            return 3;
         } else {
             return 6;
         }
