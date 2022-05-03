@@ -70,10 +70,7 @@ export default class Bar {
         this.draw_bar();
         this.draw_progress_bar();
         this.draw_label();
-
-        if (!this.gantt.options.readonly) {
             this.draw_resize_handles();
-        }
     }
 
     draw_bar() {
@@ -124,6 +121,10 @@ export default class Bar {
     }
 
     draw_resize_handles() {
+        if (this.gantt.options.readonly) return;
+
+        if (!this.gantt.options.draggable) return;
+
         if (this.invalid) return;
 
         const bar = this.$bar;

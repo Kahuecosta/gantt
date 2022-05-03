@@ -63,6 +63,7 @@ var gantt = new Gantt("#gantt", tasks, {
     margin_bottom: 100,
     disallow_popup: false,
     readonly: false,
+    draggable: true,
 });
 ```
 
