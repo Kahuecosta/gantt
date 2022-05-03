@@ -123,7 +123,9 @@ export default class Gantt {
                 task._start = date_utils.add(task._end, -2, 'day');
             }
 
-            if (task.start && !task.end) {
+            if (task.start && !task.end && task.duration) {
+                task._end = date_utils.add(task._start, task.duration, 'day');
+            } else if (task.start && !task.end) {
                 task._end = date_utils.add(task._start, 2, 'day');
             }
 
@@ -135,7 +137,7 @@ export default class Gantt {
             }
 
             // invalid flag
-            if (!task.start || !task.end) {
+            if (!task.start || (!task.end && !task.duration)) {
                 task.invalid = true;
             }
 
