@@ -91,6 +91,7 @@ export default class Gantt {
             disallow_popup: false,
             readonly: false,
             draggable: true,
+            hasArrows: true,
         };
         this.options = Object.assign({}, default_options, options);
     }
@@ -270,8 +271,8 @@ export default class Gantt {
 
     bind_events() {
         this.bind_grid_click();
-            this.bind_bar_events();
-        }
+        this.bind_bar_events();
+    }
 
     render() {
         this.clear();
@@ -585,6 +586,9 @@ export default class Gantt {
 
     make_arrows() {
         this.arrows = [];
+
+        if (!this.options.hasArrows) return;
+
         for (let task of this.tasks) {
             let arrows = [];
             arrows = task.dependencies
@@ -605,6 +609,8 @@ export default class Gantt {
     }
 
     map_arrows_on_bars() {
+        if (!this.options.hasArrows) return;
+
         for (let bar of this.bars) {
             bar.arrows = this.arrows.filter((arrow) => {
                 return (

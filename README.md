@@ -64,6 +64,7 @@ var gantt = new Gantt("#gantt", tasks, {
     disallow_popup: false,
     readonly: false,
     draggable: true,
+    hasArrows: true,
 });
 ```
 
