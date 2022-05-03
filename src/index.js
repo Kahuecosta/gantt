@@ -90,6 +90,7 @@ export default class Gantt {
             margin_bottom: 100,
             disallow_popup: false,
             readonly: false,
+            draggable: true,
         };
         this.options = Object.assign({}, default_options, options);
     }
@@ -269,11 +270,8 @@ export default class Gantt {
 
     bind_events() {
         this.bind_grid_click();
-
-        if (!this.options.readonly) {
             this.bind_bar_events();
         }
-    }
 
     render() {
         this.clear();
@@ -658,6 +656,14 @@ export default class Gantt {
     }
 
     bind_bar_events() {
+        if (this.options.readonly) return;
+
+        if (!this.options.draggable) {
+            this.bind_bar_progress();
+
+            return;
+        }
+
         let is_dragging = false;
         let x_on_start = 0;
         let y_on_start = 0;
