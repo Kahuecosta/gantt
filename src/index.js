@@ -226,6 +226,10 @@ export default class Gantt {
             }
         }
 
+        if (!this.tasks.length) {
+            this.gantt_start = this.gantt_end = new Date();
+        }
+
         this.gantt_start = date_utils.start_of(this.gantt_start, 'day');
         this.gantt_end = date_utils.start_of(this.gantt_end, 'day');
 
@@ -623,9 +627,11 @@ export default class Gantt {
 
     set_width() {
         const cur_width = this.$svg.getBoundingClientRect().width;
-        const actual_width = this.$svg
-            .querySelector('.grid .grid-row')
-            .getAttribute('width');
+
+        const actual_width = this.$svg.querySelector('.grid .grid-row')
+            ? this.$svg.querySelector('.grid .grid-row').getAttribute('width')
+            : 0;
+
         if (cur_width < actual_width) {
             this.$svg.setAttribute('width', actual_width);
         }
@@ -930,6 +936,10 @@ export default class Gantt {
      * @memberof Gantt
      */
     get_oldest_starting_date() {
+        if (this.tasks.length == 0) {
+            return this.gantt_start;
+        }
+
         return this.tasks
             .map((task) => task._start)
             .reduce((prev_date, cur_date) =>
