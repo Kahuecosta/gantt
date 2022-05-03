@@ -98,6 +98,8 @@ export default class Gantt {
     }
 
     setup_tasks(tasks) {
+        this.task_map = {};
+
         // prepare tasks
         this.tasks = tasks.map((task, i) => {
             // convert to Date objects
@@ -157,6 +159,8 @@ export default class Gantt {
             if (!task.id) {
                 task.id = generate_id(task);
             }
+
+            this.task_map[task.id] = task;
 
             return task;
         });
@@ -584,9 +588,15 @@ export default class Gantt {
     }
 
     make_bars() {
+        this.bar_map = {};
+
         this.bars = this.tasks.map((task) => {
             const bar = new Bar(this, task);
+
             this.layers.bar.appendChild(bar.group);
+
+            this.bar_map[task.id] = bar;
+
             return bar;
         });
     }
@@ -598,19 +608,25 @@ export default class Gantt {
 
         for (let task of this.tasks) {
             let arrows = [];
+
             arrows = task.dependencies
                 .map((task_id) => {
                     const dependency = this.get_task(task_id);
+
                     if (!dependency) return;
+
                     const arrow = new Arrow(
                         this,
-                        this.bars[dependency._index], // from_task
-                        this.bars[task._index] // to_task
+                        this.get_bar(dependency.id), // from_task
+                        this.get_bar(task.id) // to_task
                     );
+
                     this.layers.arrow.appendChild(arrow.element);
+
                     return arrow;
                 })
                 .filter(Boolean); // filter falsy values
+
             this.arrows = this.arrows.concat(arrows);
         }
     }
@@ -618,7 +634,9 @@ export default class Gantt {
     map_arrows_on_bars() {
         if (!this.options.hasArrows) return;
 
-        for (let bar of this.bars) {
+        for (let task_id in this.bar_map) {
+            const bar = this.get_bar(task_id);
+
             bar.arrows = this.arrows.filter((arrow) => {
                 return (
                     arrow.from_task.task.id === bar.task.id ||
@@ -914,15 +932,11 @@ export default class Gantt {
     }
 
     get_task(id) {
-        return this.tasks.find((task) => {
-            return task.id === id;
-        });
+        return this.task_map[id];
     }
 
     get_bar(id) {
-        return this.bars.find((bar) => {
-            return bar.task.id === id;
-        });
+        return this.bar_map[id];
     }
 
     show_popup(options) {
