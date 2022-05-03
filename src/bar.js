@@ -85,7 +85,8 @@ export default class Bar {
             append_to: this.bar_group,
         });
 
-        animateSVG(this.$bar, 'width', 0, this.width);
+        // Firefox not working
+        // animateSVG(this.$bar, 'width', 0, this.width);
 
         if (this.invalid) {
             this.$bar.classList.add('bar-invalid');
@@ -94,6 +95,7 @@ export default class Bar {
 
     draw_progress_bar() {
         if (this.invalid) return;
+
         this.$bar_progress = createSVG('rect', {
             x: this.x,
             y: this.y,
@@ -105,7 +107,8 @@ export default class Bar {
             append_to: this.bar_group,
         });
 
-        animateSVG(this.$bar_progress, 'width', 0, this.progress_width);
+        // Firefox not working
+        // animateSVG(this.$bar_progress, 'width', 0, this.progress_width);
     }
 
     draw_label() {
@@ -383,11 +386,10 @@ export default class Bar {
     }
 
     update_progressbar_position() {
+        const w = this.$bar.getWidth() * (this.task.progress / 100);
+
         this.$bar_progress.setAttribute('x', this.$bar.getX());
-        this.$bar_progress.setAttribute(
-            'width',
-            this.$bar.getWidth() * (this.task.progress / 100)
-        );
+        this.$bar_progress.setAttribute('width', w);
     }
 
     update_label_position() {
