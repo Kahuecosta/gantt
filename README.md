@@ -65,6 +65,7 @@ var gantt = new Gantt("#gantt", tasks, {
     readonly: false,
     draggable: true,
     hasArrows: true,
+    move_dependent: 'right' // 'left' - 'right' - 'both'
 });
 ```
 

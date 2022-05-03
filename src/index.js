@@ -92,6 +92,7 @@ export default class Gantt {
             readonly: false,
             draggable: true,
             hasArrows: true,
+            move_dependent: 'left',
         };
         this.options = Object.assign({}, default_options, options);
     }
@@ -732,13 +733,19 @@ export default class Gantt {
                 const $bar = bar.$bar;
                 $bar.finaldx = this.get_snap_position(dx);
                 this.hide_popup();
+
+                const { move_dependent } = this.options;
+
                 if (is_resizing_left) {
                     if (parent_bar_id === bar.task.id) {
                         bar.update_bar_position({
                             x: $bar.ox + $bar.finaldx,
                             width: $bar.owidth - $bar.finaldx,
                         });
-                    } else {
+                    } else if (
+                        move_dependent === 'left' ||
+                        move_dependent === 'both'
+                    ) {
                         bar.update_bar_position({
                             x: $bar.ox + $bar.finaldx,
                         });
@@ -747,6 +754,13 @@ export default class Gantt {
                     if (parent_bar_id === bar.task.id) {
                         bar.update_bar_position({
                             width: $bar.owidth + $bar.finaldx,
+                        });
+                    } else if (
+                        move_dependent === 'right' ||
+                        move_dependent === 'both'
+                    ) {
+                        bar.update_bar_position({
+                            x: $bar.ox + $bar.finaldx,
                         });
                     }
                 } else if (is_dragging) {
