@@ -96,6 +96,7 @@ export default class Gantt {
             move_dependent: 'left',
             padding_start: null,
             padding_end: null,
+            fixed_label_location: false,
         };
         this.options = Object.assign({}, default_options, options);
     }
