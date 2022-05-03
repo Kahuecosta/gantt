@@ -375,7 +375,7 @@ export default class Gantt {
 
         $.attr(this.$svg, {
             height: grid_height + space_height,
-            width: '100%',
+            width: grid_width,
         });
     }
 
@@ -693,15 +693,11 @@ export default class Gantt {
     }
 
     set_width() {
-        const cur_width = this.$svg.getBoundingClientRect().width;
-
         const actual_width = this.$svg.querySelector('.grid .grid-row')
             ? this.$svg.querySelector('.grid .grid-row').getAttribute('width')
             : 0;
 
-        if (cur_width < actual_width) {
-            this.$svg.setAttribute('width', actual_width);
-        }
+        this.$svg.setAttribute('width', actual_width);
     }
 
     set_scroll_position() {
