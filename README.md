@@ -55,7 +55,9 @@ var gantt = new Gantt("#gantt", tasks, {
     bar_corner_radius: 3,
     arrow_curve: 5,
     padding: 18,
-    view_mode: 'Day',
+    view_mode: 'Day', // 'Quarter Day' - 'Half Day' - 'Day' - 'Week' - 'Month' - 'Year'
+    padding_start: null, // view_mode: 'Day' => padding_start in days
+    padding_end: null, // view_mode: 'Day' => padding_end in days
     date_format: 'YYYY-MM-DD',
     popup_trigger: 'click',
     custom_popup_html: null,
