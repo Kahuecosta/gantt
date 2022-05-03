@@ -70,7 +70,7 @@ export default class Bar {
         this.draw_bar();
         this.draw_progress_bar();
         this.draw_label();
-            this.draw_resize_handles();
+        this.draw_resize_handles();
     }
 
     draw_bar() {
