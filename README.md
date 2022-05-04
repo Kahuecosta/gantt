@@ -70,6 +70,13 @@ var gantt = new Gantt("#gantt", tasks, {
     move_dependent: 'right', // 'left' - 'right' - 'both'
     fixed_label_location: false,
     is_draggable: true,
+    groups: [ 
+        {
+            id: 'design', 
+            name: 'Web Design',
+            bar_class: 'bar-design-group',
+        },
+    ],
 });
 ```
 
