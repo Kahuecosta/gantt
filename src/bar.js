@@ -23,6 +23,7 @@ export default class Bar {
     prepare_values() {
         this.invalid = this.task.invalid;
         this.height = this.gantt.options.bar_height;
+        this.image_size = this.gantt.options.bar_height - 5;
         this.x = this.compute_x();
         this.y = this.compute_y();
         this.corner_radius = this.gantt.options.bar_corner_radius;
@@ -70,6 +71,7 @@ export default class Bar {
         this.draw_bar();
         this.draw_progress_bar();
         this.draw_label();
+        this.draw_thumbnail();
         this.draw_resize_handles();
     }
 
@@ -112,8 +114,17 @@ export default class Bar {
     }
 
     draw_label() {
+        let x_coord, y_coord;
+        let padding = 5;
+
+        if (this.task.img) {
+            x_coord = this.x + this.image_size + padding;
+        } else {
+            x_coord = this.x + 5;
+        }
+
         createSVG('text', {
-            x: this.x + this.width / 2,
+            x: x_coord,
             y: this.y + this.height / 2,
             innerHTML: this.task.name,
             class: 'bar-label',
@@ -121,6 +132,50 @@ export default class Bar {
         });
         // labels get BBox in the next tick
         requestAnimationFrame(() => this.update_label_position());
+    }
+
+    draw_thumbnail() {
+        if (!this.task.thumbnail) return;
+
+        let x_offset = 10;
+        let y_offset = 2;
+        let defs, clipPath;
+
+        defs = createSVG('defs', {
+            append_to: this.bar_group,
+        });
+
+        createSVG('rect', {
+            id: 'rect_' + this.task.id,
+            x: this.x + x_offset,
+            y: this.y + y_offset,
+            width: this.image_size,
+            height: this.image_size,
+            rx: '15',
+            class: 'img_mask',
+            append_to: defs,
+        });
+
+        clipPath = createSVG('clipPath', {
+            id: 'clip_' + this.task.id,
+            append_to: defs,
+        });
+
+        createSVG('use', {
+            href: '#rect_' + this.task.id,
+            append_to: clipPath,
+        });
+
+        createSVG('image', {
+            x: this.x + x_offset,
+            y: this.y + y_offset,
+            width: this.image_size,
+            height: this.image_size,
+            class: 'bar-img',
+            href: this.task.thumbnail,
+            clipPath: 'clip_' + this.task.id,
+            append_to: this.bar_group,
+        });
     }
 
     draw_resize_handles() {
@@ -166,14 +221,16 @@ export default class Bar {
 
     get_progress_polygon_points() {
         const bar_progress = this.$bar_progress;
-        return [
+        return bar_progress
+            ? [
             bar_progress.getEndX() - 5,
             bar_progress.getY() + bar_progress.getHeight(),
             bar_progress.getEndX() + 5,
             bar_progress.getY() + bar_progress.getHeight(),
             bar_progress.getEndX(),
             bar_progress.getY() + bar_progress.getHeight() - 8.66,
-        ];
+              ]
+            : [];
     }
 
     bind() {
@@ -393,18 +450,39 @@ export default class Bar {
     }
 
     update_label_position() {
+        const img_mask = this.bar_group.querySelector('.img_mask') || '';
         const bar = this.$bar,
-            label = this.group.querySelector('.bar-label');
+            label = this.group.querySelector('.bar-label'),
+            img = this.group.querySelector('.bar-img');
+
+        let padding = 5;
+        let x_offset_label_img = this.image_size + 10;
+
+        const x = bar.getX() + bar.getWidth();
 
         if (
             this.gantt.options.fixed_label_location ||
             label.getBBox().width > bar.getWidth()
         ) {
             label.classList.add('big');
-            label.setAttribute('x', bar.getX() + bar.getWidth() + 5);
+
+            if (img) {
+                img.setAttribute('x', x + padding);
+                img_mask.setAttribute('x', x + padding);
+                label.setAttribute('x', x + x_offset_label_img);
+            } else {
+                label.setAttribute('x', x + padding);
+            }
         } else {
             label.classList.remove('big');
-            label.setAttribute('x', bar.getX() + bar.getWidth() / 2);
+
+            if (img) {
+                img.setAttribute('x', bar.getX() + padding);
+                img_mask.setAttribute('x', bar.getX() + padding);
+                label.setAttribute('x', bar.getX() + x_offset_label_img);
+            } else {
+                label.setAttribute('x', bar.getX() + padding);
+            }
         }
     }
 

@@ -69,9 +69,8 @@ $handle-color: #ddd !default;
 	.bar-label {
 		fill: #fff;
 		dominant-baseline: central;
-		text-anchor: middle;
-		font-size: 12px;
-		font-weight: lighter;
+		font-size: 1.03em;
+		font-weight: 500;
 
 		&.big {
 			fill: $text-light;

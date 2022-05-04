@@ -56,7 +56,8 @@
 				name: 'Review',
 				id: "Task 3",
 				progress: 5,
-				dependencies: 'Task 2'
+				dependencies: 'Task 2',
+				custom_class: 'bar-milestone',
 			},
 			{
 				start: '2018-10-08',
@@ -75,7 +76,27 @@
 				progress: 0,
 				dependencies: 'Task 4',
 				custom_class: 'bar-milestone'
-			}
+			},
+			{
+				start: '2018-10-11',
+				end: '2018-10-25',
+				name: 'Header Stick!',
+				id: "Task_6",
+				progress: 0,
+				dependencies: '',
+				custom_class: 'bar-milestone',
+				thumbnail: 'https://www.clipartmax.com/png/middle/85-851687_campfire-icon-14-icon-success-error.png'
+			},
+			{
+				start: '2018-10-11',
+				end: '2018-10-20',
+				name: 'Jean Jacques doc!',
+				id: "Task_7",
+				progress: 0,
+				dependencies: 'Task_0',
+				custom_class: 'bar-milestone',
+				thumbnail: 'https://image.similarpng.com/very-thumbnail/2021/06/Attention-sign-icon.png'
+			},
 		]
 		var gantt_chart = new Gantt(".gantt-target", tasks, {
 			on_click: function (task) {
@@ -103,6 +124,7 @@
 			move_dependent: 'both',
 			fixed_label_location: false,
 			is_draggable: true,
+			bar_height: 30,
 		});
 		console.log(gantt_chart);
 	</script>
