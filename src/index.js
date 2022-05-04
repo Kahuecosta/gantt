@@ -776,6 +776,7 @@ export default class Gantt {
 
         let is_dragging = false;
         let x_on_start = 0;
+        let x_on_scroll_start = 0;
         let y_on_start = 0;
         let is_resizing_left = false;
         let is_resizing_right = false;
@@ -877,6 +878,39 @@ export default class Gantt {
             is_dragging = false;
             is_resizing_left = false;
             is_resizing_right = false;
+        });
+
+        $.on(this.$container, 'scroll', (e) => {
+            let elements = document.querySelectorAll('.bar-wrapper');
+            let localBars = [];
+            const ids = [];
+            let dx;
+
+            this.layers.date.setAttribute(
+                'transform',
+                'translate(0,' + e.currentTarget.scrollTop + ')'
+            );
+
+            if (x_on_scroll_start) {
+                dx = e.currentTarget.scrollLeft - x_on_scroll_start;
+            }
+
+            Array.prototype.forEach.call(elements, function (el, i) {
+                ids.push(el.getAttribute('data-id'));
+            });
+
+            if (dx) {
+                localBars = ids.map((id) => this.get_bar(id));
+
+                localBars.forEach((bar) => {
+                    bar.update_label_position_on_horizontal_scroll({
+                        x: dx,
+                        sx: e.currentTarget.scrollLeft,
+                    });
+                });
+            }
+
+            x_on_scroll_start = e.currentTarget.scrollLeft;
         });
 
         $.on(this.$svg, 'mouseup', (e) => {
