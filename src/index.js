@@ -105,6 +105,9 @@ export default class Gantt {
             fixed_label_location: false,
             is_draggable: true,
             groups: {},
+            resource_enable: false,
+            resource_title: 'Tasks',
+            resource_width: 250,
         };
         this.options = Object.assign({}, default_options, options);
     }
@@ -266,7 +269,8 @@ export default class Gantt {
         const padd_start = this.options.padding_start || this.default_padding();
         const padd_end = this.options.padding_end || this.default_padding();
 
-        const { HOUR, QUARTER_DAY, HALF_DAY, DAY, WEEK, MONTH, YEAR } = VIEW_MODE;
+        const { HOUR, QUARTER_DAY, HALF_DAY, DAY, WEEK, MONTH, YEAR } =
+            VIEW_MODE;
 
         // add date padding on both sides
         if (this.view_is([HOUR, QUARTER_DAY, HALF_DAY, DAY])) {
@@ -352,6 +356,7 @@ export default class Gantt {
     render() {
         this.clear();
         this.setup_layers();
+        this.make_resource();
         this.make_grid();
         this.make_dates();
         this.make_bars();
@@ -363,13 +368,116 @@ export default class Gantt {
 
     setup_layers() {
         this.layers = {};
-        const layers = ['grid', 'arrow', 'progress', 'bar', 'details', 'date'];
+
+        const layers = [
+            'grid',
+            'resource',
+            'arrow',
+            'progress',
+            'bar',
+            'details',
+            'date',
+        ];
+
         // make group layers
         for (let layer of layers) {
             this.layers[layer] = createSVG('g', {
                 class: layer,
                 append_to: this.$svg,
             });
+        }
+    }
+
+    make_resource() {
+        if (!this.options.resource_enable) {
+            this.resource_width = 0;
+
+            return;
+        }
+
+        //define width size
+        this.resource_width = this.options.resource_width;
+
+        const grid_layer = createSVG('g', { append_to: this.layers.resource });
+        const text_layer = createSVG('g', { append_to: this.layers.resource });
+        const lines_layer = createSVG('g', { append_to: this.layers.resource });
+
+        const row_width = this.resource_width;
+        const row_height = this.options.bar_height + this.options.padding;
+
+        let row_y = this.options.header_height + this.options.padding / 2;
+
+        // make resource
+        createSVG('rect', {
+            x: 0,
+            y: 0,
+            width: row_width,
+            height: row_height + this.options.header_height - 25,
+            class: 'grid-row',
+            append_to: text_layer,
+        });
+
+        createSVG('text', {
+            x: 20,
+            y: row_y - 20,
+            width: row_width,
+            height: row_height,
+            innerHTML: this.options.resource_title,
+            class: 'header-text resource-title',
+            append_to: text_layer,
+        });
+
+        createSVG('line', {
+            x1: 0,
+            y1: row_y,
+            x2: row_width,
+            y2: row_y + 1,
+            class: 'grid-header',
+            append_to: lines_layer,
+        });
+
+        createSVG('path', {
+            d: `M ${row_width} ${
+                this.options.header_height + this.options.padding / 2
+            } v ${
+                (this.options.bar_height + this.options.padding) *
+                this.tasks.length
+            }`,
+            class: 'resource-line',
+            append_to: lines_layer,
+        });
+
+        // reouse name
+        for (let task of this.tasks) {
+            createSVG('rect', {
+                x: 0,
+                y: row_y,
+                width: row_width,
+                height: row_height,
+                class: 'grid-row',
+                append_to: grid_layer,
+            });
+
+            createSVG('text', {
+                x: 20,
+                y: row_y + row_height / 2 + 5,
+                innerHTML: `${task.name.slice(0, 40)}${
+                    task.name.length > 50 ? '...' : ''
+                }`,
+                class: 'resource-text',
+                append_to: text_layer,
+            });
+
+            createSVG('line', {
+                x1: 0,
+                y1: row_y + row_height,
+                x2: row_width,
+                y2: row_y + row_height,
+                class: 'row-line',
+                append_to: lines_layer,
+            });
+
+            row_y += this.options.bar_height + this.options.padding;
         }
     }
 
@@ -382,7 +490,9 @@ export default class Gantt {
     }
 
     make_grid_background() {
-        const grid_width = this.dates.length * this.options.column_width;
+        const grid_width =
+            this.resource_width + this.dates.length * this.options.column_width;
+
         const grid_height =
             this.options.header_height +
             this.options.padding +
@@ -410,14 +520,16 @@ export default class Gantt {
         const rows_layer = createSVG('g', { append_to: this.layers.grid });
         const lines_layer = createSVG('g', { append_to: this.layers.grid });
 
-        const row_width = this.dates.length * this.options.column_width;
+        const row_width =
+            this.resource_width + this.dates.length * this.options.column_width;
+
         const row_height = this.options.bar_height + this.options.padding;
 
         let row_y = this.options.header_height + this.options.padding / 2;
 
         for (let task of this.tasks) {
             createSVG('rect', {
-                x: 0,
+                x: this.resource_width,
                 y: row_y,
                 width: row_width,
                 height: row_height,
@@ -426,7 +538,7 @@ export default class Gantt {
             });
 
             createSVG('line', {
-                x1: 0,
+                x1: this.resource_width,
                 y1: row_y + row_height,
                 x2: row_width,
                 y2: row_y + row_height,
@@ -439,11 +551,13 @@ export default class Gantt {
     }
 
     make_grid_header() {
-        const header_width = this.dates.length * this.options.column_width;
+        const header_width =
+            this.resource_width + this.dates.length * this.options.column_width;
+
         const header_height = this.options.header_height + 10;
 
         createSVG('rect', {
-            x: 0,
+            x: this.resource_width,
             y: 0,
             width: header_width,
             height: header_height,
@@ -454,7 +568,7 @@ export default class Gantt {
     }
 
     make_grid_ticks() {
-        let tick_x = 0;
+        let tick_x = this.resource_width;
         let tick_y = this.options.header_height + this.options.padding / 2;
         let tick_height =
             (this.options.bar_height + this.options.padding) *
@@ -529,7 +643,7 @@ export default class Gantt {
     make_dates() {
         for (let date of this.get_dates_to_draw()) {
             createSVG('text', {
-                x: date.lower_x,
+                x: this.resource_width + date.lower_x,
                 y: date.lower_y,
                 innerHTML: date.lower_text,
                 class: 'lower-text',
@@ -538,7 +652,7 @@ export default class Gantt {
 
             if (date.upper_text) {
                 const $upper_text = createSVG('text', {
-                    x: date.upper_x,
+                    x: this.resource_width + date.upper_x,
                     y: date.upper_y,
                     innerHTML: date.upper_text,
                     class: 'upper-text',
@@ -687,7 +801,7 @@ export default class Gantt {
         this.bar_map = {};
 
         this.bars = this.tasks.map((task) => {
-            const bar = new Bar(this, task);
+            const bar = new Bar(this, task, this.resource_width);
 
             this.layers.bar.appendChild(bar.group);
 
@@ -790,7 +904,7 @@ export default class Gantt {
         }
 
         let is_dragging = false;
-        let x_on_start = 0;
+        let x_on_start = this.resource_width || 0;
         let x_on_scroll_start = 0;
         let y_on_start = 0;
         let is_resizing_left = false;
@@ -947,7 +1061,7 @@ export default class Gantt {
     }
 
     bind_bar_progress() {
-        let x_on_start = 0;
+        let x_on_start = this.resource_width || 0;
         let y_on_start = 0;
         let is_resizing = null;
         let bar = null;

@@ -2,17 +2,18 @@ import date_utils from './date_utils';
 import { $, createSVG, animateSVG } from './svg_utils';
 
 export default class Bar {
-    constructor(gantt, task) {
-        this.set_defaults(gantt, task);
+    constructor(gantt, task, resource_width) {
+        this.set_defaults(gantt, task, resource_width);
         this.prepare();
         this.draw();
         this.bind();
     }
 
-    set_defaults(gantt, task) {
+    set_defaults(gantt, task, resource_width) {
         this.action_completed = false;
         this.gantt = gantt;
         this.task = task;
+        this.resource_width = resource_width;
     }
 
     prepare() {
@@ -302,7 +303,7 @@ export default class Bar {
 
     update_bar_position({ x = null, width = null }) {
         const bar = this.$bar;
-        if (x) {
+        if (x && x >= this.resource_width) {
             // get all x values of parent task
             const xs = this.task.dependencies.map((dep) => {
                 return this.gantt.get_bar(dep).$bar.getX();
@@ -432,7 +433,8 @@ export default class Bar {
             const diff = date_utils.diff(task_start, gantt_start, 'day');
             x = (diff * column_width) / 30;
         }
-        return x;
+
+        return this.resource_width + x;
     }
 
     compute_y() {
