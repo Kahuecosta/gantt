@@ -28,6 +28,10 @@ $handle-color: #ddd !default;
 	.row-line {
 		stroke: $light-border-color;
 	}
+	.resource-line {
+		stroke: #e0e0e0;
+    	stroke-width: 1;
+	}
 	.tick {
 		stroke: $border-color;
 		stroke-width: 0.2;
@@ -126,7 +130,18 @@ $handle-color: #ddd !default;
 	.lower-text {
 		fill: $text-color;
 	}
-
+	.header-text {
+		font-size: 1.2em;
+		text-anchor: start;
+	}
+	.resource-title {
+		font-weight: 600;
+		letter-spacing: 0.05em;
+	}
+	.resource-text {
+		font-size: 12px;
+		text-anchor: start;
+	}
 	.hide {
 		display: none;
 	}
