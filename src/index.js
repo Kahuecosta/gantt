@@ -97,6 +97,7 @@ export default class Gantt {
             padding_start: null,
             padding_end: null,
             fixed_label_location: false,
+            is_draggable: true,
         };
         this.options = Object.assign({}, default_options, options);
     }
@@ -860,7 +861,7 @@ export default class Gantt {
                             x: $bar.ox + $bar.finaldx,
                         });
                     }
-                } else if (is_dragging) {
+                } else if (is_dragging && this.options.is_draggable) {
                     bar.update_bar_position({ x: $bar.ox + $bar.finaldx });
                 }
             });
