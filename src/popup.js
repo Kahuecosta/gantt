@@ -60,10 +60,12 @@ export default class Popup {
 
         // show
         this.parent.style.opacity = 1;
+        this.parent.style.zIndex = 0;
     }
 
     hide() {
         this.parent.style.opacity = 0;
         this.parent.style.left = 0;
+        this.parent.style.zIndex = -1;
     }
 }
