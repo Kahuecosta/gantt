@@ -80,6 +80,10 @@ $handle-color: #ddd !default;
 			fill: $text-light;
 			text-anchor: start;
 		}
+
+		&.hide {
+			display: none;
+		}
 	}
 
 	.handle {
