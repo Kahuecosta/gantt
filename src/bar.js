@@ -132,9 +132,10 @@ export default class Bar {
             x: x_coord,
             y: this.y + this.height / 2,
             innerHTML: this.task.name,
-            class: 'bar-label',
+            class: `bar-label ${this.gantt.options.hide_labels ? 'hide' : ''}`,
             append_to: this.bar_group,
         });
+
         // labels get BBox in the next tick
         requestAnimationFrame(() => this.update_label_position());
     }

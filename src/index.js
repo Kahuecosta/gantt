@@ -103,6 +103,7 @@ export default class Gantt {
             padding_start: null,
             padding_end: null,
             fixed_label_location: false,
+            hide_labels: false,
             is_draggable: true,
             groups: {},
             resource_enable: false,
