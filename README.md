@@ -75,6 +75,7 @@ var gantt = new Gantt('#gantt', tasks, {
     move_dependent: 'right', // 'left' - 'right' - 'both'
     fixed_label_location: false,
     hide_labels: false,
+    horizontal_auto_scroll_labels: false,
     is_draggable: true,
     resource_enable: true,
     resource_title: 'Tasks',
