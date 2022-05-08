@@ -145,6 +145,11 @@ $handle-color: #ddd !default;
 	.resource-text {
 		font-size: 12px;
 		text-anchor: start;
+
+		&:hover {
+			cursor: pointer;
+			text-decoration: underline;
+		}
 	}
 	.hide {
 		display: none;
