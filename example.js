@@ -107,6 +107,7 @@ const gantt = new Gantt('.gantt-target', workitems, {
     move_dependent: 'both',
     fixed_label_location: false,
     hide_labels: false,
+    horizontal_auto_scroll_labels: false,
     is_draggable: true,
     bar_height: 22,
     resource_enable: true,

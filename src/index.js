@@ -104,6 +104,7 @@ export default class Gantt {
             padding_end: null,
             fixed_label_location: false,
             hide_labels: false,
+            horizontal_auto_scroll_labels: false,
             is_draggable: true,
             groups: {},
             resource_enable: false,
@@ -1029,7 +1030,7 @@ export default class Gantt {
                 ids.push(el.getAttribute('data-id'));
             });
 
-            if (dx) {
+            if (dx && this.options.horizontal_auto_scroll_labels) {
                 localBars = ids.map((id) => this.get_bar(id));
 
                 localBars.forEach((bar) => {
