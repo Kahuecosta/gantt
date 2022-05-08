@@ -460,16 +460,15 @@ export default class Gantt {
                 append_to: grid_layer,
             });
 
-            createSVG('text', {
+            const elText = createSVG('text', {
                 x: 20,
                 y: row_y + row_height / 2 + 5,
-                innerHTML: `${task.name.slice(0, 40)}${
-                    task.name.length > 50 ? '...' : ''
-                }`,
                 'data-id': task.id,
                 class: 'resource-text',
                 append_to: text_layer,
             });
+
+            this.textEllipsis(elText, task.name, row_width - 40);
 
             createSVG('line', {
                 x1: 0,
@@ -481,6 +480,28 @@ export default class Gantt {
             });
 
             row_y += this.options.bar_height + this.options.padding;
+        }
+    }
+
+    textEllipsis(el, text, width) {
+        if (typeof el.getSubStringLength !== 'undefined') {
+            el.innerHTML = text;
+            var len = text.length;
+            while (el.getSubStringLength(0, len--) > width) {
+                el.innerHTML = text.slice(0, len) + '...';
+            }
+        } else if (typeof el.getComputedTextLength !== 'undefined') {
+            while (el.getComputedTextLength() > width) {
+                text = text.slice(0, -1);
+                el.innerHTML = text + '...';
+            }
+        } else {
+            // the last fallback
+            while (el.getBBox().width > width) {
+                text = text.slice(0, -1);
+                // we need to update the textContent to update the boundary width
+                el.innerHTML = text + '...';
+            }
         }
     }
 
