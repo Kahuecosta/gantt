@@ -17,10 +17,12 @@ const VIEW_MODE = {
 };
 
 export default class Gantt {
-    constructor(wrapper, tasks, options) {
+    constructor(wrapper, workItems, workItemTypes, options) {
         this.setup_wrapper(wrapper);
         this.setup_options(options);
-        this.setup_tasks(tasks);
+        this.setup_workItem_types(workItemTypes);
+        this.setup_tasks(workItems);
+
         // initialize with default view mode
         this.change_view_mode();
         this.bind_events();
@@ -74,12 +76,6 @@ export default class Gantt {
     }
 
     setup_options(options) {
-        // convert groups array to a dictionary for faster lookups
-        options.groups = options.groups.reduce((dict, curr) => {
-            dict[curr.id] = curr;
-            return dict;
-        }, {});
-
         const default_options = {
             header_height: 50,
             column_width: 30,
@@ -106,13 +102,22 @@ export default class Gantt {
             hide_labels: false,
             horizontal_auto_scroll_labels: false,
             is_draggable: true,
-            groups: {},
             resource_fixed: false,
             resource_enable: false,
             resource_title: 'Tasks',
             resource_width: 250,
         };
+
         this.options = Object.assign({}, default_options, options);
+    }
+
+    setup_workItem_types(workItemTypes) {
+        // convert workItemTypes array to a dictionary for faster lookups
+        this.workItemTypes = workItemTypes.reduce((dict, curr) => {
+            dict[curr.id] = curr;
+
+            return dict;
+        }, {});
     }
 
     setup_tasks(tasks) {
@@ -178,15 +183,15 @@ export default class Gantt {
                 task.id = generate_id(task);
             }
 
-            this.task_map[task.id] = task;
-
-            // task group
+            // workItem types
             if (
-                typeof task.group_id !== 'undefined' &&
-                this.options.groups.hasOwnProperty(task.group_id)
+                typeof task.type_id !== 'undefined' &&
+                this.workItemTypes.hasOwnProperty(task.type_id)
             ) {
-                task._group = this.options.groups[task.group_id];
+                task._type = this.workItemTypes[task.type_id];
             }
+
+            this.task_map[task.id] = task;
 
             return task;
         });
@@ -460,15 +465,13 @@ export default class Gantt {
                 append_to: grid_layer,
             });
 
-            const elText = createSVG('text', {
-                x: 20,
-                y: row_y + row_height / 2 + 5,
-                'data-id': task.id,
-                class: 'resource-text',
-                append_to: text_layer,
-            });
-
-            this.textEllipsis(elText, task.name, row_width - 40);
+            this.make_resource_text(
+                task,
+                row_y,
+                row_width,
+                row_height,
+                text_layer
+            );
 
             createSVG('line', {
                 x1: 0,
@@ -481,6 +484,56 @@ export default class Gantt {
 
             row_y += this.options.bar_height + this.options.padding;
         }
+    }
+
+    make_resource_text(task, row_y, row_width, row_height, text_layer) {
+        const type = this.workItemTypes[task.type_id];
+
+        const elY = row_y + row_height / 2 + 5;
+
+        let elX = 10;
+        let elPadding = 30;
+
+        if (type && type.icon) {
+            createSVG('image', {
+                x: 8,
+                y: elY - 12,
+                width: 14,
+                height: 14,
+                class: 'resource-type-icon-img',
+                href: type.icon,
+                clipPath: 'clip_' + type.id,
+                append_to: text_layer,
+            });
+
+            elX = 30;
+            elPadding = 48;
+        } else if (type && type.color) {
+            createSVG('rect', {
+                x: 8,
+                y: elY - 12,
+                rx: 2,
+                ry: 2,
+                width: 14,
+                height: 14,
+                class: 'resource-type-icon',
+                style: `fill:${type.color || '#000000'}`,
+                append_to: text_layer,
+            });
+
+            elX = 30;
+            elPadding = 48;
+        }
+
+        const elText = createSVG('text', {
+            x: elX,
+            y: elY,
+            'data-id': task.id,
+            class: 'resource-text',
+            append_to: text_layer,
+        });
+
+        this.textEllipsis(elText, task.name, row_width - elPadding);
     }
 
     textEllipsis(el, text, width) {

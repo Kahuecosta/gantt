@@ -8,6 +8,7 @@ export default class Popup {
     make() {
         this.parent.innerHTML = `
             <div class="title"></div>
+            <div class="type"></div>
             <div class="subtitle"></div>
             <div class="pointer"></div>
         `;
@@ -15,6 +16,7 @@ export default class Popup {
         this.hide();
 
         this.title = this.parent.querySelector('.title');
+        this.type = this.parent.querySelector('.type');
         this.subtitle = this.parent.querySelector('.subtitle');
         this.pointer = this.parent.querySelector('.pointer');
     }
@@ -23,9 +25,11 @@ export default class Popup {
         if (!options.target_element) {
             throw new Error('target_element is required to show popup');
         }
+
         if (!options.position) {
             options.position = 'left';
         }
+
         const target_element = options.target_element;
 
         if (this.custom_html) {
@@ -36,6 +40,9 @@ export default class Popup {
         } else {
             // set data
             this.title.innerHTML = options.title;
+
+            this.set_type(options.type);
+
             this.subtitle.innerHTML = options.subtitle;
             this.parent.style.width = this.parent.clientWidth + 'px';
         }
@@ -61,6 +68,28 @@ export default class Popup {
         // show
         this.parent.style.opacity = 1;
         this.parent.style.zIndex = 0;
+    }
+
+    set_type(type = {}) {
+        const { color, name, icon } = type;
+
+        if (name) {
+            this.type.style.display = 'inherit';
+        } else {
+            this.type.style.display = 'none';
+
+            return;
+        }
+
+        let typeIcon = '';
+
+        if (icon) {
+            typeIcon = `<img class="popup-type-icon" src="${icon}" />`;
+        } else if (color) {
+            typeIcon = `<span class="popup-type-icon" style="background-color:${color}"></span>`;
+        }
+
+        this.type.innerHTML = `<span class="popup-type-name">${typeIcon}${name}</span>`;
     }
 
     hide() {

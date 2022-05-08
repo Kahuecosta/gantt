@@ -4,7 +4,7 @@ const workitems = [
         end: '2018-10-08',
         name: 'Criação dos processos de RH do cliente Santa Clara',
         id: 'Task 0',
-        group_id: 'design',
+        type_id: 'hotfix',
         progress: 20,
     },
     {
@@ -12,7 +12,7 @@ const workitems = [
         end: '2018-10-06',
         name: 'Write new content',
         id: 'Task 1',
-        group_id: 'development',
+        type_id: 'task',
         progress: 5,
         dependencies: 'Task 0',
     },
@@ -21,7 +21,7 @@ const workitems = [
         end: '2018-10-08',
         name: 'Apply new styles',
         id: 'Task 2',
-        group_id: 'development',
+        type_id: 'task',
         progress: 10,
         dependencies: 'Task 1',
     },
@@ -30,7 +30,7 @@ const workitems = [
         end: '2018-10-09',
         name: 'Review',
         id: 'Task 3',
-        group_id: 'integration',
+        type_id: 'debit',
         progress: 5,
         dependencies: 'Task 2',
         custom_class: 'bar-milestone',
@@ -40,7 +40,7 @@ const workitems = [
         end: '2018-10-10',
         name: 'Deploy',
         id: 'Task 4',
-        group_id: 'integration',
+        type_id: 'debit',
         progress: 0,
         dependencies: 'Task 2',
     },
@@ -50,7 +50,7 @@ const workitems = [
         duration: 2,
         name: 'Go Live!',
         id: 'Task 5',
-        group_id: 'integration',
+        type_id: 'debit',
         progress: 0,
         dependencies: 'Task 4',
         custom_class: 'bar-milestone',
@@ -60,7 +60,7 @@ const workitems = [
         end: '2018-10-25',
         name: 'Header Stick!',
         id: 'Task_6',
-        group_id: 'integration',
+        type_id: 'epic',
         progress: 0,
         dependencies: '',
         custom_class: 'bar-milestone',
@@ -70,9 +70,8 @@ const workitems = [
     {
         start: '2018-10-11',
         end: '2018-10-20',
-        name: 'Jean Jacques doc!',
+        name: 'Correção no módulo de impresão de PDF',
         id: 'Task_7',
-        group_id: 'integration',
         progress: 0,
         dependencies: 'Task_0',
         custom_class: 'bar-milestone',
@@ -81,18 +80,47 @@ const workitems = [
     },
 ];
 
-const gantt = new Gantt('.gantt-target', workitems, {
-    on_click: function (task) {
-        console.log('on_click', task);
+const workItemTypes = [
+    {
+        id: 'hotfix',
+        name: 'Hotfix',
+        bar_class: 'bar-hotfix',
+        color: '#e27d02',
+        icon: './icons/icon-1.png',
     },
-    on_dblclick: function (task) {
-        console.log('dblclick', task);
+    {
+        id: 'task',
+        name: 'Task',
+        bar_class: 'bar-task',
+        color: '#0758b3',
+        icon: './icons/icon-2.png',
     },
-    on_date_change: function (task, start, end) {
-        console.log('on_date_change', task, start, end);
+    {
+        id: 'debit',
+        name: 'Débito Técnico',
+        bar_class: 'bar-debit',
+        icon: './icons/icon-3.png',
     },
-    on_progress_change: function (task, progress) {
-        console.log('on_progress_change', task, progress);
+    {
+        id: 'epic',
+        name: 'Épico',
+        bar_class: 'bar-epic',
+        color: '#d81e46',
+    },
+];
+
+const options = {
+    on_click: function (workitem) {
+        console.log('on_click', workitem);
+    },
+    on_dblclick: function (workitem) {
+        console.log('dblclick', workitem);
+    },
+    on_date_change: function (workitem, start, end) {
+        console.log('on_date_change', workitem, start, end);
+    },
+    on_progress_change: function (workitem, progress) {
+        console.log('on_progress_change', workitem, progress);
     },
     on_view_change: function (mode) {
         console.log('on_view_change', mode);
@@ -114,23 +142,6 @@ const gantt = new Gantt('.gantt-target', workitems, {
     resource_enable: true,
     resource_title: 'Tarefas',
     resource_width: 250,
-    groups: [
-        {
-            id: 'design',
-            name: 'Web Design',
-            bar_class: 'bar-design',
-        },
-        {
-            id: 'development',
-            name: 'Development',
-            bar_class: 'bar-development',
-        },
-        {
-            id: 'integration',
-            name: 'Integration & Deployment',
-            bar_class: 'bar-integration',
-        },
-    ],
-});
+};
 
-console.log(gantt);
+const gantt = new Gantt('.gantt-target', workitems, workItemTypes, options);
