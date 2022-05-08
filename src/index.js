@@ -354,6 +354,7 @@ export default class Gantt {
     bind_events() {
         this.bind_grid_click();
         this.bind_bar_events();
+        this.bind_resource_events();
     }
 
     render() {
@@ -465,6 +466,7 @@ export default class Gantt {
                 innerHTML: `${task.name.slice(0, 40)}${
                     task.name.length > 50 ? '...' : ''
                 }`,
+                'data-id': task.id,
                 class: 'resource-text',
                 append_to: text_layer,
             });
@@ -1067,6 +1069,18 @@ export default class Gantt {
         });
 
         this.bind_bar_progress();
+    }
+
+    bind_resource_events() {
+        $.on(this.$svg, 'click', '.resource-text', (event, element) => {
+            const id = element.getAttribute('data-id');
+
+            const bar = this.get_bar(id);
+
+            const left = bar.x - (this.resource_width + 50);
+
+            this.$container.scrollTo(left, this.$container.scrollTop);
+        });
     }
 
     bind_bar_progress() {
