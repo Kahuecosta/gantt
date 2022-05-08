@@ -107,6 +107,7 @@ export default class Gantt {
             horizontal_auto_scroll_labels: false,
             is_draggable: true,
             groups: {},
+            resource_fixed: false,
             resource_enable: false,
             resource_title: 'Tasks',
             resource_width: 250,
@@ -373,12 +374,12 @@ export default class Gantt {
 
         const layers = [
             'grid',
-            'resource',
             'arrow',
             'progress',
             'bar',
             'details',
             'date',
+            'resource',
         ];
 
         // make group layers
@@ -398,13 +399,13 @@ export default class Gantt {
         }
 
         //define width size
-        this.resource_width = this.options.resource_width;
+        this.resource_width = this.options.resource_width - 30;
 
         const grid_layer = createSVG('g', { append_to: this.layers.resource });
         const text_layer = createSVG('g', { append_to: this.layers.resource });
         const lines_layer = createSVG('g', { append_to: this.layers.resource });
 
-        const row_width = this.resource_width;
+        const row_width = this.options.resource_width;
         const row_height = this.options.bar_height + this.options.padding;
 
         let row_y = this.options.header_height + this.options.padding / 2;
@@ -438,13 +439,11 @@ export default class Gantt {
             append_to: lines_layer,
         });
 
-        createSVG('path', {
-            d: `M ${row_width} ${
-                this.options.header_height + this.options.padding / 2
-            } v ${
-                (this.options.bar_height + this.options.padding) *
-                this.tasks.length
-            }`,
+        createSVG('rect', {
+            x: row_width,
+            y: 0,
+            width: 1,
+            height: '100%',
             class: 'resource-line',
             append_to: lines_layer,
         });
@@ -868,6 +867,7 @@ export default class Gantt {
 
     set_scroll_position() {
         const parent_element = this.$svg.parentElement;
+
         if (!parent_element) return;
 
         const hours_before_first_task = date_utils.diff(
@@ -1042,6 +1042,13 @@ export default class Gantt {
             }
 
             x_on_scroll_start = e.currentTarget.scrollLeft;
+
+            if (this.options.resource_fixed) {
+                this.layers.resource.setAttribute(
+                    'transform',
+                    `translate(${x_on_scroll_start},0)`
+                );
+            }
         });
 
         $.on(this.$svg, 'mouseup', (e) => {
