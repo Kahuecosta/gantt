@@ -2,7 +2,7 @@ const workitems = [
     {
         start: '2018-10-01',
         end: '2018-10-08',
-        name: 'Redesign website',
+        name: 'Criação dos processos de RH do cliente Santa Clara',
         id: 'Task 0',
         group_id: 'design',
         progress: 20,
@@ -106,7 +106,7 @@ const gantt = new Gantt('.gantt-target', workitems, {
     hasArrows: true,
     move_dependent: 'both',
     fixed_label_location: false,
-    hide_labels: false,
+    hide_labels: true,
     horizontal_auto_scroll_labels: false,
     is_draggable: true,
     bar_height: 22,
