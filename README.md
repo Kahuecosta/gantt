@@ -33,7 +33,7 @@ Include it in your HTML:
 And start hacking:
 
 ```js
-var tasks = [
+const workitems = [
   {
     id: 'Task 1',
     name: 'Redesign website',
@@ -44,14 +44,24 @@ var tasks = [
     custom_class: 'bar-milestone' // optional
   },
   ...
-]
-var gantt = new Gantt("#gantt", tasks);
+];
+
+const workItemTypes = [
+    {
+        id: 'design',
+        name: 'Web Design',
+        bar_class: 'bar-design',
+        color: '#e27d02',
+    },
+];
+
+const gantt = new Gantt("#gantt", workitems, workItemTypes);
 ```
 
 You can also pass various options to the Gantt constructor:
 
 ```js
-var gantt = new Gantt('#gantt', tasks, {
+const options = {
     header_height: 50,
     column_width: 30,
     step: 24,
@@ -81,14 +91,9 @@ var gantt = new Gantt('#gantt', tasks, {
     resource_enable: true,
     resource_title: 'Tasks',
     resource_width: 250,
-    groups: [
-        {
-            id: 'design',
-            name: 'Web Design',
-            bar_class: 'bar-design-group',
-        },
-    ],
-});
+};
+
+const gantt = new Gantt('#gantt', workitems, workItemTypes, options);
 ```
 
 ### Contributing

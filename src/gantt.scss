@@ -151,6 +151,7 @@ $handle-color: #ddd !default;
 			text-decoration: underline;
 		}
 	}
+	
 	.hide {
 		display: none;
 	}
@@ -180,12 +181,38 @@ $handle-color: #ddd !default;
 			color: #dfe2e5;
 		}
 
+		.type {
+			padding: 10px 10px 0;
+		}
+
 		.pointer {
 			position: absolute;
 			height: 5px;
 			margin: 0 0 0 -5px;
 			border: 5px solid transparent;
 			border-top-color: rgba(0, 0, 0, 0.8);
+		}
+
+		span.popup-type-icon {
+			background-color: #000000;
+			width: 15px;
+			height: 15px;
+			border-radius: 2px;
+			margin: 0 4px 0 0;
+			display: inline;
+		}
+
+		img.popup-type-icon {
+			width: 15px;
+			height: 15px;
+			margin: 0 4px 0 0;
+			display: inline;
+		}
+
+		.popup-type-name {
+			color: #dfe2e5;
+			display: inline-flex;
+			line-height: 18px;
 		}
 	}
 }

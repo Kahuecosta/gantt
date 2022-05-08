@@ -39,10 +39,10 @@ export default class Bar {
         this.group = createSVG('g', {
             class:
                 'bar-wrapper ' +
-                (this.task._group ? `${this.task._group.bar_class} ` : '') +
+                (this.task._type ? `${this.task._type.bar_class} ` : '') +
                 (this.task.custom_class || ''),
             'data-id': this.task.id,
-            'data-group-id': this.task.group_id,
+            'data-type-id': this.task.type_id,
         });
         this.bar_group = createSVG('g', {
             class: 'bar-group',
@@ -294,10 +294,9 @@ export default class Bar {
 
         this.gantt.show_popup({
             target_element: this.$bar,
-            title:
-                `<b>${this.task.name}</b>` +
-                (this.task._group ? `<br>${this.task._group.name}` : ''),
-            subtitle: subtitle,
+            title: `<b>${this.task.name}</b>`,
+            type: this.task._type,
+            subtitle,
             task: this.task,
         });
     }
