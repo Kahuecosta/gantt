@@ -102,6 +102,7 @@ export default class Gantt {
             hide_labels: false,
             horizontal_auto_scroll_labels: false,
             is_draggable: true,
+            resource_resize_enable: true,
             resource_fixed: false,
             resource_enable: false,
             resource_title: 'Tasks',
@@ -458,17 +459,19 @@ export default class Gantt {
             append_to: lines_layer,
         });
 
-        this.resource_resize = createSVG('image', {
-            x: row_width - 8,
-            y: 10,
-            width: 16,
-            height: 16,
-            fill: '#000',
-            class: 'resource-resize',
-            href: 'dist/resize.png',
-            clipPath: 'clip_resize',
-            append_to: lines_layer,
-        });
+        if (this.options.resource_resize_enable) {
+            this.resource_resize = createSVG('image', {
+                x: row_width - 8,
+                y: 10,
+                width: 16,
+                height: 16,
+                fill: '#000',
+                class: 'resource-resize',
+                href: 'dist/resize.png',
+                clipPath: 'clip_resize',
+                append_to: lines_layer,
+            });
+        }
 
         // reouse name
         for (let task of this.tasks) {
@@ -1190,55 +1193,57 @@ export default class Gantt {
             this.$container.scrollTo(left, this.$container.scrollTop);
         });
 
-        $.on(this.$svg, 'mousedown', '.resource-resize', (e, handle) => {
-            is_resizing = true;
-            x_on_start = e.clientX;
+        if (this.options.resource_resize_enable) {
+            $.on(this.$svg, 'mousedown', '.resource-resize', (e, handle) => {
+                is_resizing = true;
+                x_on_start = e.clientX;
 
-            $resource_resize = this.resource_resize;
-            $resource_resize.owidth = this.resource_resize.getWidth();
-            $resource_resize.ox = this.resource_resize.getX();
-        });
-
-        $.on(this.$svg, 'mousemove', (e) => {
-            if (!is_resizing) return;
-
-            let dx = e.clientX - x_on_start;
-
-            const posX = $resource_resize.ox + dx;
-
-            if (
-                !posX ||
-                isNaN(posX) ||
-                posX <= this.resource_width - 50 ||
-                posX >= this.resource_width + 50
-            ) {
-                return;
-            }
-
-            this.resource_resize.setAttribute('x', posX);
-            this.resource_line.setAttribute('x', posX + 8);
-            this.resource_grid_row.setAttribute('width', posX + 8);
-            this.resource_header_text.setAttribute('width', posX + 8);
-            this.resource_grid_header_line.setAttribute('x2', posX + 8);
-            this.resource_grid_layer.forEach((x) => {
-                x.setAttribute('width', posX + 8);
-            });
-            this.resource_line_grid_layer.forEach((x) => {
-                x.setAttribute('width', posX + 8);
+                $resource_resize = this.resource_resize;
+                $resource_resize.owidth = this.resource_resize.getWidth();
+                $resource_resize.ox = this.resource_resize.getX();
             });
 
-            this.resource_task_title_list.forEach((x) => {
-                const { element, padding, name } = x;
+            $.on(this.$svg, 'mousemove', (e) => {
+                if (!is_resizing) return;
 
-                element.setAttribute('width', posX + 8);
+                let dx = e.clientX - x_on_start;
 
-                this.textEllipsis(element, name, posX - padding);
+                const posX = $resource_resize.ox + dx;
+
+                if (
+                    !posX ||
+                    isNaN(posX) ||
+                    posX <= this.resource_width ||
+                    posX >= this.resource_width + 180
+                ) {
+                    return;
+                }
+
+                this.resource_resize.setAttribute('x', posX);
+                this.resource_line.setAttribute('x', posX + 8);
+                this.resource_grid_row.setAttribute('width', posX + 8);
+                this.resource_header_text.setAttribute('width', posX + 8);
+                this.resource_grid_header_line.setAttribute('x2', posX + 8);
+                this.resource_grid_layer.forEach((x) => {
+                    x.setAttribute('width', posX + 8);
+                });
+                this.resource_line_grid_layer.forEach((x) => {
+                    x.setAttribute('width', posX + 8);
+                });
+
+                this.resource_task_title_list.forEach((x) => {
+                    const { element, padding, name } = x;
+
+                    element.setAttribute('width', posX + 8);
+
+                    this.textEllipsis(element, name, posX - padding);
+                });
             });
-        });
 
-        $.on(this.$svg, 'mouseup', () => {
-            is_resizing = false;
-        });
+            $.on(this.$svg, 'mouseup', () => {
+                is_resizing = false;
+            });
+        }
     }
 
     bind_bar_progress() {

@@ -87,6 +87,7 @@ const options = {
     hide_labels: false,
     horizontal_auto_scroll_labels: false,
     is_draggable: true,
+    resource_resize_enable: true,
     resource_fixed: true,
     resource_enable: true,
     resource_title: 'Tasks',
