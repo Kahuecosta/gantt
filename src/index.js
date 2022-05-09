@@ -407,6 +407,10 @@ export default class Gantt {
         //define width size
         this.resource_width = this.options.resource_width - 30;
 
+        this.resource_grid_layer = [];
+        this.resource_line_grid_layer = [];
+        this.resource_task_title_list = [];
+
         const grid_layer = createSVG('g', { append_to: this.layers.resource });
         const text_layer = createSVG('g', { append_to: this.layers.resource });
         const lines_layer = createSVG('g', { append_to: this.layers.resource });
@@ -417,7 +421,7 @@ export default class Gantt {
         let row_y = this.options.header_height + this.options.padding / 2;
 
         // make resource
-        createSVG('rect', {
+        this.resource_grid_row = createSVG('rect', {
             x: 0,
             y: 0,
             width: row_width,
@@ -426,7 +430,7 @@ export default class Gantt {
             append_to: text_layer,
         });
 
-        createSVG('text', {
+        this.resource_header_text = createSVG('text', {
             x: 20,
             y: row_y - 20,
             width: row_width,
@@ -436,7 +440,7 @@ export default class Gantt {
             append_to: text_layer,
         });
 
-        createSVG('line', {
+        this.resource_grid_header_line = createSVG('line', {
             x1: 0,
             y1: row_y,
             x2: row_width,
@@ -445,7 +449,7 @@ export default class Gantt {
             append_to: lines_layer,
         });
 
-        createSVG('rect', {
+        this.resource_line = createSVG('rect', {
             x: row_width,
             y: 0,
             width: 1,
@@ -454,9 +458,21 @@ export default class Gantt {
             append_to: lines_layer,
         });
 
+        this.resource_resize = createSVG('image', {
+            x: row_width - 8,
+            y: 10,
+            width: 16,
+            height: 16,
+            fill: '#000',
+            class: 'resource-resize',
+            href: 'dist/resize.png',
+            clipPath: 'clip_resize',
+            append_to: lines_layer,
+        });
+
         // reouse name
         for (let task of this.tasks) {
-            createSVG('rect', {
+            const task_grid_layer = createSVG('rect', {
                 x: 0,
                 y: row_y,
                 width: row_width,
@@ -473,7 +489,7 @@ export default class Gantt {
                 text_layer
             );
 
-            createSVG('line', {
+            const line_grid_layer = createSVG('line', {
                 x1: 0,
                 y1: row_y + row_height,
                 x2: row_width,
@@ -481,6 +497,9 @@ export default class Gantt {
                 class: 'row-line',
                 append_to: lines_layer,
             });
+
+            this.resource_grid_layer.push(task_grid_layer);
+            this.resource_line_grid_layer.push(line_grid_layer);
 
             row_y += this.options.bar_height + this.options.padding;
         }
@@ -492,7 +511,7 @@ export default class Gantt {
         const elY = row_y + row_height / 2 + 5;
 
         let elX = 10;
-        let elPadding = 30;
+        let padding = 30;
 
         if (type && type.icon) {
             createSVG('image', {
@@ -507,7 +526,7 @@ export default class Gantt {
             });
 
             elX = 30;
-            elPadding = 48;
+            padding = 48;
         } else if (type && type.color) {
             createSVG('rect', {
                 x: 8,
@@ -522,10 +541,10 @@ export default class Gantt {
             });
 
             elX = 30;
-            elPadding = 48;
+            padding = 48;
         }
 
-        const elText = createSVG('text', {
+        const task_title = createSVG('text', {
             x: elX,
             y: elY,
             'data-id': task.id,
@@ -533,7 +552,14 @@ export default class Gantt {
             append_to: text_layer,
         });
 
-        this.textEllipsis(elText, task.name, row_width - elPadding);
+        this.resource_task_title_list.push({
+            element: task_title,
+            row_width,
+            padding,
+            name: task.name,
+        });
+
+        this.textEllipsis(task_title, task.name, row_width - padding);
     }
 
     textEllipsis(el, text, width) {
@@ -1148,6 +1174,10 @@ export default class Gantt {
     }
 
     bind_resource_events() {
+        let is_resizing = false;
+        let x_on_start;
+        let $resource_resize = null;
+
         $.on(this.$svg, 'click', '.resource-text', (event, element) => {
             this.hide_popup();
 
@@ -1158,6 +1188,56 @@ export default class Gantt {
             const left = bar.x - (this.resource_width + 50);
 
             this.$container.scrollTo(left, this.$container.scrollTop);
+        });
+
+        $.on(this.$svg, 'mousedown', '.resource-resize', (e, handle) => {
+            is_resizing = true;
+            x_on_start = e.clientX;
+
+            $resource_resize = this.resource_resize;
+            $resource_resize.owidth = this.resource_resize.getWidth();
+            $resource_resize.ox = this.resource_resize.getX();
+        });
+
+        $.on(this.$svg, 'mousemove', (e) => {
+            if (!is_resizing) return;
+
+            let dx = e.clientX - x_on_start;
+
+            const posX = $resource_resize.ox + dx;
+
+            if (
+                !posX ||
+                isNaN(posX) ||
+                posX <= this.resource_width - 50 ||
+                posX >= this.resource_width + 50
+            ) {
+                return;
+            }
+
+            this.resource_resize.setAttribute('x', posX);
+            this.resource_line.setAttribute('x', posX + 8);
+            this.resource_grid_row.setAttribute('width', posX + 8);
+            this.resource_header_text.setAttribute('width', posX + 8);
+            this.resource_grid_header_line.setAttribute('x2', posX + 8);
+            this.resource_grid_layer.forEach((x) => {
+                x.setAttribute('width', posX + 8);
+            });
+            this.resource_line_grid_layer.forEach((x) => {
+                x.setAttribute('width', posX + 8);
+            });
+
+            this.resource_task_title_list.forEach((x) => {
+                const { element, padding, name } = x;
+
+                element.setAttribute('width', posX + 8);
+
+                this.textEllipsis(element, name, posX - padding);
+            });
+        });
+
+        $.on(this.$svg, 'mouseup', () => {
+            is_resizing = false;
         });
     }
 

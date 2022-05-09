@@ -28,6 +28,16 @@ $handle-color: #ddd !default;
 	.row-line {
 		stroke: $light-border-color;
 	}
+	.resource-resize {
+		outline: none;
+		user-select: none;
+		opacity: 0.2;
+
+		&:hover {
+			cursor: pointer;
+			opacity: 1;
+		}
+	}
 	.resource-line {
 		stroke: #e0e0e0;
     	stroke-width: 1;
