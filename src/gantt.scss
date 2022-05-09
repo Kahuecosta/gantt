@@ -7,7 +7,7 @@ $light-yellow: #fcf8e3 !default;
 $text-muted: #666 !default;
 $text-light: #555 !default;
 $text-color: #333 !default;
-$blue: #a3a3ff !default;
+$primary: #F2711C !default;
 $handle-color: #ddd !default;
 
 .gantt {
@@ -58,7 +58,7 @@ $handle-color: #ddd !default;
 		user-select: none;
 	}
 	.bar-progress {
-		fill: $blue;
+		fill: $primary;
 	}
 	.bar-invalid {
 		fill: transparent;
@@ -104,7 +104,7 @@ $handle-color: #ddd !default;
 			}
 
 			.bar-progress {
-				fill: darken($blue, 5);
+				fill: darken($primary, 5);
 			}
 
 			.handle {
@@ -119,7 +119,7 @@ $handle-color: #ddd !default;
 			}
 
 			.bar-progress {
-				fill: darken($blue, 5);
+				fill: darken($primary, 5);
 			}
 		}
 	}
@@ -166,19 +166,21 @@ $handle-color: #ddd !default;
 		position: absolute;
 		top: 0;
 		left: 0;
-		background: rgba(0, 0, 0, 0.8);
 		padding: 0;
-		color: #959da5;
 		border-radius: 3px;
+		border: 2px solid #dfdddd;
+		background: #fbfbfb;
+		min-width: 160px;
 
 		.title {
-			border-bottom: 3px solid $blue;
+			color: $text-color;
+			border-bottom: 3px solid $primary;
 			padding: 10px;
 		}
 
 		.subtitle {
 			padding: 10px;
-			color: #dfe2e5;
+			color: $text-color;
 		}
 
 		.type {
@@ -188,9 +190,9 @@ $handle-color: #ddd !default;
 		.pointer {
 			position: absolute;
 			height: 5px;
-			margin: 0 0 0 -5px;
+			margin: 0 0 0 -7px;
 			border: 5px solid transparent;
-			border-top-color: rgba(0, 0, 0, 0.8);
+			border-top-color: #dfdddd;
 		}
 
 		span.popup-type-icon {
@@ -210,7 +212,7 @@ $handle-color: #ddd !default;
 		}
 
 		.popup-type-name {
-			color: #dfe2e5;
+			color: $text-color;
 			display: inline-flex;
 			line-height: 18px;
 		}
