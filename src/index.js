@@ -1088,6 +1088,8 @@ export default class Gantt {
         });
 
         $.on(this.$container, 'scroll', (e) => {
+            this.hide_popup();
+
             let elements = document.querySelectorAll('.bar-wrapper');
             let localBars = [];
             const ids = [];
@@ -1147,6 +1149,8 @@ export default class Gantt {
 
     bind_resource_events() {
         $.on(this.$svg, 'click', '.resource-text', (event, element) => {
+            this.hide_popup();
+
             const id = element.getAttribute('data-id');
 
             const bar = this.get_bar(id);
