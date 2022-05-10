@@ -181,6 +181,7 @@ $handle-color: #ddd !default;
 		border: 2px solid #dfdddd;
 		background: #fbfbfb;
 		min-width: 160px;
+		z-index: -1;
 
 		.title {
 			color: $text-color;
