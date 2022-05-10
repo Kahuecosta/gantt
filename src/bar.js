@@ -92,9 +92,6 @@ export default class Bar {
             append_to: this.bar_group,
         });
 
-        // Firefox not working
-        // animateSVG(this.$bar, 'width', 0, this.width);
-
         if (this.invalid) {
             this.$bar.classList.add('bar-invalid');
         }
@@ -113,9 +110,6 @@ export default class Bar {
             class: 'bar-progress',
             append_to: this.bar_group,
         });
-
-        // Firefox not working
-        // animateSVG(this.$bar_progress, 'width', 0, this.progress_width);
     }
 
     draw_label() {
@@ -227,6 +221,7 @@ export default class Bar {
 
     get_progress_polygon_points() {
         const bar_progress = this.$bar_progress;
+
         return bar_progress
             ? [
                   bar_progress.getEndX() - 5,
@@ -241,6 +236,7 @@ export default class Bar {
 
     bind() {
         if (this.invalid) return;
+
         this.setup_click_event();
     }
 
@@ -303,24 +299,28 @@ export default class Bar {
 
     update_bar_position({ x = null, width = null }) {
         const bar = this.$bar;
+
         if (x && x >= this.resource_width) {
             // get all x values of parent task
-            const xs = this.task.dependencies.map((dep) => {
-                return this.gantt.get_bar(dep).$bar.getX();
-            });
+            const xs = this.task.dependencies.map((dep) =>
+                this.gantt.get_bar(dep).$bar.getX()
+            );
+
             // child task must not go before parent
-            const valid_x = xs.reduce((prev, curr) => {
-                return x >= curr;
-            }, x);
+            const valid_x = xs.reduce((prev, curr) => x >= curr, x);
+
             if (!valid_x) {
                 width = null;
                 return;
             }
+
             this.update_attr(bar, 'x', x);
         }
+
         if (width && width >= this.gantt.options.column_width) {
             this.update_attr(bar, 'width', width);
         }
+
         this.update_label_position();
         this.update_handle_position();
         this.update_progressbar_position();
@@ -365,15 +365,18 @@ export default class Bar {
 
     date_changed() {
         let changed = false;
+
         const { new_start_date, new_end_date } = this.compute_start_end_date();
 
         if (Number(this.task._start) !== Number(new_start_date)) {
             changed = true;
+
             this.task._start = new_start_date;
         }
 
         if (Number(this.task._end) !== Number(new_end_date)) {
             changed = true;
+
             this.task._end = new_end_date;
         }
 
@@ -388,12 +391,14 @@ export default class Bar {
 
     progress_changed() {
         const new_progress = this.compute_progress();
+
         this.task.progress = new_progress;
         this.gantt.trigger_event('progress_change', [this.task, new_progress]);
     }
 
     set_action_completed() {
         this.action_completed = true;
+
         setTimeout(() => (this.action_completed = false), 1000);
     }
 
@@ -418,6 +423,7 @@ export default class Bar {
     compute_progress() {
         const progress =
             (this.$bar_progress.getWidth() / this.$bar.getWidth()) * 100;
+
         return parseInt(progress, 10);
     }
 
@@ -425,12 +431,13 @@ export default class Bar {
         const { step, column_width } = this.gantt.options;
         const task_start = this.task._start;
         const gantt_start = this.gantt.gantt_start;
-
         const diff = date_utils.diff(task_start, gantt_start, 'hour');
+
         let x = (diff / step) * column_width;
 
         if (this.gantt.view_is('Month')) {
             const diff = date_utils.diff(task_start, gantt_start, 'day');
+
             x = (diff * column_width) / 30;
         }
 
@@ -475,14 +482,17 @@ export default class Bar {
                     ? 0
                     : this.gantt.options.column_width);
         }
+
         return position;
     }
 
     update_attr(element, attr, value) {
         value = +value;
+
         if (!isNaN(value)) {
             element.setAttribute(attr, value);
         }
+
         return element;
     }
 
@@ -498,11 +508,10 @@ export default class Bar {
         const bar = this.$bar,
             label = this.group.querySelector('.bar-label'),
             img = this.group.querySelector('.bar-img');
+        const x = bar.getX() + bar.getWidth();
 
         let padding = 5;
         let x_offset_label_img = this.image_size + 10;
-
-        const x = bar.getX() + bar.getWidth();
 
         if (
             this.gantt.options.fixed_label_location ||
@@ -532,19 +541,23 @@ export default class Bar {
 
     update_handle_position() {
         const bar = this.$bar;
+
         this.handle_group
             .querySelector('.handle.left')
             .setAttribute('x', bar.getX() + 1);
         this.handle_group
             .querySelector('.handle.right')
             .setAttribute('x', bar.getEndX() - 9);
+
         const handle = this.group.querySelector('.handle.progress');
+
         handle &&
             handle.setAttribute('points', this.get_progress_polygon_points());
     }
 
     update_arrow_position() {
         this.arrows = this.arrows || [];
+
         for (let arrow of this.arrows) {
             arrow.update();
         }
