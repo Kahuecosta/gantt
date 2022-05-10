@@ -11,32 +11,30 @@ export default class Arrow {
     }
 
     calculate_path() {
+        const { padding, bar_height, header_height } = this.gantt.options;
+
         let start_x =
             this.from_task.$bar.getX() + this.from_task.$bar.getWidth() / 2;
 
         const condition = () =>
-            this.to_task.$bar.getX() < start_x + this.gantt.options.padding &&
-            start_x > this.from_task.$bar.getX() + this.gantt.options.padding;
+            this.to_task.$bar.getX() < start_x + padding &&
+            start_x > this.from_task.$bar.getX() + padding;
 
         while (condition()) {
             start_x -= 10;
         }
 
         const start_y =
-            this.gantt.options.header_height +
-            this.gantt.options.bar_height +
-            (this.gantt.options.padding + this.gantt.options.bar_height) *
-                this.from_task.task._index +
-            this.gantt.options.padding;
-
-        const end_x = this.to_task.$bar.getX() - this.gantt.options.padding / 2;
+            header_height +
+            bar_height +
+            (padding + bar_height) * this.from_task.task._index +
+            padding;
+        const end_x = this.to_task.$bar.getX() - padding / 2;
         const end_y =
-            this.gantt.options.header_height +
-            this.gantt.options.bar_height / 2 +
-            (this.gantt.options.padding + this.gantt.options.bar_height) *
-                this.to_task.task._index +
-            this.gantt.options.padding;
-
+            header_height +
+            bar_height / 2 +
+            (padding + bar_height) * this.to_task.task._index +
+            padding;
         const from_is_below_to =
             this.from_task.task._index > this.to_task.task._index;
         const curve = this.gantt.options.arrow_curve;
@@ -45,7 +43,6 @@ export default class Arrow {
         const offset = from_is_below_to
             ? end_y + this.gantt.options.arrow_curve
             : end_y - this.gantt.options.arrow_curve;
-
         this.path = `
             M ${start_x} ${start_y}
             V ${offset}
@@ -55,16 +52,13 @@ export default class Arrow {
             l 5 5
             l -5 5`;
 
-        if (
-            this.to_task.$bar.getX() <
-            this.from_task.$bar.getX() + this.gantt.options.padding
-        ) {
-            const down_1 = this.gantt.options.padding / 2 - curve;
+        if (this.to_task.$bar.getX() < this.from_task.$bar.getX() + padding) {
+            const down_1 = padding / 2 - curve;
             const down_2 =
                 this.to_task.$bar.getY() +
                 this.to_task.$bar.getHeight() / 2 -
                 curve_y;
-            const left = this.to_task.$bar.getX() - this.gantt.options.padding;
+            const left = this.to_task.$bar.getX() - padding;
 
             this.path = `
                 M ${start_x} ${start_y}

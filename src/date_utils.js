@@ -6,11 +6,12 @@ const MINUTE = 'minute';
 const SECOND = 'second';
 const MILLISECOND = 'millisecond';
 
-export default {
+const utils = {
     parse(date, date_separator = '-', time_separator = /[.:]/) {
         if (date instanceof Date) {
             return date;
         }
+
         if (typeof date === 'string') {
             let date_parts, time_parts;
             const parts = date.split(' ');
@@ -30,6 +31,7 @@ export default {
                     time_parts[3] = '0.' + time_parts[3];
                     time_parts[3] = parseFloat(time_parts[3]) * 1000;
                 }
+
                 vals = vals.concat(time_parts);
             }
 
@@ -41,6 +43,7 @@ export default {
         if (!(date instanceof Date)) {
             throw new TypeError('Invalid argument type');
         }
+
         const vals = this.get_date_values(date).map((val, i) => {
             if (i === 1) {
                 // add 1 for month
@@ -48,11 +51,12 @@ export default {
             }
 
             if (i === 6) {
-                return padStart(val + '', 3, '0');
+                return utils.padStart(val + '', 3, '0');
             }
 
-            return padStart(val + '', 2, '0');
+            return utils.padStart(val + '', 2, '0');
         });
+
         const date_string = `${vals[0]}-${vals[1]}-${vals[2]}`;
         const time_string = `${vals[3]}:${vals[4]}:${vals[5]}.${vals[6]}`;
 
@@ -69,10 +73,13 @@ export default {
         const month_name_capitalized =
             month_name.charAt(0).toUpperCase() + month_name.slice(1);
 
-        const values = this.get_date_values(date).map((d) => padStart(d, 2, 0));
+        const values = this.get_date_values(date).map((d) =>
+            utils.padStart(d, 2, 0)
+        );
+
         const format_map = {
             YYYY: values[0],
-            MM: padStart(+values[1] + 1, 2, 0),
+            MM: utils.padStart(+values[1] + 1, 2, 0),
             DD: values[2],
             HH: values[3],
             mm: values[4],
@@ -84,6 +91,7 @@ export default {
         };
 
         let str = format_string;
+
         const formatted_values = [];
 
         Object.keys(format_map)
@@ -132,6 +140,7 @@ export default {
 
     today() {
         const vals = this.get_date_values(new Date()).slice(0, 3);
+
         return new Date(...vals);
     },
 
@@ -141,6 +150,7 @@ export default {
 
     add(date, qty, scale) {
         qty = parseInt(qty, 10);
+
         const vals = [
             date.getFullYear() + (scale === YEAR ? qty : 0),
             date.getMonth() + (scale === MONTH ? qty : 0),
@@ -150,6 +160,7 @@ export default {
             date.getSeconds() + (scale === SECOND ? qty : 0),
             date.getMilliseconds() + (scale === MILLISECOND ? qty : 0),
         ];
+
         return new Date(...vals);
     },
 
@@ -209,25 +220,33 @@ export default {
 
         // Feb
         const year = date.getFullYear();
+
         if ((year % 4 == 0 && year % 100 != 0) || year % 400 == 0) {
             return 29;
         }
+
         return 28;
+    },
+
+    padStart(str, targetLength, padString) {
+        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/padStart
+
+        str = str + '';
+        targetLength = targetLength >> 0;
+        padString = String(typeof padString !== 'undefined' ? padString : ' ');
+
+        if (str.length > targetLength) {
+            return String(str);
+        } else {
+            targetLength = targetLength - str.length;
+
+            if (targetLength > padString.length) {
+                padString += padString.repeat(targetLength / padString.length);
+            }
+
+            return padString.slice(0, targetLength) + String(str);
+        }
     },
 };
 
-// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/padStart
-function padStart(str, targetLength, padString) {
-    str = str + '';
-    targetLength = targetLength >> 0;
-    padString = String(typeof padString !== 'undefined' ? padString : ' ');
-    if (str.length > targetLength) {
-        return String(str);
-    } else {
-        targetLength = targetLength - str.length;
-        if (targetLength > padString.length) {
-            padString += padString.repeat(targetLength / padString.length);
-        }
-        return padString.slice(0, targetLength) + String(str);
-    }
-}
+export default utils;

@@ -6,6 +6,7 @@ export function $(expr, con) {
 
 export function createSVG(tag, attrs) {
     const elem = document.createElementNS('http://www.w3.org/2000/svg', tag);
+
     for (let attr in attrs) {
         if (attr === 'append_to') {
             const parent = attrs.append_to;
@@ -18,6 +19,7 @@ export function createSVG(tag, attrs) {
             elem.setAttribute(attr, attrs[attr]);
         }
     }
+
     return elem;
 }
 
@@ -28,6 +30,7 @@ export function animateSVG(svgElement, attr, from, to) {
         // triggered 2nd time programmatically
         // trigger artificial click event
         const event = document.createEvent('HTMLEvents');
+
         event.initEvent('click', true, true);
         event.eventName = 'click';
         animatedSvgElement.dispatchEvent(event);
@@ -43,6 +46,7 @@ function getAnimationElement(
     begin = '0.1s'
 ) {
     const animEl = svgElement.querySelector('animate');
+
     if (animEl) {
         $.attr(animEl, {
             attributeName: attr,
@@ -65,6 +69,7 @@ function getAnimationElement(
         keyTimes: '0; 1',
         keySplines: cubic_bezier('ease-out'),
     });
+
     svgElement.appendChild(animateElement);
 
     return svgElement;
@@ -83,6 +88,7 @@ function cubic_bezier(name) {
 $.on = (element, event, selector, callback) => {
     if (!callback) {
         callback = selector;
+
         $.bind(element, event, callback);
     } else {
         $.delegate(element, event, selector, callback);
@@ -102,6 +108,7 @@ $.bind = (element, event, callback) => {
 $.delegate = (element, event, selector, callback) => {
     element.addEventListener(event, function (e) {
         const delegatedTarget = e.target.closest(selector);
+
         if (delegatedTarget) {
             e.delegatedTarget = delegatedTarget;
             callback.call(this, e, delegatedTarget);
@@ -128,6 +135,7 @@ $.attr = (element, attr, value) => {
         for (let key in attr) {
             $.attr(element, key, attr[key]);
         }
+
         return;
     }
 
