@@ -196,6 +196,7 @@ export default class Bar {
             rx: this.corner_radius,
             ry: this.corner_radius,
             class: 'handle right',
+            fill: this.gantt.options.handle_bar_color,
             append_to: this.handle_group,
         });
 
@@ -207,6 +208,7 @@ export default class Bar {
             rx: this.corner_radius,
             ry: this.corner_radius,
             class: 'handle left',
+            fill: this.gantt.options.handle_bar_color,
             append_to: this.handle_group,
         });
 
@@ -214,6 +216,7 @@ export default class Bar {
             this.$handle_progress = createSVG('polygon', {
                 points: this.get_progress_polygon_points().join(','),
                 class: 'handle progress',
+                fill: this.gantt.options.handle_progress_color,
                 append_to: this.handle_group,
             });
         }
@@ -229,7 +232,7 @@ export default class Bar {
                   bar_progress.getEndX() + 5,
                   bar_progress.getY() + bar_progress.getHeight(),
                   bar_progress.getEndX(),
-                  bar_progress.getY() + bar_progress.getHeight() - 8.66,
+                  bar_progress.getY() + bar_progress.getHeight() - 12.66,
               ]
             : [];
     }
