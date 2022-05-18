@@ -1,21 +1,30 @@
 <div align="center">
-    <img src="https://github.com/frappe/design/blob/master/logos/logo-2019/frappe-gantt-logo.png" height="128">
-    <h2>Frappe Gantt</h2>
-    <p align="center">
-        <p>A simple, interactive, modern gantt chart library for the web</p>
-        <a href="https://frappe.github.io/gantt">
-            <b>View the demo »</b>
-        </a>
-    </p>
+    <h2 align="center">Frappe Gantt customized</h2>
+    <p>A simple, interactive, modern gantt chart library for the web</p>
+    <img src="./gantt v1.0.png" />
+    <br /><br />
 </div>
 
-<p align="center">
+<div align="center">
+    <h4>Frappe Gantt</h4>
+    <p align="center"> 
+        <a href="https://frappe.github.io/gantt">
+            <b>View the demo (frappe version) »</b>
+        </a>
+    </p>
     <a href="https://frappe.github.io/gantt">
         <img src="https://cloud.githubusercontent.com/assets/9355208/21537921/4a38b194-cdbd-11e6-8110-e0da19678a6d.png">
     </a>
-</p>
+     <br /><br /><br /><br />
+</div>
 
-### Install
+### Install (my version)
+
+```
+npm install github.com/Kahuecosta/gantt
+```
+
+### Install (frappe version)
 
 ```
 npm install frappe-gantt
