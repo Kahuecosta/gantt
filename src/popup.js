@@ -1,8 +1,8 @@
 export default class Popup {
-    constructor(parent, custom_html, container_height) {
+    constructor(parent, custom_html, container) {
         this.parent = parent;
         this.custom_html = custom_html;
-        this.container_height = container_height;
+        this.container = container;
 
         this.make();
     }
@@ -67,14 +67,16 @@ export default class Popup {
             this.pointer.style.top = '2px';
         }
 
-        const bottom = position_meta.y + this.parent.clientHeight;
+        const bottom = position_meta.y + this.parent.scrollHeight;
 
         let top = position_meta.y;
 
-        if (bottom > this.container_height) {
-            top -= bottom - this.container_height + 5;
+        if (bottom > this.container.scrollHeight) {
+            top -= bottom - this.container.scrollHeight + 5;
 
-            this.pointer.style.top = `${bottom - this.container_height + 7}px`;
+            this.pointer.style.top = `${
+                bottom - this.container.scrollHeight + 7
+            }px`;
         }
 
         this.parent.style.top = `${top}px`;

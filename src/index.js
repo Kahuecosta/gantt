@@ -1614,7 +1614,7 @@ export default class Gantt {
             this.popup = new Popup(
                 this.popup_wrapper,
                 this.options.custom_popup_html,
-                this.$container.clientHeight
+                this.$container
             );
         }
 
