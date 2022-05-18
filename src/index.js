@@ -6,12 +6,24 @@ import Popup from './popup';
 import VIEW_MODE from './view_mode';
 import './gantt.scss';
 
+const RESPONSABLE_DEFAULT_ID = 0;
+const RESPONSABLE_TYPES = {
+    DEFAULT: 'default',
+    NAME: 'name',
+};
+
+const RESPONSABLE_TYPES_ARR = [
+    RESPONSABLE_TYPES.DEFAULT,
+    RESPONSABLE_TYPES.NAME,
+];
+
 export default class Gantt {
-    constructor(wrapper, workItems, workItemTypes, options) {
+    constructor(wrapper, workItems, workItemTypes, responsables = [], options) {
         this.VIEW_MODE = VIEW_MODE;
 
         this.setup_wrapper(wrapper);
         this.setup_options(options);
+        this.setup_responsables(responsables);
         this.setup_workItem_types(workItemTypes);
         this.setup_tasks(workItems);
 
@@ -99,9 +111,30 @@ export default class Gantt {
             resource_enable: false,
             resource_title: 'Tasks',
             resource_width: 250,
+            responsables_enable: false,
+            responsables_sort_by: 'default', // 'default' - 'name'
+            responsables_default_name: 'Não atribuido',
+            responsables_default_photo:
+                './images-example/responsable-default.png',
         };
 
         this.options = Object.assign({}, default_options, options);
+    }
+
+    setup_responsables(responsables) {
+        if (this.options.responsables_enable) {
+            this.responsables = responsables;
+
+            this.sort_responsables();
+
+            this.responsables.push({
+                id: RESPONSABLE_DEFAULT_ID,
+                name: this.options.responsables_default_name,
+                photo: this.options.responsables_default_photo,
+            });
+        } else {
+            this.responsables = [];
+        }
     }
 
     setup_workItem_types(workItemTypes) {
@@ -113,11 +146,98 @@ export default class Gantt {
         }, {});
     }
 
+    sort_responsables() {
+        const { responsables_sort_by } = this.options;
+
+        if (!RESPONSABLE_TYPES_ARR.includes(responsables_sort_by)) {
+            throw new TypeError('The responsables_sort_by is invalid!');
+        }
+
+        if (responsables_sort_by === RESPONSABLE_TYPES.DEFAULT) {
+        }
+
+        if (responsables_sort_by === RESPONSABLE_TYPES.NAME) {
+            this.responsables = responsables.sort((a, b) => {
+                if (a.name > b.name) return 1;
+
+                if (a.name < b.name) return -1;
+
+                return 0;
+            });
+        }
+    }
+
+    sort_tasks_by_responsable(tasks) {
+        if (!this.options.responsables_enable) {
+            return tasks;
+        }
+
+        let ordened_tasks = [];
+
+        this.responsables.forEach((responsable) => {
+            const list_tasks = tasks.filter(
+                (task) => task.responsable_id === responsable.id
+            );
+
+            ordened_tasks = [...ordened_tasks, ...list_tasks];
+        });
+
+        return ordened_tasks;
+    }
+
+    set_task_index_by_responsable() {
+        let index = 0;
+
+        this.resource_tree.forEach((item) => {
+            if (item.type === 'responsable') {
+                index++;
+            } else {
+                const task = this.get_task(item.task_id);
+
+                task._index = index;
+
+                index++;
+            }
+        });
+    }
+
+    set_resource_tree() {
+        this.resource_tree = [];
+
+        if (!this.options.responsables_enable) {
+            this.resource_tree = this.tasks.map((task) => ({
+                type: 'task',
+                task_id: task.id,
+            }));
+
+            return;
+        }
+
+        this.responsables.forEach((responsable) => {
+            this.resource_tree.push({
+                type: 'responsable',
+                responsable_id: responsable.id,
+                responsable_name: responsable.name,
+                responsable_photo: responsable.photo,
+            });
+
+            this.tasks
+                .filter((task) => task.responsable_id === responsable.id)
+                .forEach((task) => {
+                    this.resource_tree.push({
+                        type: 'task',
+                        task_id: task.id,
+                        responsable_id: responsable.id,
+                    });
+                });
+        });
+    }
+
     setup_tasks(tasks) {
         this.task_map = {};
 
         // prepare tasks
-        this.tasks = tasks.map((task, i) => {
+        const tasks_map = tasks.map((task, i) => {
             // convert to Date objects
             task._start = date_utils.parse(task.start);
             task._end = date_utils.parse(task.end);
@@ -187,10 +307,32 @@ export default class Gantt {
                 task._type = this.workItemTypes[task.type_id];
             }
 
+            // workItem responsable
+            if (
+                typeof task.responsable_id !== 'undefined' &&
+                this.responsables.hasOwnProperty(task.responsable_id)
+            ) {
+                task._responsable = this.responsables.find(
+                    (item) => item.id === task.responsable_id
+                );
+            }
+
+            if (!task._responsable) {
+                task.responsable_id = RESPONSABLE_DEFAULT_ID;
+                task._responsable =
+                    this.responsables[this.responsables.length - 1];
+            }
+
             this.task_map[task.id] = task;
 
             return task;
         });
+
+        this.tasks = this.sort_tasks_by_responsable(tasks_map);
+
+        this.set_resource_tree();
+
+        this.set_task_index_by_responsable();
 
         this.setup_dependencies();
     }
@@ -412,7 +554,7 @@ export default class Gantt {
 
         this.resource_grid_layer = [];
         this.resource_line_grid_layer = [];
-        this.resource_task_title_list = [];
+        this.resource_item_title_list = [];
 
         const grid_layer = createSVG('g', { append_to: this.layers.resource });
         const text_layer = createSVG('g', { append_to: this.layers.resource });
@@ -475,8 +617,28 @@ export default class Gantt {
             });
         }
 
-        // reouse name
-        for (let task of this.tasks) {
+        this.resource_tree.forEach((tree) => {
+            let item;
+
+            if (tree.type === 'responsable') {
+                item = {
+                    name: tree.responsable_name,
+                    photo: tree.responsable_photo,
+                    responsable_id: tree.responsable_id,
+                    is_responsable: true,
+                };
+            } else {
+                item = this.get_task(tree.task_id);
+            }
+
+            this.make_resource_text(
+                item,
+                row_y,
+                row_width,
+                row_height,
+                text_layer
+            );
+
             const task_grid_layer = createSVG('rect', {
                 x: 0,
                 y: row_y,
@@ -485,14 +647,6 @@ export default class Gantt {
                 class: 'grid-row',
                 append_to: grid_layer,
             });
-
-            this.make_resource_text(
-                task,
-                row_y,
-                row_width,
-                row_height,
-                text_layer
-            );
 
             const line_grid_layer = createSVG('line', {
                 x1: 0,
@@ -507,20 +661,82 @@ export default class Gantt {
             this.resource_line_grid_layer.push(line_grid_layer);
 
             row_y += this.options.bar_height + this.options.padding;
-        }
+        });
     }
 
-    make_resource_text(task, row_y, row_width, row_height, text_layer) {
-        const type = this.workItemTypes[task.type_id];
-
+    make_resource_text(item, row_y, row_width, row_height, text_layer) {
         const elY = row_y + row_height / 2 + 5;
 
         let elX = 10;
         let padding = 30;
 
-        if (type && type.icon) {
+        if (this.options.responsables_enable && !item.is_responsable) {
+            elX += 10;
+        }
+
+        const type = this.workItemTypes[item.type_id];
+
+        if (type) {
+            this.make_resource_workitem_type(type, text_layer, elY, elX);
+
+            elX += 20;
+            padding += 12;
+        }
+
+        if (this.options.responsables_enable && item.is_responsable) {
+            this.make_resource_responsable_photo(item.photo, text_layer, elY);
+
+            elX += 20;
+            padding += 12;
+        }
+
+        const item_title_css = item.is_responsable
+            ? 'resource-text -responsable'
+            : 'resource-text -task';
+
+        const item_title = createSVG('text', {
+            x: elX,
+            y: elY,
+            'data-id': item.id,
+            class: item_title_css,
+            append_to: text_layer,
+        });
+
+        this.resource_item_title_list.push({
+            element: item_title,
+            row_width,
+            padding,
+            name: item.name,
+        });
+
+        this.text_ellipsis(item_title, item.name, row_width - padding);
+    }
+
+    html_avatar(photo, w, y) {
+        const avatar = `<img class="avatar" src="${photo}" width="${w}px" height="${y}px" />`;
+
+        return avatar;
+    }
+
+    make_resource_responsable_photo(photo, text_layer, elY) {
+        if (!photo) return;
+
+        const img_wh = 18;
+
+        createSVG('foreignObject', {
+            x: 8,
+            y: elY - 14,
+            width: img_wh,
+            height: img_wh,
+            append_to: text_layer,
+            innerHTML: this.html_avatar(photo, img_wh, img_wh),
+        });
+    }
+
+    make_resource_workitem_type(type, text_layer, elY, elX = 8) {
+        if (type.icon) {
             createSVG('image', {
-                x: 8,
+                x: elX,
                 y: elY - 12,
                 width: 14,
                 height: 14,
@@ -529,12 +745,9 @@ export default class Gantt {
                 clipPath: 'clip_' + type.id,
                 append_to: text_layer,
             });
-
-            elX = 30;
-            padding = 48;
-        } else if (type && type.color) {
+        } else if (type.color) {
             createSVG('rect', {
-                x: 8,
+                x: elX,
                 y: elY - 12,
                 rx: 2,
                 ry: 2,
@@ -544,30 +757,10 @@ export default class Gantt {
                 style: `fill:${type.color || '#000000'}`,
                 append_to: text_layer,
             });
-
-            elX = 30;
-            padding = 48;
         }
-
-        const task_title = createSVG('text', {
-            x: elX,
-            y: elY,
-            'data-id': task.id,
-            class: 'resource-text',
-            append_to: text_layer,
-        });
-
-        this.resource_task_title_list.push({
-            element: task_title,
-            row_width,
-            padding,
-            name: task.name,
-        });
-
-        this.textEllipsis(task_title, task.name, row_width - padding);
     }
 
-    textEllipsis(el, text, width) {
+    text_ellipsis(el, text, width) {
         if (typeof el.getSubStringLength !== 'undefined') {
             el.innerHTML = text;
             let len = text.length;
@@ -602,11 +795,14 @@ export default class Gantt {
         const grid_width =
             this.resource_width + this.dates.length * this.options.column_width;
 
+        const bar_height_padding =
+            this.options.bar_height + this.options.padding;
+
         const grid_height =
             this.options.header_height +
             this.options.padding +
-            (this.options.bar_height + this.options.padding) *
-                this.tasks.length;
+            bar_height_padding * this.tasks.length +
+            bar_height_padding * this.responsables.length;
 
         createSVG('rect', {
             x: 0,
@@ -626,17 +822,22 @@ export default class Gantt {
     }
 
     make_grid_rows() {
+        const { column_width, header_height, bar_height, padding } =
+            this.options;
+
         const rows_layer = createSVG('g', { append_to: this.layers.grid });
         const lines_layer = createSVG('g', { append_to: this.layers.grid });
 
         const row_width =
-            this.resource_width + this.dates.length * this.options.column_width;
+            this.resource_width + this.dates.length * column_width;
 
-        const row_height = this.options.bar_height + this.options.padding;
+        const row_height = bar_height + padding;
 
-        let row_y = this.options.header_height + this.options.padding / 2;
+        const total_rows = this.tasks.length + this.responsables.length;
 
-        for (let task of this.tasks) {
+        let row_y = header_height + padding / 2;
+
+        for (let i = 0; i < total_rows; i++) {
             createSVG('rect', {
                 x: this.resource_width,
                 y: row_y,
@@ -655,7 +856,7 @@ export default class Gantt {
                 append_to: lines_layer,
             });
 
-            row_y += this.options.bar_height + this.options.padding;
+            row_y += row_height;
         }
     }
 
@@ -1198,14 +1399,16 @@ export default class Gantt {
         let x_on_start;
         let $resource_resize = null;
 
-        $.on(this.$svg, 'click', '.resource-text', (event, element) => {
+        $.on(this.$svg, 'click', '.resource-text.-task', (event, element) => {
             this.hide_popup();
 
             const id = element.getAttribute('data-id');
 
             const bar = this.get_bar(id);
 
-            const left = bar.x - (this.resource_width + 50);
+            const grid_row_width = this.resource_grid_row.getWidth();
+
+            const left = bar.x - (grid_row_width + 50);
 
             this.$container.scrollTo(left, this.$container.scrollTop);
         });
@@ -1248,12 +1451,12 @@ export default class Gantt {
                     x.setAttribute('width', posX + 8);
                 });
 
-                this.resource_task_title_list.forEach((x) => {
+                this.resource_item_title_list.forEach((x) => {
                     const { element, padding, name } = x;
 
                     element.setAttribute('width', posX + 8);
 
-                    this.textEllipsis(element, name, posX - padding);
+                    this.text_ellipsis(element, name, posX - padding);
                 });
             });
 
