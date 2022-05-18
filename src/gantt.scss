@@ -156,9 +156,14 @@ $handle-color: #ddd !default;
 		font-size: 12px;
 		text-anchor: start;
 
-		&:hover {
+		&.-task:hover {
 			cursor: pointer;
 			text-decoration: underline;
+		}
+
+		&.-responsable {
+			font-size: 13px;
+			font-weight: bold;
 		}
 	}
 	
@@ -167,9 +172,13 @@ $handle-color: #ddd !default;
 	}
 }
 
+.avatar {
+	border-radius: 50%;
+}
+
 .gantt-container {
 	position: relative;
-	overflow: auto hidden;
+	overflow: auto;
 	font-size: 12px;
 
 	.popup-wrapper {

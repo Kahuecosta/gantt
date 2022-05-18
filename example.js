@@ -1,34 +1,50 @@
+const responsables = [
+    {
+        id: 1,
+        name: 'José Santos Oliveira Rodrigues',
+        photo: './images-example/responsable-1.jpg',
+    },
+    {
+        id: 2,
+        name: 'Roberta Souza de Melo',
+        photo: './images-example/responsable-default.png',
+    },
+];
+
 const workitems = [
     {
         start: '2018-10-01',
         end: '2018-10-08',
-        name: 'Criação dos processos de RH do cliente Santa Clara',
+        name: 'Lorem ipsum dolor sit amet',
         id: 'Task 0',
         type_id: 'hotfix',
+        responsable_id: 2,
         progress: 20,
     },
     {
         start: '2018-10-03',
         end: '2018-10-06',
-        name: 'Write new content',
+        name: 'Nulla aliquam egestas velit posuere commodo',
         id: 'Task 1',
         type_id: 'task',
+        responsable_id: 1,
         progress: 5,
         dependencies: 'Task 0',
     },
     {
         start: '2018-10-04',
         end: '2018-10-08',
-        name: 'Apply new styles',
+        name: 'Duis nec ornare massa. Vestibulum at consectetur arcu',
         id: 'Task 2',
         type_id: 'task',
+        responsable_id: 1,
         progress: 10,
         dependencies: 'Task 1',
     },
     {
         start: '2018-10-08',
         end: '2018-10-09',
-        name: 'Review',
+        name: 'Aenean maximus, odio sed rhoncus vulputate',
         id: 'Task 3',
         type_id: 'debit',
         progress: 5,
@@ -38,9 +54,10 @@ const workitems = [
     {
         start: '2018-10-08',
         end: '2018-10-10',
-        name: 'Deploy',
+        name: 'Curabitur venenatis ac lorem sed imperdiet',
         id: 'Task 4',
         type_id: 'debit',
+        responsable_id: 1,
         progress: 0,
         dependencies: 'Task 2',
     },
@@ -48,7 +65,7 @@ const workitems = [
         start: '2018-10-11',
         //end: '2018-10-11',
         duration: 2,
-        name: 'Go Live!',
+        name: 'Quisque porta justo fringilla quam euismod, eu semper libero viverra',
         id: 'Task 5',
         type_id: 'debit',
         progress: 0,
@@ -58,9 +75,10 @@ const workitems = [
     {
         start: '2018-10-11',
         end: '2018-10-25',
-        name: 'Header Stick!',
+        name: 'Maecenas augue nulla, luctus id rutrum at, efficitur id quam!',
         id: 'Task_6',
         type_id: 'epic',
+        responsable_id: 1,
         progress: 0,
         dependencies: '',
         custom_class: 'bar-milestone',
@@ -70,8 +88,9 @@ const workitems = [
     {
         start: '2018-10-11',
         end: '2018-10-20',
-        name: 'Correção no módulo de impresão de PDF',
+        name: 'Etiam at suscipit ipsum, sollicitudin efficitur purus',
         id: 'Task_7',
+        responsable_id: 1,
         progress: 0,
         dependencies: 'Task_0',
         custom_class: 'bar-milestone',
@@ -86,20 +105,20 @@ const workItemTypes = [
         name: 'Hotfix',
         bar_class: 'bar-hotfix',
         color: '#e27d02',
-        icon: './icons/icon-1.png',
+        icon: './images-example/icon-1.png',
     },
     {
         id: 'task',
         name: 'Task',
         bar_class: 'bar-task',
         color: '#0758b3',
-        icon: './icons/icon-2.png',
+        icon: './images-example/icon-2.png',
     },
     {
         id: 'debit',
         name: 'Débito Técnico',
         bar_class: 'bar-debit',
-        icon: './icons/icon-3.png',
+        icon: './images-example/icon-3.png',
     },
     {
         id: 'epic',
@@ -143,6 +162,16 @@ const options = {
     resource_enable: true,
     resource_title: 'Tarefas',
     resource_width: 250,
+    responsables_enable: true,
+    responsables_sort_by: 'name', // 'default' - 'name'
+    responsables_default_name: 'Não atribuido',
+    responsables_default_photo: './images-example/responsable-default.png',
 };
 
-const gantt = new Gantt('.gantt-target', workitems, workItemTypes, options);
+const gantt = new Gantt(
+    '.gantt-target',
+    workitems,
+    workItemTypes,
+    responsables,
+    options
+);

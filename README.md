@@ -33,12 +33,26 @@ Include it in your HTML:
 And start hacking:
 
 ```js
+const responsables = [
+    {
+        id: 1,
+        name: 'Kahuê Costa',
+        photo: './images-example/responsable-1.jpg',
+    },
+    {
+        id: 2,
+        name: 'João Silva',
+        photo: './images-example/responsable-default.png',
+    },
+];
+
 const workitems = [
   {
     id: 'Task 1',
     name: 'Redesign website',
     start: '2016-12-28',
     end: '2016-12-31',
+    responsable_id: 1,
     progress: 20,
     dependencies: 'Task 2, Task 3',
     custom_class: 'bar-milestone' // optional
@@ -55,7 +69,7 @@ const workItemTypes = [
     },
 ];
 
-const gantt = new Gantt("#gantt", workitems, workItemTypes);
+const gantt = new Gantt("#gantt", workitems, workItemTypes, responsables);
 ```
 
 You can also pass various options to the Gantt constructor:
@@ -92,9 +106,19 @@ const options = {
     resource_enable: true,
     resource_title: 'Tasks',
     resource_width: 250,
+    responsables_enable: true,
+    responsables_sort_by: 'default', // 'default' - 'name'
+    responsables_default_name: 'Não atribuido',
+    responsables_default_photo: './images-example/responsable-default.png',
 };
 
-const gantt = new Gantt('#gantt', workitems, workItemTypes, options);
+const gantt = new Gantt(
+    '#gantt',
+    workitems,
+    workItemTypes,
+    responsables,
+    options
+);
 ```
 
 ### Contributing
