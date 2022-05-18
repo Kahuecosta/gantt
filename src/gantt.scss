@@ -97,7 +97,6 @@ $handle-color: #ddd !default;
 	}
 
 	.handle {
-		fill: $handle-color;
 		cursor: ew-resize;
 		opacity: 0;
 		visibility: hidden;

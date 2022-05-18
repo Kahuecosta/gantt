@@ -201,6 +201,8 @@ const options = {
     horizontal_auto_scroll_labels: false,
     is_draggable: true,
     bar_height: 22,
+    handle_bar_color: '#752f00',
+    handle_progress_color: '#752f00',
     resource_resize_enable: true,
     resource_fixed: true,
     resource_enable: true,
