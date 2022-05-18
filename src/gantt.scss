@@ -1,33 +1,47 @@
-$bar-color: #b8c2cc !default;
-$bar-stroke: #8D99A6 !default;
+$bar-color: #dddee0 !default;
+$bar-stroke: #b2b6ba !default;
 $border-color: #e0e0e0 !default;
-$light-bg: #f5f5f5 !default;
-$light-border-color: #ebeff2 !default;
+$light-bg: #f9f9f9 !default;
+$light-border-color: #f9f9f9 !default;
 $light-yellow: #fcf8e3 !default;
 $text-muted: #666 !default;
 $text-light: #555 !default;
 $text-color: #333 !default;
 $primary: #F2711C !default;
-$handle-color: #ddd !default;
 
-.gantt {
+$max-height: calc(100vh - 100px);
+
+.gantt-wrapper {
+	width: calc(100% - 20px);
+	margin: 0;
+	border: 1px solid $border-color;
+}
+
+.gantt-svg {
+	margin-top: -1px;
+
 	.grid-background {
 		fill: none;
 	}
+
 	.grid-header {
 		fill: #ffffff;
 		stroke: $border-color;
 		stroke-width: 1.4;
 	}
+	
 	.grid-row {
 		fill: #ffffff;
 	}
+	
 	.grid-row:nth-child(even) {
 		fill: $light-bg;
 	}
+	
 	.row-line {
 		stroke: $light-border-color;
 	}
+	
 	.resource-resize {
 		outline: none;
 		user-select: none;
@@ -38,26 +52,34 @@ $handle-color: #ddd !default;
 			opacity: 1;
 		}
 	}
+
 	.resource-line {
 		stroke: #e0e0e0;
     	stroke-width: 1;
 	}
+	
 	.tick {
 		stroke: $border-color;
 		stroke-width: 0.2;
+		
 		&.thick {
 			stroke-width: 0.4;
 		}
 	}
+	
 	.today-highlight {
-		fill: $light-yellow;
-		opacity: 0.5;
+		fill: $primary;
+		opacity: 0.06;
 	}
 
 	.arrow {
 		fill: none;
 		stroke: $text-muted;
 		stroke-width: 1.4;
+
+		path:hover, path.active {
+			stroke: $primary;
+		}
 	}
 
 	.bar {
@@ -67,9 +89,11 @@ $handle-color: #ddd !default;
 		transition: stroke-width .3s ease;
 		user-select: none;
 	}
+
 	.bar-progress {
 		fill: $primary;
 	}
+
 	.bar-invalid {
 		fill: transparent;
 		stroke: $bar-stroke;
@@ -80,6 +104,7 @@ $handle-color: #ddd !default;
 			fill: $text-light;
 		}
 	}
+
 	.bar-label {
 		fill: #fff;
 		dominant-baseline: central;
@@ -137,20 +162,25 @@ $handle-color: #ddd !default;
 		font-size: 12px;
 		text-anchor: middle;
 	}
+
 	.upper-text {
 		fill: $text-light;
 	}
+
 	.lower-text {
 		fill: $text-color;
 	}
+
 	.header-text {
 		font-size: 1.2em;
 		text-anchor: start;
 	}
+
 	.resource-title {
 		font-weight: 600;
 		letter-spacing: 0.05em;
 	}
+
 	.resource-text {
 		font-size: 12px;
 		text-anchor: start;
@@ -165,20 +195,21 @@ $handle-color: #ddd !default;
 			font-weight: bold;
 		}
 	}
+
+	.avatar {
+		border-radius: 50%;
+	}
 	
 	.hide {
 		display: none;
 	}
 }
 
-.avatar {
-	border-radius: 50%;
-}
-
 .gantt-container {
 	position: relative;
 	overflow: auto;
 	font-size: 12px;
+	max-height: $max-height;
 
 	.popup-wrapper {
 		position: absolute;
