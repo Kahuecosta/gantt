@@ -118,6 +118,7 @@ export default class Gantt {
             responsables_default_name: 'Não atribuido',
             responsables_default_photo:
                 './images-example/responsable-default.png',
+            rows_alternate_background: true,
         };
 
         this.options = Object.assign({}, default_options, options);
@@ -829,8 +830,13 @@ export default class Gantt {
     }
 
     make_grid_rows() {
-        const { column_width, header_height, bar_height, padding } =
-            this.options;
+        const {
+            column_width,
+            header_height,
+            bar_height,
+            padding,
+            rows_alternate_background,
+        } = this.options;
 
         const rows_layer = createSVG('g', { append_to: this.layers.grid });
         const lines_layer = createSVG('g', { append_to: this.layers.grid });
@@ -844,13 +850,17 @@ export default class Gantt {
 
         let row_y = header_height + padding / 2;
 
+        const grid_row_class = rows_alternate_background
+            ? 'grid-row -alt-bg'
+            : 'grid-row';
+
         for (let i = 0; i < total_rows; i++) {
             createSVG('rect', {
                 x: this.resource_width,
                 y: row_y,
                 width: row_width,
                 height: row_height,
-                class: 'grid-row',
+                class: grid_row_class,
                 append_to: rows_layer,
             });
 

@@ -32,10 +32,10 @@ $max-height: calc(100vh - 100px);
 	
 	.grid-row {
 		fill: #ffffff;
-	}
-	
-	.grid-row:nth-child(even) {
-		fill: $light-bg;
+
+		&.-alt-bg:nth-child(even) {
+			fill: $light-bg;
+		}
 	}
 	
 	.row-line {
