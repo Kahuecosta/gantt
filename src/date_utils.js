@@ -63,12 +63,18 @@ const utils = {
         return date_string + (with_time ? ' ' + time_string : '');
     },
 
-    format(date, format_string = 'YYYY-MM-DD HH:mm:ss.SSS', lang = 'en') {
-        const dateTimeFormat = new Intl.DateTimeFormat(lang, {
-            month: 'long',
-        });
+    date_format(date, lang, options) {
+        const dateTimeFormat = new Intl.DateTimeFormat(lang, options);
 
-        const month_name = dateTimeFormat.format(date);
+        const format = dateTimeFormat.format(date);
+
+        return format;
+    },
+
+    format(date, format_string = 'YYYY-MM-DD HH:mm:ss.SSS', lang = 'en') {
+        const month_name = this.date_format(date, lang, { month: 'long' });
+
+        const wday_name = this.date_format(date, lang, { weekday: 'short' });
 
         const month_name_capitalized =
             month_name.charAt(0).toUpperCase() + month_name.slice(1);
@@ -88,6 +94,7 @@ const utils = {
             D: values[2],
             MMMM: month_name_capitalized,
             MMM: month_name_capitalized,
+            ddd: wday_name.replace('.', ''),
         };
 
         let str = format_string;

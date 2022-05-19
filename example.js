@@ -25,6 +25,7 @@ const workitems = [
         type_id: 'hotfix',
         responsable_id: 2,
         progress: 20,
+        bar_color: '#E2445C',
     },
     {
         start: getDate(3),
@@ -34,6 +35,7 @@ const workitems = [
         type_id: 'task',
         responsable_id: 1,
         progress: 5,
+        bar_color: '#FDAB3D',
         dependencies: 'Task 0',
     },
     {
@@ -45,6 +47,7 @@ const workitems = [
         responsable_id: 1,
         progress: 10,
         dependencies: 'Task 1',
+        bar_color: '#FDAB3D',
     },
     {
         start: getDate(8),
@@ -54,7 +57,7 @@ const workitems = [
         type_id: 'debit',
         progress: 5,
         dependencies: 'Task 2',
-        custom_class: 'bar-milestone',
+        bar_color: '#579BFC',
     },
     {
         start: getDate(8),
@@ -63,6 +66,7 @@ const workitems = [
         id: 'Task 4',
         type_id: 'debit',
         responsable_id: 1,
+        bar_color: '#FDAB3D',
         progress: 0,
         dependencies: 'Task 2',
     },
@@ -74,7 +78,7 @@ const workitems = [
         type_id: 'debit',
         progress: 0,
         dependencies: 'Task 4',
-        custom_class: 'bar-milestone',
+        bar_color: '#579BFC',
     },
     {
         start: getDate(11),
@@ -83,9 +87,9 @@ const workitems = [
         id: 'Task_6',
         type_id: 'epic',
         responsable_id: 1,
-        progress: 0,
+        progress: 20,
         dependencies: '',
-        custom_class: 'bar-milestone',
+        bar_color: '#9CD326',
         thumbnail:
             'https://www.clipartmax.com/png/middle/85-851687_campfire-icon-14-icon-success-error.png',
     },
@@ -97,7 +101,7 @@ const workitems = [
         responsable_id: 1,
         progress: 0,
         dependencies: 'Task_0',
-        custom_class: 'bar-milestone',
+        bar_color: '#E2445C',
         thumbnail:
             'https://image.similarpng.com/very-thumbnail/2021/06/Attention-sign-icon.png',
     },
@@ -107,6 +111,7 @@ const workitems = [
         name: 'Ut at mi dictum, bibendum augue quis, sagittis nisi',
         id: 'Task 9',
         type_id: 'debit',
+        bar_color: '#579BFC',
         progress: 10,
     },
     {
@@ -115,7 +120,7 @@ const workitems = [
         name: 'Cras eget ornare leo, non congue leo. Aenean porttitor rutrum enim tincidunt rutrum',
         id: 'Task 10',
         type_id: 'debit',
-        progress: 0,
+        progress: 40,
     },
     {
         start: getDate(8),
@@ -123,6 +128,7 @@ const workitems = [
         name: 'Proin id faucibus massa',
         id: 'Task 11',
         type_id: 'hotfix',
+        bar_color: '#E2445C',
         progress: 0,
     },
     {
@@ -131,6 +137,7 @@ const workitems = [
         name: 'Nam condimentum nisl in diam molestie',
         id: 'Task 12',
         type_id: 'hotfix',
+        bar_color: '#E2445C',
         progress: 0,
     },
     {
@@ -139,6 +146,7 @@ const workitems = [
         name: 'Quisque ac neque pulvinar, ullamcorper lorem at, vestibulum lectus',
         id: 'Task 13',
         type_id: 'task',
+        bar_color: '#FDAB3D',
         progress: 50,
     },
 ];
@@ -201,19 +209,20 @@ const options = {
     horizontal_auto_scroll_labels: false,
     is_draggable: true,
     bar_height: 22,
-    handle_bar_color: '#752f00',
-    handle_progress_color: '#752f00',
+    handle_bar_color: '#333',
+    handle_progress_color: '#333',
     resource_resize_enable: true,
     resource_fixed: true,
     resource_enable: true,
     resource_title: 'Tarefas',
-    resource_width: 250,
+    resource_width: 280,
     responsables_enable: true,
     responsables_sort_by: 'name', // 'default' - 'name'
     responsables_default_name: 'Não atribuido',
     responsables_default_photo: './images-example/responsable-default.png',
-    rows_alternate_background: true,
+    rows_alternate_background: false,
     grid_ticks: false,
+    bar_color_default: '#FEF1E8',
 };
 
 const gantt = new Gantt(

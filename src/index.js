@@ -82,7 +82,8 @@ export default class Gantt {
     setup_options(options) {
         const default_options = {
             header_height: 50,
-            column_width: 30,
+            column_width: 150,
+            column_width: 50,
             step: 24,
             view_modes: [...Object.values(VIEW_MODE)],
             bar_height: 20,
@@ -120,6 +121,7 @@ export default class Gantt {
                 './images-example/responsable-default.png',
             rows_alternate_background: true,
             grid_ticks: true,
+            bar_color_default: '#FEF1E8',
         };
 
         this.options = Object.assign({}, default_options, options);
@@ -373,13 +375,13 @@ export default class Gantt {
             this.options.column_width = 38;
         } else if (view_mode === VIEW_MODE.DAY) {
             this.options.step = 24;
-            this.options.column_width = 38;
+            this.options.column_width = 60;
         } else if (view_mode === VIEW_MODE.HALF_DAY) {
             this.options.step = 24 / 2;
-            this.options.column_width = 38;
+            this.options.column_width = 60;
         } else if (view_mode === VIEW_MODE.QUARTER_DAY) {
             this.options.step = 24 / 4;
-            this.options.column_width = 38;
+            this.options.column_width = 60;
         } else if (view_mode === VIEW_MODE.WEEK) {
             this.options.step = 24 * 7;
             this.options.column_width = 140;
@@ -953,9 +955,16 @@ export default class Gantt {
         const { column_width, step, padding, header_height, bar_height } =
             this.options;
 
+        let resource_width = 0;
+
+        if (this.options.resource_enable) {
+            resource_width = this.options.resource_width - 30;
+        }
+
         const today = date_utils.today();
         const diff = date_utils.diff(today, this.gantt_start, 'hour');
-        const x = (diff / step) * column_width;
+        const column_start = (diff / step) * column_width + resource_width;
+        const x = column_start + column_width / 2 - 1;
 
         const height =
             (bar_height + padding) * this.resource_tree.length +
@@ -966,9 +975,18 @@ export default class Gantt {
             x,
             y: 0,
             height,
-            width: column_width,
+            width: 2,
             class: 'today-highlight',
             append_to: this.layers.grid,
+        });
+
+        createSVG('rect', {
+            x: column_start,
+            y: header_height + 8,
+            height: 2,
+            width: column_width,
+            class: 'today-highlight',
+            append_to: this.layers.date,
         });
     }
 
@@ -1046,7 +1064,7 @@ export default class Gantt {
             ),
             Day_lower:
                 date.getDate() !== last_date.getDate()
-                    ? date_utils.format(date, 'D', this.options.language)
+                    ? date_utils.format(date, 'D ddd', this.options.language)
                     : '',
             Week_lower:
                 date.getMonth() !== last_date.getMonth()
@@ -1070,7 +1088,11 @@ export default class Gantt {
                               'D MMM',
                               this.options.language
                           )
-                        : date_utils.format(date, 'D', this.options.language)
+                        : date_utils.format(
+                              date,
+                              'D ddd',
+                              this.options.language
+                          )
                     : '',
             Day_upper:
                 date.getMonth() !== last_date.getMonth()
