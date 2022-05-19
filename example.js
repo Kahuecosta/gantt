@@ -189,7 +189,7 @@ const options = {
         console.log('on_view_change', mode);
     },
     view_mode: 'Day',
-    language: 'en',
+    language: 'pt-br',
     margin_bottom: -26,
     disallow_popup: false,
     readonly: false,
@@ -213,6 +213,7 @@ const options = {
     responsables_default_name: 'Não atribuido',
     responsables_default_photo: './images-example/responsable-default.png',
     rows_alternate_background: true,
+    grid_ticks: false,
 };
 
 const gantt = new Gantt(

@@ -119,6 +119,7 @@ export default class Gantt {
             responsables_default_photo:
                 './images-example/responsable-default.png',
             rows_alternate_background: true,
+            grid_ticks: true,
         };
 
         this.options = Object.assign({}, default_options, options);
@@ -895,6 +896,8 @@ export default class Gantt {
     }
 
     make_grid_ticks() {
+        if (!this.options.grid_ticks) return;
+
         let tick_x = this.resource_width;
         let tick_y = this.options.header_height + this.options.padding / 2;
         let tick_height =
