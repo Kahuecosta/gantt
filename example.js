@@ -212,6 +212,7 @@ const options = {
     responsables_sort_by: 'name', // 'default' - 'name'
     responsables_default_name: 'Não atribuido',
     responsables_default_photo: './images-example/responsable-default.png',
+    rows_alternate_background: true,
 };
 
 const gantt = new Gantt(
