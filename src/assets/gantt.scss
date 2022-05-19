@@ -72,6 +72,14 @@ $max-height: calc(100vh - 100px);
 		fill: lighten($primary, 22%);
 	}
 
+	.weekend-highlight {
+		fill: darken($background, 4%);
+	}
+
+	.past-days-highlight {
+		fill: darken($background, 2%);
+	}
+
 	.arrow {
 		fill: none;
 		stroke: darken($background, 16%);
