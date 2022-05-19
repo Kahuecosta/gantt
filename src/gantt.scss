@@ -1,13 +1,14 @@
-$bar-color: #dddee0 !default;
-$bar-stroke: #b2b6ba !default;
+$bar-stroke: #e9e4e4 !default;
 $border-color: #e0e0e0 !default;
 $light-bg: #f9f9f9 !default;
 $light-border-color: #f9f9f9 !default;
 $light-yellow: #fcf8e3 !default;
-$text-muted: #666 !default;
+$text-muted: #e0dfdf !default;
 $text-light: #555 !default;
 $text-color: #333 !default;
 $primary: #F2711C !default;
+
+$background: #F0F2F5;
 
 $max-height: calc(100vh - 100px);
 
@@ -25,21 +26,21 @@ $max-height: calc(100vh - 100px);
 	}
 
 	.grid-header {
-		fill: #ffffff;
+		fill: $background;
 		stroke: $border-color;
 		stroke-width: 1.4;
 	}
 	
 	.grid-row {
-		fill: #ffffff;
+		fill: $background;
 
 		&.-alt-bg:nth-child(even) {
-			fill: $light-bg;
+			fill: darken($background, 1%);
 		}
 	}
 	
 	.row-line {
-		stroke: $light-border-color;
+		stroke: darken($background, 1%);
 	}
 	
 	.resource-resize {
@@ -59,7 +60,7 @@ $max-height: calc(100vh - 100px);
 	}
 	
 	.tick {
-		stroke: $border-color;
+		stroke: darken($background, 16%);
 		stroke-width: 0.2;
 		
 		&.thick {
@@ -68,14 +69,13 @@ $max-height: calc(100vh - 100px);
 	}
 	
 	.today-highlight {
-		fill: $primary;
-		opacity: 0.06;
+		fill: lighten($primary, 22%);
 	}
 
 	.arrow {
 		fill: none;
-		stroke: $text-muted;
-		stroke-width: 1.4;
+		stroke: darken($background, 16%);
+		stroke-width: 2;
 
 		path:hover, path.active {
 			stroke: $primary;
@@ -83,15 +83,15 @@ $max-height: calc(100vh - 100px);
 	}
 
 	.bar {
-		fill: $bar-color;
-		stroke: $bar-stroke;
+		filter: drop-shadow(0px 0px 3px $bar-stroke);
 		stroke-width: 0;
 		transition: stroke-width .3s ease;
 		user-select: none;
 	}
 
 	.bar-progress {
-		fill: $primary;
+		fill: #000000;
+		opacity: 0.1;
 	}
 
 	.bar-invalid {
@@ -133,27 +133,19 @@ $max-height: calc(100vh - 100px);
 		outline: none;
 
 		&:hover {
-			.bar {
-				fill: darken($bar-color, 5);
-			}
-
 			.bar-progress {
-				fill: darken($primary, 5);
+				opacity: 0.3;
 			}
 
 			.handle {
 				visibility: visible;
-				opacity: 1;
+				opacity: 0.7;
 			}
 		}
 
 		&.active {
-			.bar {
-				fill: darken($bar-color, 5);
-			}
-
 			.bar-progress {
-				fill: darken($primary, 5);
+				opacity: 0.3;
 			}
 		}
 	}

@@ -123,6 +123,7 @@ const options = {
     responsables_default_photo: './images-example/responsable-default.png',
     rows_alternate_background: false,
     grid_ticks: true,
+    bar_color_default: '#f3f2f2',
 };
 
 const gantt = new Gantt(

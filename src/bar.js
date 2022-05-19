@@ -39,8 +39,7 @@ export default class Bar {
         this.group = createSVG('g', {
             class:
                 'bar-wrapper ' +
-                (this.task._type ? `${this.task._type.bar_class} ` : '') +
-                (this.task.custom_class || ''),
+                (this.task._type ? `${this.task._type.bar_class} ` : ''),
             'data-id': this.task.id,
             'data-type-id': this.task.type_id,
         });
@@ -81,6 +80,7 @@ export default class Bar {
     }
 
     draw_bar() {
+        console.log('this.task.bar_color', this.task.bar_color);
         this.$bar = createSVG('rect', {
             x: this.x,
             y: this.y,
@@ -89,6 +89,9 @@ export default class Bar {
             rx: this.corner_radius,
             ry: this.corner_radius,
             class: 'bar',
+            fill: `${
+                this.task.bar_color || this.gantt.options.bar_color_default
+            }`,
             append_to: this.bar_group,
         });
 
