@@ -1,116 +1,114 @@
 export default class Popup {
-    constructor(parent, custom_html, container) {
-        this.parent = parent;
-        this.custom_html = custom_html;
-        this.container = container;
+	constructor(parent, custom_html, container) {
+		this.parent = parent
+		this.custom_html = custom_html
+		this.container = container
 
-        this.make();
-    }
+		this.make()
+	}
 
-    make() {
-        this.parent.innerHTML = `
+	make() {
+		this.parent.innerHTML = `
             <div class="title"></div>
             <div class="type"></div>
             <div class="subtitle"></div>
             <div class="pointer"></div>
-        `;
+        `
 
-        this.hide();
+		this.hide()
 
-        this.title = this.parent.querySelector('.title');
-        this.type = this.parent.querySelector('.type');
-        this.subtitle = this.parent.querySelector('.subtitle');
-        this.pointer = this.parent.querySelector('.pointer');
-    }
+		this.title = this.parent.querySelector('.title')
+		this.type = this.parent.querySelector('.type')
+		this.subtitle = this.parent.querySelector('.subtitle')
+		this.pointer = this.parent.querySelector('.pointer')
+	}
 
-    show(options) {
-        if (!options.target_element) {
-            throw new Error('target_element is required to show popup');
-        }
+	show(options) {
+		if (!options.target_element) {
+			throw new Error('target_element is required to show popup')
+		}
 
-        if (!options.position) {
-            options.position = 'left';
-        }
+		if (!options.position) {
+			options.position = 'left'
+		}
 
-        const target_element = options.target_element;
+		const target_element = options.target_element
 
-        if (this.custom_html) {
-            let html = this.custom_html(options.task);
-            html += '<div class="pointer"></div>';
-            this.parent.innerHTML = html;
-            this.pointer = this.parent.querySelector('.pointer');
-        } else {
-            // set data
-            this.title.innerHTML = options.title;
+		if (this.custom_html) {
+			let html = this.custom_html(options.task)
+			html += '<div class="pointer"></div>'
+			this.parent.innerHTML = html
+			this.pointer = this.parent.querySelector('.pointer')
+		} else {
+			// set data
+			this.title.innerHTML = options.title
 
-            this.set_type(options.type);
+			this.set_type(options.type)
 
-            this.subtitle.innerHTML = options.subtitle;
-            this.parent.style.width = this.parent.clientWidth + 'px';
-        }
+			this.subtitle.innerHTML = options.subtitle
+			this.parent.style.width = this.parent.clientWidth + 'px'
+		}
 
-        // set position
-        let position_meta;
-        if (target_element instanceof HTMLElement) {
-            position_meta = target_element.getBoundingClientRect();
-        } else if (target_element instanceof SVGElement) {
-            position_meta = options.target_element.getBBox();
-        }
+		// set position
+		let position_meta
+		if (target_element instanceof HTMLElement) {
+			position_meta = target_element.getBoundingClientRect()
+		} else if (target_element instanceof SVGElement) {
+			position_meta = options.target_element.getBBox()
+		}
 
-        if (options.position === 'left') {
-            const left = position_meta.x + (position_meta.width + 10) + 'px';
+		if (options.position === 'left') {
+			const left = position_meta.x + (position_meta.width + 10) + 'px'
 
-            this.parent.style.left = left;
+			this.parent.style.left = left
 
-            this.pointer.style.transform = 'rotateZ(90deg)';
-            this.pointer.style.left = '-7px';
-            this.pointer.style.top = '2px';
-        }
+			this.pointer.style.transform = 'rotateZ(90deg)'
+			this.pointer.style.left = '-7px'
+			this.pointer.style.top = '2px'
+		}
 
-        const bottom = position_meta.y + this.parent.scrollHeight;
+		const bottom = position_meta.y + this.parent.scrollHeight
 
-        let top = position_meta.y;
+		let top = position_meta.y
 
-        if (bottom > this.container.scrollHeight) {
-            top -= bottom - this.container.scrollHeight + 5;
+		if (bottom > this.container.scrollHeight) {
+			top -= bottom - this.container.scrollHeight + 5
 
-            this.pointer.style.top = `${
-                bottom - this.container.scrollHeight + 7
-            }px`;
-        }
+			this.pointer.style.top = `${bottom - this.container.scrollHeight + 7}px`
+		}
 
-        this.parent.style.top = `${top}px`;
+		this.parent.style.top = `${top}px`
 
-        // show
-        this.parent.style.opacity = 1;
-        this.parent.style.zIndex = 0;
-    }
+		// show
+		this.parent.style.opacity = 1
+		this.parent.style.zIndex = 0
+	}
 
-    set_type(type = {}) {
-        const { color, name, icon } = type;
+	set_type(type = {}) {
+		const { color, name, icon } = type
 
-        if (name) {
-            this.type.style.display = 'inherit';
-        } else {
-            this.type.style.display = 'none';
+		if (name) {
+			this.type.style.display = 'inherit'
+		} else {
+			this.type.style.display = 'none'
 
-            return;
-        }
+			return
+		}
 
-        let typeIcon = '';
+		let typeIcon = ''
 
-        if (icon) {
-            typeIcon = `<img class="popup-type-icon" src="${icon}" />`;
-        } else if (color) {
-            typeIcon = `<span class="popup-type-icon" style="background-color:${color}"></span>`;
-        }
+		if (icon) {
+			typeIcon = `<img class="popup-type-icon" src="${icon}" />`
+		} else if (color) {
+			typeIcon = `<span class="popup-type-icon" style="background-color:${color}"></span>`
+		}
 
-        this.type.innerHTML = `<span class="popup-type-name">${typeIcon}${name}</span>`;
-    }
+		this.type.innerHTML = `<span class="popup-type-name">${typeIcon}${name}</span>`
+	}
 
-    hide() {
-        this.parent.style.opacity = 0;
-        this.parent.style.left = 0;
-        this.parent.style.zIndex = -1;
-    }
+	hide() {
+		this.parent.style.opacity = 0
+		this.parent.style.left = 0
+		this.parent.style.zIndex = -1
+	}
 }
