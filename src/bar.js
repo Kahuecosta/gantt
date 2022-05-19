@@ -80,7 +80,6 @@ export default class Bar {
 	}
 
 	draw_bar() {
-		console.log('this.task.bar_color', this.task.bar_color)
 		this.$bar = createSVG('rect', {
 			x: this.x,
 			y: this.y,

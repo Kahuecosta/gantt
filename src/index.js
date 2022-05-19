@@ -121,6 +121,8 @@ export default class Gantt {
 			rows_alternate_background: true,
 			grid_ticks: true,
 			bar_color_default: '#FEF1E8',
+			highlights_weekend: true,
+			highlights_past_days: true,
 		}
 
 		this.options = Object.assign({}, default_options, options)
@@ -916,8 +918,15 @@ export default class Gantt {
 		// highlight today's date
 		if (!this.view_is(VIEW_MODE.DAY)) return
 
-		const { column_width, step, padding, header_height, bar_height } =
-			this.options
+		const {
+			column_width,
+			step,
+			padding,
+			header_height,
+			bar_height,
+			highlights_weekend,
+			highlights_past_days,
+		} = this.options
 
 		let resource_width = 0
 
@@ -951,6 +960,53 @@ export default class Gantt {
 			width: column_width,
 			class: 'today-highlight',
 			append_to: this.layers.date,
+		})
+
+		if (highlights_past_days) {
+			this.make_grid_highlights_past_days(column_width, resource_width, height)
+		}
+
+		if (highlights_weekend) {
+			this.make_grid_highlights_weekend(column_width, resource_width, height)
+		}
+	}
+
+	make_grid_highlights_weekend(column_width, resource_width, height) {
+		const start = this.gantt_start
+		const end = this.gantt_end
+		const total = date_utils.diff(end, start, 'day')
+		let now = date_utils.clone(start)
+		let index = 0
+
+		while (index < total) {
+			now = date_utils.add(now, 1, 'day')
+
+			if (now.getDay() === 6) {
+				createSVG('rect', {
+					x: column_width * (index + 1) + resource_width,
+					y: 0,
+					height,
+					width: column_width * 2,
+					class: 'weekend-highlight',
+					append_to: this.layers.grid,
+				})
+			}
+
+			index++
+		}
+	}
+
+	make_grid_highlights_past_days(column_width, resource_width, height) {
+		const today = date_utils.today()
+		const diff = date_utils.diff(today, this.gantt_start, 'day')
+
+		createSVG('rect', {
+			x: resource_width,
+			y: 0,
+			height,
+			width: column_width * diff,
+			class: 'past-days-highlight',
+			append_to: this.layers.grid,
 		})
 	}
 
