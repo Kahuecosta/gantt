@@ -286,17 +286,17 @@ export default class Bar {
 		)
 		const end_date = date_utils.format(
 			date_utils.add(this.task._end, -1, 'second'),
-			'MMM D',
+			'MMM D YY',
 			this.gantt.options.language
 		)
-		const subtitle = start_date + ' - ' + end_date
 
 		this.gantt.show_popup({
 			target_element: this.$bar,
 			title: `<b>${this.task.name}</b>`,
-			type: this.task._type,
-			subtitle,
+			subtitle: '',
+			period: `${start_date} - ${end_date}`,
 			task: this.task,
+			link_detail_text: this.gantt.options.link_detail_text,
 		})
 	}
 

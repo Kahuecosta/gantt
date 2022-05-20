@@ -121,11 +121,14 @@ const options = {
 	responsables_sort_by: 'default', // 'default' - 'name'
 	responsables_default_name: 'Não atribuido',
 	responsables_default_photo: './images-example/responsable-default.png',
+	teams_enable: false,
+	teams_sort_by: 'name', // 'default' - 'name'
 	rows_alternate_background: false,
 	grid_ticks: true,
 	bar_color_default: '#f3f2f2',
 	highlights_weekend: true,
 	highlights_past_days: true,
+	link_detail_text: 'Ver detalhes',
 }
 
 const gantt = new Gantt(
