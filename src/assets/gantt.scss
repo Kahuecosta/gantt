@@ -200,6 +200,13 @@ $max-height: calc(100vh - 100px);
 		&.-team {
 			font-size: 13px;
 			font-weight: bold;
+			cursor: pointer;
+		}
+
+		&.-sub-group {
+			font-size: 13px;
+			font-weight: 600;
+			cursor: pointer;
 		}
 	}
 

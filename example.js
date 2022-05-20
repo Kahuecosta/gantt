@@ -13,30 +13,83 @@ const responsables = [
 
 const teams = [
 	{
-		name: 'Suporte',
+		name: 'Agiboard V2',
 		id: 1,
-		slug: 'SU',
 		color: '#e27d02',
 		icon: './images-example/icon-1.png',
+		sub_group: [
+			{
+				name: 'A fazer',
+				id: 0,
+				color: '#e27d02',
+				icon: './images-example/icon-1.png',
+			},
+			{
+				name: 'Prioridade',
+				id: 1,
+				color: '#e27d02',
+			},
+			{
+				name: 'Em avaliação',
+				id: 2,
+				icon: './images-example/icon-2.png',
+			},
+			{
+				name: 'Fazendo',
+				id: 3,
+				color: '#d81e46',
+			},
+			{
+				name: 'Feito',
+				id: 4,
+				icon: './images-example/icon-3.png',
+			},
+		],
 	},
 	{
 		name: 'Implantação',
 		id: 2,
-		slug: 'IM',
 		icon: './images-example/icon-2.png',
 	},
 	{
 		name: 'Produto',
 		id: 3,
-		slug: 'PR',
 		color: '#d81e46',
 		icon: './images-example/icon-3.png',
 	},
 	{
 		name: 'Tecnologia',
 		id: 4,
-		slug: 'TE',
 		color: '#e27dff',
+	},
+]
+
+const types = [
+	{
+		id: 1,
+		name: 'Hotfix',
+		bar_class: 'bar-hotfix',
+		color: '#e27d02',
+		icon: './images-example/icon-1.png',
+	},
+	{
+		id: 2,
+		name: 'Task',
+		bar_class: 'bar-task',
+		color: '#0758b3',
+		icon: './images-example/icon-2.png',
+	},
+	{
+		id: 3,
+		name: 'Débito Técnico',
+		bar_class: 'bar-debit',
+		icon: './images-example/icon-3.png',
+	},
+	{
+		id: 4,
+		name: 'Épico',
+		bar_class: 'bar-epic',
+		color: '#d81e46',
 	},
 ]
 
@@ -50,8 +103,6 @@ const workitems = [
 		start: getDate(1),
 		end: getDate(8),
 		name: 'Lorem ipsum dolor sit amet',
-		id: '0',
-		type_id: 'hotfix',
 		progress: 20,
 		estimated: 100,
 		bar_color: '#E2445C',
@@ -60,8 +111,6 @@ const workitems = [
 		start: getDate(3),
 		end: getDate(6),
 		name: 'Nulla aliquam egestas velit posuere commodo',
-		id: '1',
-		type_id: 'task',
 		progress: 5,
 		estimated: 100,
 		bar_color: '#FDAB3D',
@@ -71,8 +120,6 @@ const workitems = [
 		start: getDate(4),
 		end: getDate(8),
 		name: 'Duis nec ornare massa. Vestibulum at consectetur arcu',
-		id: '2',
-		type_id: 'task',
 		progress: 10,
 		estimated: 100,
 		dependencies: '1',
@@ -82,8 +129,6 @@ const workitems = [
 		start: getDate(8),
 		end: getDate(9),
 		name: 'Aenean maximus, odio sed rhoncus vulputate',
-		id: '3',
-		type_id: 'debit',
 		progress: 5,
 		estimated: 100,
 		dependencies: '2',
@@ -93,8 +138,6 @@ const workitems = [
 		start: getDate(8),
 		end: getDate(10),
 		name: 'Curabitur venenatis ac lorem sed imperdiet',
-		id: '4',
-		type_id: 'debit',
 		bar_color: '#FDAB3D',
 		progress: 0,
 		estimated: 100,
@@ -104,8 +147,6 @@ const workitems = [
 		start: getDate(11),
 		duration: 2,
 		name: 'Quisque porta justo fringilla quam euismod, eu semper libero viverra',
-		id: '5',
-		type_id: 'debit',
 		progress: 0,
 		estimated: 100,
 		dependencies: '4',
@@ -115,8 +156,6 @@ const workitems = [
 		start: getDate(11),
 		end: getDate(16),
 		name: 'Maecenas augue nulla, luctus id rutrum at, efficitur id quam!',
-		id: '6',
-		type_id: 'epic',
 		progress: 20,
 		estimated: 100,
 		dependencies: '',
@@ -128,7 +167,6 @@ const workitems = [
 		start: getDate(11),
 		end: getDate(18),
 		name: 'Etiam at suscipit ipsum, sollicitudin efficitur purus',
-		id: '7',
 		progress: 0,
 		estimated: 100,
 		dependencies: '0',
@@ -140,8 +178,6 @@ const workitems = [
 		start: getDate(3),
 		duration: 2,
 		name: 'Ut at mi dictum, bibendum augue quis, sagittis nisi',
-		id: '9',
-		type_id: 'debit',
 		bar_color: '#579BFC',
 		progress: 10,
 		estimated: 100,
@@ -150,8 +186,6 @@ const workitems = [
 		start: getDate(5),
 		duration: 3,
 		name: 'Cras eget ornare leo, non congue leo. Aenean porttitor rutrum enim tincidunt rutrum',
-		id: '10',
-		type_id: 'debit',
 		progress: 40,
 		estimated: 100,
 	},
@@ -159,8 +193,6 @@ const workitems = [
 		start: getDate(8),
 		duration: 2,
 		name: 'Proin id faucibus massa',
-		id: '11',
-		type_id: 'hotfix',
 		bar_color: '#E2445C',
 		progress: 0,
 		estimated: 100,
@@ -169,8 +201,6 @@ const workitems = [
 		start: getDate(15),
 		duration: 5,
 		name: 'Nam condimentum nisl in diam molestie',
-		id: '12',
-		type_id: 'hotfix',
 		bar_color: '#E2445C',
 		progress: 0,
 		estimated: 100,
@@ -179,53 +209,30 @@ const workitems = [
 		start: getDate(1),
 		duration: 6,
 		name: 'Quisque ac neque pulvinar, ullamcorper lorem at, vestibulum lectus',
-		id: '13',
-		type_id: 'task',
 		bar_color: '#FDAB3D',
 		progress: 50,
 		estimated: 100,
 	},
 ]
 
-workitems.forEach(wi => {
-	wi.team_id = parseInt(Math.random() * (teams.length - 0), 10)
+workitems.forEach((wi, i) => (wi.id = i))
 
-	wi.responsable_id = parseInt(
-		Math.random() * (responsables.length + 1 - 0),
-		10
-	)
+workitems.forEach(wi => {
+	wi.team_id = parseInt(Math.random() * (teams.length + 1), 10)
+
+	wi.type_id = parseInt(Math.random() * (types.length + 1), 10)
+
+	wi.responsable_id = parseInt(Math.random() * (responsables.length + 1), 10)
+
+	if (wi.type_id > types.length) wi.type_id = undefined
 
 	if (wi.responsable_id > responsables.length) wi.responsable_id = undefined
-})
 
-const workItemTypes = [
-	{
-		id: 'hotfix',
-		name: 'Hotfix',
-		bar_class: 'bar-hotfix',
-		color: '#e27d02',
-		icon: './images-example/icon-1.png',
-	},
-	{
-		id: 'task',
-		name: 'Task',
-		bar_class: 'bar-task',
-		color: '#0758b3',
-		icon: './images-example/icon-2.png',
-	},
-	{
-		id: 'debit',
-		name: 'Débito Técnico',
-		bar_class: 'bar-debit',
-		icon: './images-example/icon-3.png',
-	},
-	{
-		id: 'epic',
-		name: 'Épico',
-		bar_class: 'bar-epic',
-		color: '#d81e46',
-	},
-]
+	const w_team = teams.find(t => t.id === wi.team_id)
+	if (w_team && w_team.sub_group) {
+		wi.sub_group_id = parseInt(Math.random() * w_team.sub_group.length, 10)
+	}
+})
 
 const options = {
 	on_click: function (workitem) {
@@ -264,7 +271,7 @@ const options = {
 	resource_resize_enable: true,
 	resource_fixed: true,
 	resource_enable: true,
-	resource_title: 'Tarefas',
+	resource_title: 'Desenvolvimento Evolutivo',
 	resource_width: 280,
 	responsables_enable: true,
 	responsables_sort_by: 'name', // 'default' - 'name'
@@ -283,7 +290,7 @@ const options = {
 const gantt = new Gantt(
 	'.gantt-target',
 	workitems,
-	workItemTypes,
+	types,
 	responsables,
 	teams,
 	options

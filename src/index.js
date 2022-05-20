@@ -3,26 +3,15 @@ import { $, createSVG } from './svg_utils'
 import Bar from './bar'
 import Arrow from './arrow'
 import Popup from './popup'
-import VIEW_MODE from './view_mode'
 import './assets/gantt.scss'
-
-const TEAMS_TYPES = {
-	DEFAULT: 'default',
-	NAME: 'name',
-}
-
-const TEAMS_TYPES_ARR = [TEAMS_TYPES.DEFAULT, TEAMS_TYPES.NAME]
-
-const RESPONSABLE_DEFAULT_ID = 0
-const RESPONSABLE_TYPES = {
-	DEFAULT: 'default',
-	NAME: 'name',
-}
-
-const RESPONSABLE_TYPES_ARR = [
-	RESPONSABLE_TYPES.DEFAULT,
-	RESPONSABLE_TYPES.NAME,
-]
+import {
+	VIEW_MODE,
+	TEAMS_TYPES,
+	TEAMS_TYPES_ARR,
+	RESPONSABLE_DEFAULT_ID,
+	RESPONSABLE_TYPES,
+	RESPONSABLE_TYPES_ARR,
+} from './constants'
 
 export default class Gantt {
 	constructor(
@@ -277,7 +266,7 @@ export default class Gantt {
 		let index = 0
 
 		this.resource_tree.forEach(item => {
-			if (item.type === 'teams') {
+			if (item.type === 'teams' || item.type === 'sub_group') {
 				index++
 			} else {
 				const task = this.get_task(item.task_id)
@@ -286,6 +275,27 @@ export default class Gantt {
 
 				index++
 			}
+		})
+	}
+
+	resource_tree_team_push_task(team, sub_group) {
+		let tasks = [...this.tasks]
+
+		if (team) {
+			tasks = tasks.filter(task => task.team_id === team.id)
+		}
+
+		if (sub_group) {
+			tasks = tasks.filter(task => task.sub_group_id === sub_group.id)
+		}
+
+		tasks.forEach(task => {
+			this.resource_tree.push({
+				type: 'task',
+				task_id: task.id,
+				team_id: team.id,
+				sub_group_id: sub_group ? sub_group.id : null,
+			})
 		})
 	}
 
@@ -313,15 +323,23 @@ export default class Gantt {
 					team_color: team.color,
 				})
 
-				this.tasks
-					.filter(task => task.team_id === team.id)
-					.forEach(task => {
+				if (team.sub_group) {
+					team.sub_group.forEach(sg => {
 						this.resource_tree.push({
-							type: 'task',
-							task_id: task.id,
-							team_id: team.id,
+							type: 'sub_group',
+							sub_group_id: sg.id,
+							sub_group_name: sg.name,
+							sub_group_icon: sg.icon,
+							sub_group_color: sg.color,
 						})
+
+						this.resource_tree_team_push_task(team, sg)
 					})
+				} else {
+					team.sub_group = []
+
+					this.resource_tree_team_push_task(team)
+				}
 			})
 
 			return
@@ -730,7 +748,8 @@ export default class Gantt {
 			})
 		}
 
-		console.log('this.resource_tree', this.resource_tree)
+		let team_id
+
 		this.resource_tree.forEach(tree => {
 			let item
 
@@ -741,6 +760,17 @@ export default class Gantt {
 					team_color: tree.team_color,
 					team_id: tree.team_id,
 					is_team: true,
+				}
+
+				team_id = tree.team_id
+			} else if (tree.type === 'sub_group') {
+				item = {
+					name: tree.sub_group_name,
+					icon: tree.sub_group_icon,
+					sub_group_color: tree.sub_group_color,
+					sub_group_id: tree.sub_group_id,
+					team_id,
+					is_sub_group: true,
 				}
 			} else if (tree.type === 'responsable') {
 				item = {
@@ -782,8 +812,8 @@ export default class Gantt {
 
 	make_resource_text(item, row_y, row_width, row_height, text_layer) {
 		const { responsables_enable, teams_enable } = this.options
-		const elY = row_y + row_height / 2 + 5
 
+		let elY = row_y + row_height / 2 + 2
 		let elX = 10
 		let padding = 30
 		let item_title_css = 'resource-text '
@@ -795,35 +825,54 @@ export default class Gantt {
 				this.make_resource_team_color(item.team_color, text_layer, elY)
 			}
 
-			elX += 22
-			padding += 12
+			elX += 30
+			elY += 3
+			padding += 22
 			item_title_css += '-team'
+		} else if (teams_enable && item.is_sub_group) {
+			if (item && item.icon) {
+				this.make_resource_sub_group_icon(item.icon, text_layer, elY)
+			} else {
+				this.make_resource_sub_group_color(
+					item.sub_group_color,
+					text_layer,
+					elY
+				)
+			}
+
+			elX += 30
+			elY += 3
+			padding += 22
+			item_title_css += '-sub-group'
 		} else if (responsables_enable && item.is_responsable) {
 			this.make_resource_responsable_photo(item.photo, text_layer, elY)
 
-			elX += 22
-			padding += 12
+			elX += 30
+			elY += 3
+			padding += 22
 			item_title_css += '-responsable'
 		} else {
 			item_title_css += '-task'
 
 			if (responsables_enable || teams_enable) {
-				elX += 10
+				elX += 20
 			}
-
-			const type = this.workItemTypes[item.type_id]
 
 			if (teams_enable && responsables_enable) {
 				this.make_resource_responsable_photo(
 					item._responsable.photo,
 					text_layer,
 					elY,
-					12
+					24,
+					21
 				)
 
-				elX += 15
+				elY += 2
+				elX += 26
 				padding += 20
 			}
+
+			const type = this.workItemTypes[item.type_id]
 
 			if (type) {
 				this.make_resource_workitem_type(type, text_layer, elY, elX)
@@ -836,7 +885,9 @@ export default class Gantt {
 		const item_title = createSVG('text', {
 			x: elX,
 			y: elY,
-			'data-id': item.id,
+			'data-id': item.id || '',
+			'data-team-id': item.team_id || '',
+			'data-sub-group-id': item.sub_group_id || '',
 			class: item_title_css,
 			append_to: text_layer,
 		})
@@ -857,10 +908,14 @@ export default class Gantt {
 		return avatar
 	}
 
-	make_resource_responsable_photo(photo, text_layer, elY, elX = 8) {
+	make_resource_responsable_photo(
+		photo,
+		text_layer,
+		elY,
+		elX = 8,
+		img_wh = 25
+	) {
 		if (!photo) return
-
-		const img_wh = 18
 
 		createSVG('foreignObject', {
 			x: elX,
@@ -872,13 +927,11 @@ export default class Gantt {
 		})
 	}
 
-	make_resource_team_icon(icon, text_layer, elY) {
+	make_resource_team_icon(icon, text_layer, elY, elX = 8, img_wh = 25) {
 		if (!icon) return
 
-		const img_wh = 18
-
 		createSVG('foreignObject', {
-			x: 8,
+			x: elX,
 			y: elY - 14,
 			width: img_wh,
 			height: img_wh,
@@ -887,13 +940,11 @@ export default class Gantt {
 		})
 	}
 
-	make_resource_team_color(color, text_layer, elY) {
+	make_resource_team_color(color, text_layer, elY, elX = 8, img_wh = 25) {
 		if (!color) return
 
-		const img_wh = 20
-
 		createSVG('rect', {
-			x: 8,
+			x: elX,
 			y: elY - 14,
 			rx: img_wh,
 			ry: img_wh,
@@ -905,13 +956,38 @@ export default class Gantt {
 		})
 	}
 
-	make_resource_workitem_type(type, text_layer, elY, elX = 8) {
+	make_resource_sub_group_icon(icon, text_layer, elY, elX = 16, img_wh = 18) {
+		createSVG('foreignObject', {
+			x: elX,
+			y: elY - 10,
+			width: img_wh,
+			height: img_wh,
+			append_to: text_layer,
+			innerHTML: this.html_avatar(icon, img_wh, img_wh),
+		})
+	}
+
+	make_resource_sub_group_color(color, text_layer, elY, elX = 16, img_wh = 18) {
+		createSVG('rect', {
+			x: elX,
+			y: elY - 10,
+			rx: img_wh,
+			ry: img_wh,
+			width: img_wh,
+			height: img_wh,
+			class: 'resource-team-icon',
+			style: `fill:${color || '#000000'}`,
+			append_to: text_layer,
+		})
+	}
+
+	make_resource_workitem_type(type, text_layer, elY, elX = 8, img_wh = 14) {
 		if (type.icon) {
 			createSVG('image', {
 				x: elX,
 				y: elY - 12,
-				width: 14,
-				height: 14,
+				width: img_wh,
+				height: img_wh,
 				class: 'resource-type-icon-img',
 				href: type.icon,
 				clipPath: 'clip_' + type.id,
@@ -921,10 +997,10 @@ export default class Gantt {
 			createSVG('rect', {
 				x: elX,
 				y: elY - 12,
-				rx: 10,
-				ry: 10,
-				width: 14,
-				height: 14,
+				rx: img_wh,
+				ry: img_wh,
+				width: img_wh,
+				height: img_wh,
 				class: 'resource-type-icon',
 				style: `fill:${type.color || '#000000'}`,
 				append_to: text_layer,
@@ -972,8 +1048,7 @@ export default class Gantt {
 		const grid_height =
 			this.options.header_height +
 			this.options.padding +
-			bar_height_padding * this.tasks.length +
-			bar_height_padding * this.responsables.length
+			bar_height_padding * this.resource_tree.length
 
 		createSVG('rect', {
 			x: 0,
@@ -1366,11 +1441,13 @@ export default class Gantt {
 				.map(task_id => {
 					const dependency = this.get_task(task_id)
 
+					if (!dependency) return
+
 					const from_task = this.get_bar(dependency.id)
 
 					const to_task = this.get_bar(task.id)
 
-					if (!dependency || !from_task || !to_task) return
+					if (!from_task || !to_task) return
 
 					const arrow = new Arrow(this, from_task, to_task)
 
@@ -1536,35 +1613,6 @@ export default class Gantt {
 						})
 					}
 				} else if (is_dragging && this.options.is_draggable) {
-					// const bWidth = $bar.getWidth()
-					// const posX = $bar.ox + $bar.finaldx
-					// const cWidth = this.$container.clientWidth
-					// const left = this.$container.scrollLeft
-					// console.log('posX', posX)
-					// console.log('cWidth', cWidth)
-					// console.log('bWidth', bWidth)
-					// console.log('left', left)
-
-					// const barPosEnd = bWidth + posX
-
-					// const scroll = cWidth - left - 50
-					// console.log('barPosEnd', barPosEnd)
-					// console.log('scroll', scroll)
-					// console.log('barPosEnd - left', barPosEnd - left)
-
-					// if (barPosEnd - left > cWidth - 50) {
-					// 	console.log('dx 1', dx)
-
-					// 	this.$container.scrollTo(
-					// 		this.$container.scrollLeft + 10,
-					// 		this.$container.scrollTop
-					// 	)
-
-					// 	setTimeout(() => {
-					// 		console.log('dx 2', dx)
-					// 	}, 500)
-					// }
-
 					bar.update_bar_position({ x: $bar.ox + $bar.finaldx })
 				}
 			})
@@ -1665,6 +1713,15 @@ export default class Gantt {
 
 			this.$container.scrollTo(left, this.$container.scrollTop)
 		})
+
+		$.on(
+			this.$svg,
+			'click',
+			['.resource-text.-team', '.resource-text.-sub-group'],
+			(event, element) => {
+				console.log('TESTE')
+			}
+		)
 
 		if (this.options.resource_resize_enable) {
 			$.on(this.$svg, 'mousedown', '.resource-resize', (e, handle) => {

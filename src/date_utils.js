@@ -1,10 +1,12 @@
-const YEAR = 'year'
-const MONTH = 'month'
-const DAY = 'day'
-const HOUR = 'hour'
-const MINUTE = 'minute'
-const SECOND = 'second'
-const MILLISECOND = 'millisecond'
+import {
+	YEAR,
+	MONTH,
+	DAY,
+	HOUR,
+	MINUTE,
+	SECOND,
+	MILLISECOND,
+} from './constants'
 
 const utils = {
 	parse(date, date_separator = '-', time_separator = /[.:]/) {
