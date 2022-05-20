@@ -6,6 +6,13 @@ import Popup from './popup'
 import VIEW_MODE from './view_mode'
 import './assets/gantt.scss'
 
+const TEAMS_TYPES = {
+	DEFAULT: 'default',
+	NAME: 'name',
+}
+
+const TEAMS_TYPES_ARR = [TEAMS_TYPES.DEFAULT, TEAMS_TYPES.NAME]
+
 const RESPONSABLE_DEFAULT_ID = 0
 const RESPONSABLE_TYPES = {
 	DEFAULT: 'default',
@@ -18,12 +25,20 @@ const RESPONSABLE_TYPES_ARR = [
 ]
 
 export default class Gantt {
-	constructor(wrapper, workItems, workItemTypes, responsables = [], options) {
+	constructor(
+		wrapper,
+		workItems,
+		workItemTypes,
+		responsables = [],
+		teams = [],
+		options
+	) {
 		this.VIEW_MODE = VIEW_MODE
 
 		this.setup_wrapper(wrapper)
 		this.setup_options(options)
 		this.setup_responsables(responsables)
+		this.setup_teams(teams)
 		this.setup_workItem_types(workItemTypes)
 		this.setup_tasks(workItems)
 
@@ -118,14 +133,27 @@ export default class Gantt {
 			responsables_sort_by: 'default', // 'default' - 'name'
 			responsables_default_name: 'Não atribuido',
 			responsables_default_photo: './images-example/responsable-default.png',
+			teams_enable: false,
+			teams_sort_by: 'name', // 'default' - 'name'
 			rows_alternate_background: true,
 			grid_ticks: true,
-			bar_color_default: '#FEF1E8',
+			bar_color_default: '#FFCC33',
 			highlights_weekend: true,
 			highlights_past_days: true,
+			link_detail_text: 'Ver detalhes',
 		}
 
 		this.options = Object.assign({}, default_options, options)
+	}
+
+	setup_teams(teams) {
+		if (this.options.teams_enable) {
+			this.teams = teams
+
+			this.sort_teams()
+		} else {
+			this.teams = []
+		}
 	}
 
 	setup_responsables(responsables) {
@@ -174,6 +202,27 @@ export default class Gantt {
 		}
 	}
 
+	sort_teams() {
+		const { teams_sort_by } = this.options
+
+		if (!TEAMS_TYPES_ARR.includes(teams_sort_by)) {
+			throw new TypeError('The teams_sort_by is invalid!')
+		}
+
+		if (teams_sort_by === TEAMS_TYPES.DEFAULT) {
+		}
+
+		if (teams_sort_by === TEAMS_TYPES.NAME) {
+			this.teams = teams.sort((a, b) => {
+				if (a.name > b.name) return 1
+
+				if (a.name < b.name) return -1
+
+				return 0
+			})
+		}
+	}
+
 	sort_tasks_by_responsable(tasks) {
 		if (!this.options.responsables_enable) {
 			return tasks
@@ -185,6 +234,22 @@ export default class Gantt {
 			const list_tasks = tasks.filter(
 				task => task.responsable_id === responsable.id
 			)
+
+			ordened_tasks = [...ordened_tasks, ...list_tasks]
+		})
+
+		return ordened_tasks
+	}
+
+	sort_tasks_by_teams(tasks) {
+		if (!this.options.teams_enable) {
+			return tasks
+		}
+
+		let ordened_tasks = []
+
+		this.teams.forEach(team => {
+			const list_tasks = tasks.filter(task => task.team_id === team.id)
 
 			ordened_tasks = [...ordened_tasks, ...list_tasks]
 		})
@@ -208,14 +273,56 @@ export default class Gantt {
 		})
 	}
 
+	set_task_index_by_teams() {
+		let index = 0
+
+		this.resource_tree.forEach(item => {
+			if (item.type === 'teams') {
+				index++
+			} else {
+				const task = this.get_task(item.task_id)
+
+				task._index = index
+
+				index++
+			}
+		})
+	}
+
 	set_resource_tree() {
+		const { responsables_enable, teams_enable } = this.options
+
 		this.resource_tree = []
 
-		if (!this.options.responsables_enable) {
+		if (!responsables_enable && !teams_enable) {
 			this.resource_tree = this.tasks.map(task => ({
 				type: 'task',
 				task_id: task.id,
 			}))
+
+			return
+		}
+
+		if (teams_enable) {
+			this.teams.forEach(team => {
+				this.resource_tree.push({
+					type: 'teams',
+					team_id: team.id,
+					team_name: team.name,
+					team_icon: team.icon,
+					team_color: team.color,
+				})
+
+				this.tasks
+					.filter(task => task.team_id === team.id)
+					.forEach(task => {
+						this.resource_tree.push({
+							type: 'task',
+							task_id: task.id,
+							team_id: team.id,
+						})
+					})
+			})
 
 			return
 		}
@@ -329,16 +436,32 @@ export default class Gantt {
 				task._responsable = this.responsables[this.responsables.length - 1]
 			}
 
+			// workItem teams
+			if (
+				typeof task.team_id !== 'undefined' &&
+				this.teams.hasOwnProperty(task.team_id)
+			) {
+				task._team = this.teams.find(item => item.id === task.team_id)
+			}
+
 			this.task_map[task.id] = task
 
 			return task
 		})
 
-		this.tasks = this.sort_tasks_by_responsable(tasks_map)
+		if (this.options.teams_enable) {
+			this.tasks = this.sort_tasks_by_teams(tasks_map)
+		} else {
+			this.tasks = this.sort_tasks_by_responsable(tasks_map)
+		}
 
 		this.set_resource_tree()
 
-		this.set_task_index_by_responsable()
+		if (this.options.teams_enable) {
+			this.set_task_index_by_teams()
+		} else {
+			this.set_task_index_by_responsable()
+		}
 
 		this.setup_dependencies()
 	}
@@ -607,10 +730,19 @@ export default class Gantt {
 			})
 		}
 
+		console.log('this.resource_tree', this.resource_tree)
 		this.resource_tree.forEach(tree => {
 			let item
 
-			if (tree.type === 'responsable') {
+			if (tree.type === 'teams') {
+				item = {
+					name: tree.team_name,
+					icon: tree.team_icon,
+					team_color: tree.team_color,
+					team_id: tree.team_id,
+					is_team: true,
+				}
+			} else if (tree.type === 'responsable') {
 				item = {
 					name: tree.responsable_name,
 					photo: tree.responsable_photo,
@@ -649,34 +781,57 @@ export default class Gantt {
 	}
 
 	make_resource_text(item, row_y, row_width, row_height, text_layer) {
+		const { responsables_enable, teams_enable } = this.options
 		const elY = row_y + row_height / 2 + 5
 
 		let elX = 10
 		let padding = 30
+		let item_title_css = 'resource-text '
 
-		if (this.options.responsables_enable && !item.is_responsable) {
-			elX += 10
-		}
+		if (teams_enable && item.is_team) {
+			if (item.icon) {
+				this.make_resource_team_icon(item.icon, text_layer, elY)
+			} else {
+				this.make_resource_team_color(item.team_color, text_layer, elY)
+			}
 
-		const type = this.workItemTypes[item.type_id]
-
-		if (type) {
-			this.make_resource_workitem_type(type, text_layer, elY, elX)
-
-			elX += 20
-			padding += 20
-		}
-
-		if (this.options.responsables_enable && item.is_responsable) {
+			elX += 22
+			padding += 12
+			item_title_css += '-team'
+		} else if (responsables_enable && item.is_responsable) {
 			this.make_resource_responsable_photo(item.photo, text_layer, elY)
 
-			elX += 20
+			elX += 22
 			padding += 12
-		}
+			item_title_css += '-responsable'
+		} else {
+			item_title_css += '-task'
 
-		const item_title_css = item.is_responsable
-			? 'resource-text -responsable'
-			: 'resource-text -task'
+			if (responsables_enable || teams_enable) {
+				elX += 10
+			}
+
+			const type = this.workItemTypes[item.type_id]
+
+			if (teams_enable && responsables_enable) {
+				this.make_resource_responsable_photo(
+					item._responsable.photo,
+					text_layer,
+					elY,
+					12
+				)
+
+				elX += 15
+				padding += 20
+			}
+
+			if (type) {
+				this.make_resource_workitem_type(type, text_layer, elY, elX)
+
+				elX += 20
+				padding += 20
+			}
+		}
 
 		const item_title = createSVG('text', {
 			x: elX,
@@ -702,8 +857,23 @@ export default class Gantt {
 		return avatar
 	}
 
-	make_resource_responsable_photo(photo, text_layer, elY) {
+	make_resource_responsable_photo(photo, text_layer, elY, elX = 8) {
 		if (!photo) return
+
+		const img_wh = 18
+
+		createSVG('foreignObject', {
+			x: elX,
+			y: elY - 14,
+			width: img_wh,
+			height: img_wh,
+			append_to: text_layer,
+			innerHTML: this.html_avatar(photo, img_wh, img_wh),
+		})
+	}
+
+	make_resource_team_icon(icon, text_layer, elY) {
+		if (!icon) return
 
 		const img_wh = 18
 
@@ -713,7 +883,25 @@ export default class Gantt {
 			width: img_wh,
 			height: img_wh,
 			append_to: text_layer,
-			innerHTML: this.html_avatar(photo, img_wh, img_wh),
+			innerHTML: this.html_avatar(icon, img_wh, img_wh),
+		})
+	}
+
+	make_resource_team_color(color, text_layer, elY) {
+		if (!color) return
+
+		const img_wh = 20
+
+		createSVG('rect', {
+			x: 8,
+			y: elY - 14,
+			rx: img_wh,
+			ry: img_wh,
+			width: img_wh,
+			height: img_wh,
+			class: 'resource-team-icon',
+			style: `fill:${color || '#000000'}`,
+			append_to: text_layer,
 		})
 	}
 
@@ -733,8 +921,8 @@ export default class Gantt {
 			createSVG('rect', {
 				x: elX,
 				y: elY - 12,
-				rx: 2,
-				ry: 2,
+				rx: 10,
+				ry: 10,
 				width: 14,
 				height: 14,
 				class: 'resource-type-icon',
@@ -1178,13 +1366,13 @@ export default class Gantt {
 				.map(task_id => {
 					const dependency = this.get_task(task_id)
 
-					if (!dependency) return
+					const from_task = this.get_bar(dependency.id)
 
-					const arrow = new Arrow(
-						this,
-						this.get_bar(dependency.id), // from_task
-						this.get_bar(task.id) // to_task
-					)
+					const to_task = this.get_bar(task.id)
+
+					if (!dependency || !from_task || !to_task) return
+
+					const arrow = new Arrow(this, from_task, to_task)
 
 					this.layers.arrow.appendChild(arrow.element)
 
@@ -1241,7 +1429,7 @@ export default class Gantt {
 		$.on(
 			this.$svg,
 			this.options.popup_trigger,
-			'.grid-row, .grid-header',
+			['.grid-row, .grid-header', '.weekend-highlight', '.past-days-highlight'],
 			() => {
 				this.unselect_all()
 				this.hide_popup()
@@ -1348,6 +1536,35 @@ export default class Gantt {
 						})
 					}
 				} else if (is_dragging && this.options.is_draggable) {
+					// const bWidth = $bar.getWidth()
+					// const posX = $bar.ox + $bar.finaldx
+					// const cWidth = this.$container.clientWidth
+					// const left = this.$container.scrollLeft
+					// console.log('posX', posX)
+					// console.log('cWidth', cWidth)
+					// console.log('bWidth', bWidth)
+					// console.log('left', left)
+
+					// const barPosEnd = bWidth + posX
+
+					// const scroll = cWidth - left - 50
+					// console.log('barPosEnd', barPosEnd)
+					// console.log('scroll', scroll)
+					// console.log('barPosEnd - left', barPosEnd - left)
+
+					// if (barPosEnd - left > cWidth - 50) {
+					// 	console.log('dx 1', dx)
+
+					// 	this.$container.scrollTo(
+					// 		this.$container.scrollLeft + 10,
+					// 		this.$container.scrollTop
+					// 	)
+
+					// 	setTimeout(() => {
+					// 		console.log('dx 2', dx)
+					// 	}, 500)
+					// }
+
 					bar.update_bar_position({ x: $bar.ox + $bar.finaldx })
 				}
 			})
@@ -1644,6 +1861,7 @@ export default class Gantt {
 	show_popup(options) {
 		if (!this.popup) {
 			this.popup = new Popup(
+				this,
 				this.popup_wrapper,
 				this.options.custom_popup_html,
 				this.$container
