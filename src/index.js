@@ -6,8 +6,8 @@ import Popup from './popup'
 import './assets/gantt.scss'
 import {
 	VIEW_MODE,
-	TEAMS_TYPES,
-	TEAMS_TYPES_ARR,
+	GROUPS_TYPES,
+	GROUPS_TYPES_ARR,
 	RESPONSABLE_DEFAULT_ID,
 	RESPONSABLE_TYPES,
 	RESPONSABLE_TYPES_ARR,
@@ -19,7 +19,7 @@ export default class Gantt {
 		workItems,
 		workItemTypes,
 		responsables = [],
-		teams = [],
+		groups = [],
 		options
 	) {
 		this.VIEW_MODE = VIEW_MODE
@@ -30,7 +30,7 @@ export default class Gantt {
 		this.setup_wrapper(wrapper)
 		this.setup_options(options)
 		this.setup_responsables(responsables)
-		this.setup_teams(teams)
+		this.setup_groups(groups)
 		this.setup_workItem_types(workItemTypes)
 		this.setup_tasks(workItems)
 
@@ -123,8 +123,8 @@ export default class Gantt {
 			responsables_sort_by: 'default', // 'default' - 'name'
 			responsables_default_name: 'Não atribuido',
 			responsables_default_photo: './assets/responsable-default.png',
-			teams_enable: false,
-			teams_sort_by: 'name', // 'default' - 'name'
+			groups_enable: false,
+			groups_sort_by: 'name', // 'default' - 'name'
 			rows_alternate_background: true,
 			grid_ticks: true,
 			bar_color_default: '#FFCC33',
@@ -136,13 +136,13 @@ export default class Gantt {
 		this.options = Object.assign({}, default_options, options)
 	}
 
-	setup_teams(teams) {
-		if (this.options.teams_enable) {
-			this.teams = teams
+	setup_groups(groups) {
+		if (this.options.groups_enable) {
+			this.groups = groups
 
-			this.sort_teams()
+			this.sort_groups()
 		} else {
-			this.teams = []
+			this.groups = []
 		}
 	}
 
@@ -192,18 +192,18 @@ export default class Gantt {
 		}
 	}
 
-	sort_teams() {
-		const { teams_sort_by } = this.options
+	sort_groups() {
+		const { groups_sort_by } = this.options
 
-		if (!TEAMS_TYPES_ARR.includes(teams_sort_by)) {
-			throw new TypeError('The teams_sort_by is invalid!')
+		if (!GROUPS_TYPES_ARR.includes(groups_sort_by)) {
+			throw new TypeError('The groups_sort_by is invalid!')
 		}
 
-		if (teams_sort_by === TEAMS_TYPES.DEFAULT) {
+		if (groups_sort_by === GROUPS_TYPES.DEFAULT) {
 		}
 
-		if (teams_sort_by === TEAMS_TYPES.NAME) {
-			this.teams = teams.sort((a, b) => {
+		if (groups_sort_by === GROUPS_TYPES.NAME) {
+			this.groups = groups.sort((a, b) => {
 				if (a.name > b.name) return 1
 
 				if (a.name < b.name) return -1
@@ -231,15 +231,15 @@ export default class Gantt {
 		return ordened_tasks
 	}
 
-	sort_tasks_by_teams(tasks) {
-		if (!this.options.teams_enable) {
+	sort_tasks_by_groups(tasks) {
+		if (!this.options.groups_enable) {
 			return tasks
 		}
 
 		let ordened_tasks = []
 
-		this.teams.forEach(team => {
-			const list_tasks = tasks.filter(task => task.team_id === team.id)
+		this.groups.forEach(group => {
+			const list_tasks = tasks.filter(task => task.group_id === group.id)
 
 			ordened_tasks = [...ordened_tasks, ...list_tasks]
 		})
@@ -263,11 +263,11 @@ export default class Gantt {
 		})
 	}
 
-	set_task_index_by_teams() {
+	set_task_index_by_groups() {
 		let index = 0
 
 		this.resource_tree.forEach(item => {
-			if (item.type === 'teams' || item.type === 'sub_group') {
+			if (item.type === 'groups' || item.type === 'sub_group') {
 				index++
 			} else {
 				const task = this.get_task(item.task_id)
@@ -279,11 +279,11 @@ export default class Gantt {
 		})
 	}
 
-	resource_tree_team_push_task(team, sub_group) {
+	resource_tree_group_push_task(group, sub_group) {
 		let tasks = [...this.tasks]
 
-		if (team) {
-			tasks = tasks.filter(task => task.team_id === team.id)
+		if (group) {
+			tasks = tasks.filter(task => task.group_id === group.id)
 		}
 
 		if (sub_group) {
@@ -294,18 +294,18 @@ export default class Gantt {
 			this.resource_tree.push({
 				type: 'task',
 				task_id: task.id,
-				team_id: team.id,
+				group_id: group.id,
 				sub_group_id: sub_group ? sub_group.id : null,
 			})
 		})
 	}
 
 	set_resource_tree() {
-		const { responsables_enable, teams_enable } = this.options
+		const { responsables_enable, groups_enable } = this.options
 
 		this.resource_tree = []
 
-		if (!responsables_enable && !teams_enable) {
+		if (!responsables_enable && !groups_enable) {
 			this.resource_tree = this.tasks.map(task => ({
 				type: 'task',
 				task_id: task.id,
@@ -314,33 +314,33 @@ export default class Gantt {
 			return
 		}
 
-		if (teams_enable) {
-			this.teams.forEach(team => {
+		if (groups_enable) {
+			this.groups.forEach(group => {
 				this.resource_tree.push({
-					type: 'teams',
-					team_id: team.id,
-					team_name: team.name,
-					team_icon: team.icon,
-					color: team.color,
+					type: 'groups',
+					group_id: group.id,
+					group_name: group.name,
+					group_icon: group.icon,
+					color: group.color,
 				})
 
-				if (team.sub_group) {
-					team.sub_group.forEach(sg => {
+				if (group.sub_group) {
+					group.sub_group.forEach(sg => {
 						this.resource_tree.push({
 							type: 'sub_group',
 							sub_group_id: sg.id,
 							sub_group_name: sg.name,
 							sub_group_icon: sg.icon,
 							color: sg.color,
-							team_id: team.id,
+							group_id: group.id,
 						})
 
-						this.resource_tree_team_push_task(team, sg)
+						this.resource_tree_group_push_task(group, sg)
 					})
 				} else {
-					team.sub_group = []
+					group.sub_group = []
 
-					this.resource_tree_team_push_task(team)
+					this.resource_tree_group_push_task(group)
 				}
 			})
 
@@ -456,12 +456,12 @@ export default class Gantt {
 				task._responsable = this.responsables[this.responsables.length - 1]
 			}
 
-			// workItem teams
+			// workItem groups
 			if (
-				typeof task.team_id !== 'undefined' &&
-				this.teams.hasOwnProperty(task.team_id)
+				typeof task.group_id !== 'undefined' &&
+				this.groups.hasOwnProperty(task.group_id)
 			) {
-				task._team = this.teams.find(item => item.id === task.team_id)
+				task._group = this.groups.find(item => item.id === task.group_id)
 			}
 
 			this.task_map[task.id] = task
@@ -469,16 +469,16 @@ export default class Gantt {
 			return task
 		})
 
-		if (this.options.teams_enable) {
-			this.tasks = this.sort_tasks_by_teams(tasks_map)
+		if (this.options.groups_enable) {
+			this.tasks = this.sort_tasks_by_groups(tasks_map)
 		} else {
 			this.tasks = this.sort_tasks_by_responsable(tasks_map)
 		}
 
 		this.set_resource_tree()
 
-		if (this.options.teams_enable) {
-			this.set_task_index_by_teams()
+		if (this.options.groups_enable) {
+			this.set_task_index_by_groups()
 		} else {
 			this.set_task_index_by_responsable()
 		}
@@ -761,13 +761,13 @@ export default class Gantt {
 		this.resource_tree.forEach(tree => {
 			let item
 
-			if (tree.type === 'teams') {
+			if (tree.type === 'groups') {
 				item = {
-					name: tree.team_name,
-					icon: tree.team_icon,
+					name: tree.group_name,
+					icon: tree.group_icon,
 					color: tree.color,
-					team_id: tree.team_id,
-					is_team: true,
+					group_id: tree.group_id,
+					is_group: true,
 				}
 			} else if (tree.type === 'sub_group') {
 				item = {
@@ -775,7 +775,7 @@ export default class Gantt {
 					icon: tree.sub_group_icon,
 					color: tree.color,
 					sub_group_id: tree.sub_group_id,
-					team_id: tree.team_id,
+					group_id: tree.group_id,
 					is_sub_group: true,
 				}
 			} else if (tree.type === 'responsable') {
@@ -827,7 +827,7 @@ export default class Gantt {
 	}
 
 	make_resource_text(item, row_y, row_width, row_height, el_parent) {
-		const { responsables_enable, teams_enable, resource_collapse_enable } =
+		const { responsables_enable, groups_enable, resource_collapse_enable } =
 			this.options
 
 		let elY = row_y + row_height / 2 + 2
@@ -835,7 +835,7 @@ export default class Gantt {
 		let padding = 30
 		let item_title_css = 'resource-text '
 
-		if (teams_enable && item.is_team) {
+		if (groups_enable && item.is_group) {
 			if (resource_collapse_enable) {
 				this.make_resource_icon_color(item, el_parent, elY - 14, 18, 25)
 
@@ -850,10 +850,10 @@ export default class Gantt {
 			elX += 30
 			elY += 3
 			padding += 22
-			item_title_css += '-team'
+			item_title_css += '-group'
 
 			el_parent.setAttribute('data-type', 'group')
-		} else if (teams_enable && item.is_sub_group) {
+		} else if (groups_enable && item.is_sub_group) {
 			if (resource_collapse_enable) {
 				this.make_resource_icon_color(item, el_parent, elY - 10, 26, 18)
 
@@ -889,12 +889,12 @@ export default class Gantt {
 		} else {
 			item_title_css += '-task'
 
-			if (responsables_enable || teams_enable) {
+			if (responsables_enable || groups_enable) {
 				elX += 20
 				padding += 20
 			}
 
-			if (teams_enable && responsables_enable) {
+			if (groups_enable && responsables_enable) {
 				this.make_resource_responsable_photo(
 					item._responsable.photo,
 					el_parent,
@@ -924,7 +924,7 @@ export default class Gantt {
 			x: elX,
 			y: elY,
 			'data-id': item.id || '',
-			'data-team-id': item.team_id || '',
+			'data-group-id': item.group_id || '',
 			'data-sub-group-id': item.sub_group_id || '',
 			class: item_title_css,
 			append_to: el_parent,
@@ -962,7 +962,7 @@ export default class Gantt {
 				height: img_wh,
 				append_to: el_parent,
 				'data-id': item.id || '',
-				'data-team-id': item.team_id || '',
+				'data-group-id': item.group_id || '',
 				'data-sub-group-id': item.sub_group_id || '',
 				class: this.options.resource_collapse_enable ? 'resource-pointer' : '',
 				innerHTML: this.html_avatar(item.icon, img_wh, img_wh),
@@ -976,7 +976,7 @@ export default class Gantt {
 				width: img_wh,
 				height: img_wh,
 				'data-id': item.id || '',
-				'data-team-id': item.team_id || '',
+				'data-group-id': item.group_id || '',
 				'data-sub-group-id': item.sub_group_id || '',
 				style: `fill:${item.color || '#000000'}`,
 				class: this.options.resource_collapse_enable ? 'resource-pointer' : '',
@@ -995,7 +995,7 @@ export default class Gantt {
 			height: img_wh,
 			append_to: el_parent,
 			'data-id': item.id || '',
-			'data-team-id': item.team_id || '',
+			'data-group-id': item.group_id || '',
 			'data-sub-group-id': item.sub_group_id || '',
 			class: 'resource-pointer resource-arrow',
 			href: 'dist/assets/angle-down-solid.svg',
@@ -1745,15 +1745,15 @@ export default class Gantt {
 				this.$svg,
 				'click',
 				[
-					'.resource-text.-team',
+					'.resource-text.-group',
 					'.resource-text.-sub-group',
 					'.resource-pointer',
 				],
 				(e, element) => {
-					const team_id = element.getAttribute('data-team-id')
+					const group_id = element.getAttribute('data-group-id')
 					const sub_group_id = element.getAttribute('data-sub-group-id')
 
-					let selector = team_id ? `[data-team-id="${team_id}"]` : ''
+					let selector = group_id ? `[data-group-id="${group_id}"]` : ''
 					let start
 
 					if (sub_group_id) {
@@ -1761,13 +1761,13 @@ export default class Gantt {
 
 						start = this.resource_tree.findIndex(
 							rt =>
-								rt.team_id == team_id &&
+								rt.group_id == group_id &&
 								rt.type !== 'task' &&
 								rt.sub_group_id == sub_group_id
 						)
 					} else {
 						start = this.resource_tree.findIndex(
-							rt => rt.team_id == team_id && rt.type !== 'task'
+							rt => rt.group_id == group_id && rt.type !== 'task'
 						)
 					}
 

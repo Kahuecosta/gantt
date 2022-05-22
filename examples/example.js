@@ -11,7 +11,7 @@ const responsables = [
 	},
 ]
 
-const teams = [
+const groups = [
 	{
 		name: 'Agiboard V2',
 		id: 1,
@@ -200,7 +200,7 @@ workitems.forEach((wi, i) => (wi.id = i + 1))
 const dependencies = [2, 5, 6, 9]
 
 workitems.forEach(wi => {
-	wi.team_id = parseInt(Math.random() * (teams.length + 1), 10)
+	wi.group_id = parseInt(Math.random() * (groups.length + 1), 10)
 
 	wi.type_id = parseInt(Math.random() * (types.length + 1), 10)
 
@@ -210,9 +210,9 @@ workitems.forEach(wi => {
 
 	if (wi.responsable_id > responsables.length) wi.responsable_id = undefined
 
-	const w_team = teams.find(t => t.id === wi.team_id)
-	if (w_team && w_team.sub_group) {
-		wi.sub_group_id = parseInt(Math.random() * w_team.sub_group.length, 10)
+	const w_group = groups.find(t => t.id === wi.group_id)
+	if (w_group && w_group.sub_group) {
+		wi.sub_group_id = parseInt(Math.random() * w_group.sub_group.length, 10)
 	}
 
 	if (dependencies.includes(wi.id)) {
@@ -265,8 +265,8 @@ const options = {
 	responsables_sort_by: 'name', // 'default' - 'name'
 	responsables_default_name: 'Não atribuido',
 	responsables_default_photo: './examples/images/responsable-default.png',
-	teams_enable: true,
-	teams_sort_by: 'name', // 'default' - 'name'
+	groups_enable: true,
+	groups_sort_by: 'name', // 'default' - 'name'
 	rows_alternate_background: true,
 	grid_ticks: false,
 	bar_color_default: '#FFCC33',
@@ -280,6 +280,6 @@ const gantt = new Gantt(
 	workitems,
 	types,
 	responsables,
-	teams,
+	groups,
 	options
 )

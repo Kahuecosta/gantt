@@ -6,12 +6,12 @@ export const MINUTE = 'minute'
 export const SECOND = 'second'
 export const MILLISECOND = 'millisecond'
 
-export const TEAMS_TYPES = {
+export const GROUPS_TYPES = {
 	DEFAULT: 'default',
 	NAME: 'name',
 }
 
-export const TEAMS_TYPES_ARR = [TEAMS_TYPES.DEFAULT, TEAMS_TYPES.NAME]
+export const GROUPS_TYPES_ARR = [GROUPS_TYPES.DEFAULT, GROUPS_TYPES.NAME]
 
 export const RESPONSABLE_DEFAULT_ID = 0
 
