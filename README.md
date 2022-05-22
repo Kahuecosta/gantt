@@ -78,8 +78,8 @@ You can also pass various options to the Gantt constructor:
 | responsables_sort_by          | Ordenação de demandas na árvore por responsável                                                |
 | responsables_default_name     | Nome padrão de responsável para a demanda não possui um responsável                            |
 | responsables_default_photo    | Foto padrão de responsável para a demanda não possui um responsável                            |
-| teams_enable                  | Desabilitar ou habilitar grupos na árvore de demandas                                          |
-| teams_sort_by                 | Ordenação de grupos na árvore de demandas                                                      |
+| groups_enable                 | Desabilitar ou habilitar grupos na árvore de demandas                                          |
+| groups_sort_by                | Ordenação de grupos na árvore de demandas                                                      |
 | rows_alternate_background     | Desabilitar ou habilitar linhas zebradas                                                       |
 | grid_ticks                    | Desabilitar ou habilitar as linhas de marcação das colunas                                     |
 | bar_color_default             | Cor padrão das barras para quando a cor não é informada no workitem                            |
@@ -103,12 +103,12 @@ const responsables = [
     {
         id: 1,
         name: 'Kahuê Costa',
-        photo: './images-example/responsable-1.jpg',
+        photo: './images/responsable-1.jpg',
     },
     {
         id: 2,
         name: 'João Silva',
-        photo: './images-example/responsable-default.png',
+        photo: './images/responsable-default.png',
     },
 ];
 
@@ -180,9 +180,9 @@ const options = {
 	responsables_enable: true,
 	responsables_sort_by: 'default', // 'default' - 'name'
 	responsables_default_name: 'Não atribuido',
-	responsables_default_photo: './images-example/responsable-default.png',
-	teams_enable: false,
-	teams_sort_by: 'name', // 'default' - 'name'
+	responsables_default_photo: './images/responsable-default.png',
+	groups_enable: false,
+	groups_sort_by: 'name', // 'default' - 'name'
 	rows_alternate_background: false,
 	grid_ticks: true,
 	bar_color_default: '#f3f2f2',

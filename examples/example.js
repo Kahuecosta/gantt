@@ -2,27 +2,27 @@ const responsables = [
 	{
 		id: 1,
 		name: 'José Santos Oliveira Rodrigues',
-		photo: './images-example/responsable-1.jpg',
+		photo: './examples/images/responsable-1.jpg',
 	},
 	{
 		id: 2,
 		name: 'Roberta Souza de Melo',
-		photo: './images-example/responsable-default.png',
+		photo: './examples/images/responsable-default.png',
 	},
 ]
 
-const teams = [
+const groups = [
 	{
 		name: 'Agiboard V2',
 		id: 1,
 		color: '#e27d02',
-		icon: './images-example/icon-1.png',
+		icon: './examples/images/icon-1.png',
 		sub_group: [
 			{
 				name: 'A fazer',
 				id: 1,
 				color: '#e27d02',
-				icon: './images-example/icon-1.png',
+				icon: './examples/images/icon-1.png',
 			},
 			{
 				name: 'Prioridade',
@@ -32,7 +32,7 @@ const teams = [
 			{
 				name: 'Em avaliação',
 				id: 3,
-				icon: './images-example/icon-2.png',
+				icon: './examples/images/icon-2.png',
 			},
 			{
 				name: 'Fazendo',
@@ -42,20 +42,20 @@ const teams = [
 			{
 				name: 'Feito',
 				id: 5,
-				icon: './images-example/icon-3.png',
+				icon: './examples/images/icon-3.png',
 			},
 		],
 	},
 	{
 		name: 'Implantação',
 		id: 2,
-		icon: './images-example/icon-2.png',
+		icon: './examples/images/icon-2.png',
 	},
 	{
 		name: 'Produto',
 		id: 3,
 		color: '#d81e46',
-		icon: './images-example/icon-3.png',
+		icon: './examples/images/icon-3.png',
 	},
 	{
 		name: 'Tecnologia',
@@ -70,20 +70,20 @@ const types = [
 		name: 'Hotfix',
 		bar_class: 'bar-hotfix',
 		color: '#e27d02',
-		icon: './images-example/icon-1.png',
+		icon: './examples/images/icon-1.png',
 	},
 	{
 		id: 2,
 		name: 'Task',
 		bar_class: 'bar-task',
 		color: '#0758b3',
-		icon: './images-example/icon-2.png',
+		icon: './examples/images/icon-2.png',
 	},
 	{
 		id: 3,
 		name: 'Débito Técnico',
 		bar_class: 'bar-debit',
-		icon: './images-example/icon-3.png',
+		icon: './examples/images/icon-3.png',
 	},
 	{
 		id: 4,
@@ -200,7 +200,7 @@ workitems.forEach((wi, i) => (wi.id = i + 1))
 const dependencies = [2, 5, 6, 9]
 
 workitems.forEach(wi => {
-	wi.team_id = parseInt(Math.random() * (teams.length + 1), 10)
+	wi.group_id = parseInt(Math.random() * (groups.length + 1), 10)
 
 	wi.type_id = parseInt(Math.random() * (types.length + 1), 10)
 
@@ -210,9 +210,9 @@ workitems.forEach(wi => {
 
 	if (wi.responsable_id > responsables.length) wi.responsable_id = undefined
 
-	const w_team = teams.find(t => t.id === wi.team_id)
-	if (w_team && w_team.sub_group) {
-		wi.sub_group_id = parseInt(Math.random() * w_team.sub_group.length, 10)
+	const w_group = groups.find(t => t.id === wi.group_id)
+	if (w_group && w_group.sub_group) {
+		wi.sub_group_id = parseInt(Math.random() * w_group.sub_group.length, 10)
 	}
 
 	if (dependencies.includes(wi.id)) {
@@ -264,9 +264,9 @@ const options = {
 	responsables_enable: true,
 	responsables_sort_by: 'name', // 'default' - 'name'
 	responsables_default_name: 'Não atribuido',
-	responsables_default_photo: './images-example/responsable-default.png',
-	teams_enable: true,
-	teams_sort_by: 'name', // 'default' - 'name'
+	responsables_default_photo: './examples/images/responsable-default.png',
+	groups_enable: true,
+	groups_sort_by: 'name', // 'default' - 'name'
 	rows_alternate_background: true,
 	grid_ticks: false,
 	bar_color_default: '#FFCC33',
@@ -280,6 +280,6 @@ const gantt = new Gantt(
 	workitems,
 	types,
 	responsables,
-	teams,
+	groups,
 	options
 )
