@@ -103,12 +103,12 @@ const responsables = [
     {
         id: 1,
         name: 'Kahuê Costa',
-        photo: './images-example/responsable-1.jpg',
+        photo: './images/responsable-1.jpg',
     },
     {
         id: 2,
         name: 'João Silva',
-        photo: './images-example/responsable-default.png',
+        photo: './images/responsable-default.png',
     },
 ];
 
@@ -180,7 +180,7 @@ const options = {
 	responsables_enable: true,
 	responsables_sort_by: 'default', // 'default' - 'name'
 	responsables_default_name: 'Não atribuido',
-	responsables_default_photo: './images-example/responsable-default.png',
+	responsables_default_photo: './images/responsable-default.png',
 	teams_enable: false,
 	teams_sort_by: 'name', // 'default' - 'name'
 	rows_alternate_background: false,
