@@ -30,12 +30,10 @@ export default class Bar {
 		this.corner_radius = this.gantt.options.bar_corner_radius
 		this.duration =
 			date_utils.diff(this.task._end, this.task._start, 'hour') /
-			this.gantt.options.step
-		this.width = this.gantt.options.column_width * this.duration
+			this.gantt.step
+		this.width = this.gantt.column_width * this.duration
 		this.progress_width =
-			this.gantt.options.column_width *
-				this.duration *
-				(this.task.progress / 100) || 0
+			this.gantt.column_width * this.duration * (this.task.progress / 100) || 0
 		this.group = createSVG('g', {
 			class:
 				'bar-wrapper ' +
@@ -181,7 +179,7 @@ export default class Bar {
 	draw_resize_handles() {
 		if (this.gantt.options.readonly) return
 
-		if (!this.gantt.options.draggable) return
+		if (!this.gantt.options.draggable_bar_handles) return
 
 		if (this.invalid) return
 
@@ -320,7 +318,7 @@ export default class Bar {
 			this.update_attr(bar, 'x', x)
 		}
 
-		if (width && width >= this.gantt.options.column_width) {
+		if (width && width >= this.gantt.column_width) {
 			this.update_attr(bar, 'width', width)
 		}
 
@@ -407,16 +405,16 @@ export default class Bar {
 
 	compute_start_end_date() {
 		const bar = this.$bar
-		const x_in_units = bar.getX() / this.gantt.options.column_width
+		const x_in_units = bar.getX() / this.gantt.column_width
 		const new_start_date = date_utils.add(
 			this.gantt.gantt_start,
-			x_in_units * this.gantt.options.step,
+			x_in_units * this.gantt.step,
 			'hour'
 		)
-		const width_in_units = bar.getWidth() / this.gantt.options.column_width
+		const width_in_units = bar.getWidth() / this.gantt.column_width
 		const new_end_date = date_utils.add(
 			new_start_date,
-			width_in_units * this.gantt.options.step,
+			width_in_units * this.gantt.step,
 			'hour'
 		)
 
@@ -431,17 +429,16 @@ export default class Bar {
 	}
 
 	compute_x() {
-		const { step, column_width } = this.gantt.options
 		const task_start = this.task._start
 		const gantt_start = this.gantt.gantt_start
 		const diff = date_utils.diff(task_start, gantt_start, 'hour')
 
-		let x = (diff / step) * column_width
+		let x = (diff / this.gantt.step) * this.gantt.column_width
 
 		if (this.gantt.view_is('Month')) {
 			const diff = date_utils.diff(task_start, gantt_start, 'day')
 
-			x = (diff * column_width) / 30
+			x = (diff * this.gantt.column_width) / 30
 		}
 
 		return this.resource_width + x
@@ -461,29 +458,23 @@ export default class Bar {
 			position
 
 		if (this.gantt.view_is('Week')) {
-			rem = dx % (this.gantt.options.column_width / 7)
+			rem = dx % (this.gantt.column_width / 7)
 			position =
 				odx -
 				rem +
-				(rem < this.gantt.options.column_width / 14
-					? 0
-					: this.gantt.options.column_width / 7)
+				(rem < this.gantt.column_width / 14 ? 0 : this.gantt.column_width / 7)
 		} else if (this.gantt.view_is('Month')) {
-			rem = dx % (this.gantt.options.column_width / 30)
+			rem = dx % (this.gantt.column_width / 30)
 			position =
 				odx -
 				rem +
-				(rem < this.gantt.options.column_width / 60
-					? 0
-					: this.gantt.options.column_width / 30)
+				(rem < this.gantt.column_width / 60 ? 0 : this.gantt.column_width / 30)
 		} else {
-			rem = dx % this.gantt.options.column_width
+			rem = dx % this.gantt.column_width
 			position =
 				odx -
 				rem +
-				(rem < this.gantt.options.column_width / 2
-					? 0
-					: this.gantt.options.column_width)
+				(rem < this.gantt.column_width / 2 ? 0 : this.gantt.column_width)
 		}
 
 		return position

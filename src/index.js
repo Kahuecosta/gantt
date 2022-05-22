@@ -1,5 +1,5 @@
 import date_utils from './date_utils'
-import { $, createSVG } from './svg_utils'
+import { $, createSVG, animateSVG } from './svg_utils'
 import Bar from './bar'
 import Arrow from './arrow'
 import Popup from './popup'
@@ -23,6 +23,9 @@ export default class Gantt {
 		options
 	) {
 		this.VIEW_MODE = VIEW_MODE
+
+		this.step = 24
+		this.column_width = 38
 
 		this.setup_wrapper(wrapper)
 		this.setup_options(options)
@@ -86,9 +89,6 @@ export default class Gantt {
 	setup_options(options) {
 		const default_options = {
 			header_height: 50,
-			column_width: 150,
-			column_width: 50,
-			step: 24,
 			view_modes: [...Object.values(VIEW_MODE)],
 			bar_height: 20,
 			bar_corner_radius: 3,
@@ -102,7 +102,7 @@ export default class Gantt {
 			margin_bottom: 100,
 			disallow_popup: false,
 			readonly: false,
-			draggable: true,
+			draggable_bar_handles: true,
 			hasArrows: true,
 			move_dependent: 'left',
 			padding_start: null,
@@ -110,12 +110,13 @@ export default class Gantt {
 			fixed_label_location: false,
 			hide_labels: false,
 			horizontal_auto_scroll_labels: false,
-			is_draggable: true,
+			draggable_bar: true,
 			handle_bar_color: '#752f00',
 			handle_progress_color: '#752f00',
 			resource_resize_enable: true,
 			resource_fixed: false,
 			resource_enable: false,
+			resource_collapse_enable: false,
 			resource_title: 'Tasks',
 			resource_width: 250,
 			responsables_enable: false,
@@ -320,7 +321,7 @@ export default class Gantt {
 					team_id: team.id,
 					team_name: team.name,
 					team_icon: team.icon,
-					team_color: team.color,
+					color: team.color,
 				})
 
 				if (team.sub_group) {
@@ -330,7 +331,8 @@ export default class Gantt {
 							sub_group_id: sg.id,
 							sub_group_name: sg.name,
 							sub_group_icon: sg.icon,
-							sub_group_color: sg.color,
+							color: sg.color,
+							team_id: team.id,
 						})
 
 						this.resource_tree_team_push_task(team, sg)
@@ -428,7 +430,7 @@ export default class Gantt {
 
 			// uids
 			if (!task.id) {
-				task.id = this.generate_id(task)
+				throw new TypeError('The task id is invalid!')
 			}
 
 			// workItem types
@@ -512,26 +514,26 @@ export default class Gantt {
 		this.options.view_mode = view_mode
 
 		if (view_mode === VIEW_MODE.HOUR) {
-			this.options.step = 24 / 24
-			this.options.column_width = 38
+			this.step = 24 / 24
+			this.column_width = 38
 		} else if (view_mode === VIEW_MODE.DAY) {
-			this.options.step = 24
-			this.options.column_width = 60
+			this.step = 24
+			this.column_width = 60
 		} else if (view_mode === VIEW_MODE.HALF_DAY) {
-			this.options.step = 24 / 2
-			this.options.column_width = 60
+			this.step = 24 / 2
+			this.column_width = 60
 		} else if (view_mode === VIEW_MODE.QUARTER_DAY) {
-			this.options.step = 24 / 4
-			this.options.column_width = 60
+			this.step = 24 / 4
+			this.column_width = 60
 		} else if (view_mode === VIEW_MODE.WEEK) {
-			this.options.step = 24 * 7
-			this.options.column_width = 140
+			this.step = 24 * 7
+			this.column_width = 140
 		} else if (view_mode === VIEW_MODE.MONTH) {
-			this.options.step = 24 * 30
-			this.options.column_width = 120
+			this.step = 24 * 30
+			this.column_width = 120
 		} else if (view_mode === VIEW_MODE.YEAR) {
-			this.options.step = 24 * 365
-			this.options.column_width = 120
+			this.step = 24 * 365
+			this.column_width = 120
 		}
 	}
 
@@ -619,7 +621,7 @@ export default class Gantt {
 				} else if (this.view_is(VIEW_MODE.MONTH)) {
 					cur_date = date_utils.add(cur_date, 1, 'month')
 				} else {
-					cur_date = date_utils.add(cur_date, this.options.step, 'hour')
+					cur_date = date_utils.add(cur_date, this.step, 'hour')
 				}
 			}
 
@@ -683,12 +685,21 @@ export default class Gantt {
 		this.resource_line_grid_layer = []
 		this.resource_item_title_list = []
 
+		const row_width = this.options.resource_width
+		const row_height = this.options.bar_height + this.options.padding
+
+		this.resource_background = createSVG('rect', {
+			x: 1,
+			y: 1,
+			width: row_width,
+			height: '100%',
+			class: 'resource-background',
+			append_to: this.layers.resource,
+		})
+
 		const grid_layer = createSVG('g', { append_to: this.layers.resource })
 		const text_layer = createSVG('g', { append_to: this.layers.resource })
 		const lines_layer = createSVG('g', { append_to: this.layers.resource })
-
-		const row_width = this.options.resource_width
-		const row_height = this.options.bar_height + this.options.padding
 
 		let row_y = this.options.header_height + this.options.padding / 2
 
@@ -696,13 +707,12 @@ export default class Gantt {
 			append_to: this.layers.resource_title,
 		})
 
-		// make resource
 		this.resource_grid_row = createSVG('rect', {
 			x: 1,
 			y: 1,
 			width: row_width,
 			height: row_height + this.options.header_height - 32,
-			class: 'grid-row teste',
+			class: 'resource-title',
 			append_to: resource_title_layer,
 		})
 
@@ -712,7 +722,7 @@ export default class Gantt {
 			width: row_width,
 			height: row_height,
 			innerHTML: this.options.resource_title,
-			class: 'header-text resource-title',
+			class: 'header-text',
 			append_to: resource_title_layer,
 		})
 
@@ -748,8 +758,6 @@ export default class Gantt {
 			})
 		}
 
-		let team_id
-
 		this.resource_tree.forEach(tree => {
 			let item
 
@@ -757,19 +765,17 @@ export default class Gantt {
 				item = {
 					name: tree.team_name,
 					icon: tree.team_icon,
-					team_color: tree.team_color,
+					color: tree.color,
 					team_id: tree.team_id,
 					is_team: true,
 				}
-
-				team_id = tree.team_id
 			} else if (tree.type === 'sub_group') {
 				item = {
 					name: tree.sub_group_name,
 					icon: tree.sub_group_icon,
-					sub_group_color: tree.sub_group_color,
+					color: tree.color,
 					sub_group_id: tree.sub_group_id,
-					team_id,
+					team_id: tree.team_id,
 					is_sub_group: true,
 				}
 			} else if (tree.type === 'responsable') {
@@ -783,14 +789,24 @@ export default class Gantt {
 				item = this.get_task(tree.task_id)
 			}
 
-			this.make_resource_text(item, row_y, row_width, row_height, text_layer)
+			const resource_text_item = createSVG('g', {
+				append_to: text_layer,
+				class: 'resource-text-item',
+			})
+
+			this.make_resource_text(
+				item,
+				row_y,
+				row_width,
+				row_height,
+				resource_text_item
+			)
 
 			const task_grid_layer = createSVG('rect', {
 				x: 0,
 				y: row_y,
 				width: row_width,
 				height: row_height,
-				class: 'grid-row',
 				append_to: grid_layer,
 			})
 
@@ -810,8 +826,9 @@ export default class Gantt {
 		})
 	}
 
-	make_resource_text(item, row_y, row_width, row_height, text_layer) {
-		const { responsables_enable, teams_enable } = this.options
+	make_resource_text(item, row_y, row_width, row_height, el_parent) {
+		const { responsables_enable, teams_enable, resource_collapse_enable } =
+			this.options
 
 		let elY = row_y + row_height / 2 + 2
 		let elX = 10
@@ -819,67 +836,88 @@ export default class Gantt {
 		let item_title_css = 'resource-text '
 
 		if (teams_enable && item.is_team) {
-			if (item.icon) {
-				this.make_resource_team_icon(item.icon, text_layer, elY)
+			if (resource_collapse_enable) {
+				this.make_resource_icon_color(item, el_parent, elY - 14, 18, 25)
+
+				this.make_resource_arrow(item, el_parent, elY, 3, 12)
+
+				elX += 10
+				padding += 14
 			} else {
-				this.make_resource_team_color(item.team_color, text_layer, elY)
+				this.make_resource_icon_color(item, el_parent, elY - 14, 10, 25)
 			}
 
 			elX += 30
 			elY += 3
 			padding += 22
 			item_title_css += '-team'
+
+			el_parent.setAttribute('data-type', 'group')
 		} else if (teams_enable && item.is_sub_group) {
-			if (item && item.icon) {
-				this.make_resource_sub_group_icon(item.icon, text_layer, elY)
+			if (resource_collapse_enable) {
+				this.make_resource_icon_color(item, el_parent, elY - 10, 26, 18)
+
+				this.make_resource_arrow(item, el_parent, elY, 10, 12)
+
+				elX += 12
+				padding += 14
 			} else {
-				this.make_resource_sub_group_color(
-					item.sub_group_color,
-					text_layer,
-					elY
-				)
+				this.make_resource_icon_color(item, el_parent, elY - 10, 18, 18)
 			}
 
 			elX += 30
 			elY += 3
 			padding += 22
 			item_title_css += '-sub-group'
+
+			el_parent.setAttribute('data-type', 'sub-group')
 		} else if (responsables_enable && item.is_responsable) {
-			this.make_resource_responsable_photo(item.photo, text_layer, elY)
+			this.make_resource_responsable_photo(
+				item.photo,
+				el_parent,
+				elY - 14,
+				8,
+				25
+			)
 
 			elX += 30
 			elY += 3
 			padding += 22
 			item_title_css += '-responsable'
+
+			el_parent.setAttribute('data-type', 'responsable')
 		} else {
 			item_title_css += '-task'
 
 			if (responsables_enable || teams_enable) {
 				elX += 20
+				padding += 20
 			}
 
 			if (teams_enable && responsables_enable) {
 				this.make_resource_responsable_photo(
 					item._responsable.photo,
-					text_layer,
-					elY,
-					24,
+					el_parent,
+					elY - 14,
+					30,
 					21
 				)
 
 				elY += 2
 				elX += 26
-				padding += 20
+				padding += 25
 			}
 
 			const type = this.workItemTypes[item.type_id]
 
 			if (type) {
-				this.make_resource_workitem_type(type, text_layer, elY, elX)
+				this.make_resource_workitem_type(type, el_parent, elY - 12, elX, 14)
 
 				elX += 20
 				padding += 20
 			}
+
+			el_parent.setAttribute('data-type', 'workitem')
 		}
 
 		const item_title = createSVG('text', {
@@ -889,7 +927,7 @@ export default class Gantt {
 			'data-team-id': item.team_id || '',
 			'data-sub-group-id': item.sub_group_id || '',
 			class: item_title_css,
-			append_to: text_layer,
+			append_to: el_parent,
 		})
 
 		this.resource_item_title_list.push({
@@ -902,108 +940,91 @@ export default class Gantt {
 		this.text_ellipsis(item_title, item.name, row_width - padding)
 	}
 
-	html_avatar(photo, w, y) {
-		const avatar = `<img class="avatar" src="${photo}" width="${w}px" height="${y}px" />`
-
-		return avatar
-	}
-
-	make_resource_responsable_photo(
-		photo,
-		text_layer,
-		elY,
-		elX = 8,
-		img_wh = 25
-	) {
+	make_resource_responsable_photo(photo, el_parent, elY, elX, img_wh) {
 		if (!photo) return
 
 		createSVG('foreignObject', {
 			x: elX,
-			y: elY - 14,
+			y: elY,
 			width: img_wh,
 			height: img_wh,
-			append_to: text_layer,
+			append_to: el_parent,
 			innerHTML: this.html_avatar(photo, img_wh, img_wh),
 		})
 	}
 
-	make_resource_team_icon(icon, text_layer, elY, elX = 8, img_wh = 25) {
-		if (!icon) return
+	make_resource_icon_color(item, el_parent, elY, elX, img_wh) {
+		if (item.icon) {
+			createSVG('foreignObject', {
+				x: elX,
+				y: elY,
+				width: img_wh,
+				height: img_wh,
+				append_to: el_parent,
+				'data-id': item.id || '',
+				'data-team-id': item.team_id || '',
+				'data-sub-group-id': item.sub_group_id || '',
+				class: this.options.resource_collapse_enable ? 'resource-pointer' : '',
+				innerHTML: this.html_avatar(item.icon, img_wh, img_wh),
+			})
+		} else if (item.color) {
+			createSVG('rect', {
+				x: elX,
+				y: elY,
+				rx: img_wh,
+				ry: img_wh,
+				width: img_wh,
+				height: img_wh,
+				'data-id': item.id || '',
+				'data-team-id': item.team_id || '',
+				'data-sub-group-id': item.sub_group_id || '',
+				style: `fill:${item.color || '#000000'}`,
+				class: this.options.resource_collapse_enable ? 'resource-pointer' : '',
+				append_to: el_parent,
+			})
+		}
+	}
 
-		createSVG('foreignObject', {
+	make_resource_arrow(item, el_parent, elY, elX, img_wh) {
+		if (!this.options.resource_collapse_enable) return
+
+		createSVG('image', {
 			x: elX,
-			y: elY - 14,
+			y: elY - 7,
 			width: img_wh,
 			height: img_wh,
-			append_to: text_layer,
-			innerHTML: this.html_avatar(icon, img_wh, img_wh),
+			append_to: el_parent,
+			'data-id': item.id || '',
+			'data-team-id': item.team_id || '',
+			'data-sub-group-id': item.sub_group_id || '',
+			class: 'resource-pointer resource-arrow',
+			href: 'dist/assets/angle-down-solid.svg',
 		})
 	}
 
-	make_resource_team_color(color, text_layer, elY, elX = 8, img_wh = 25) {
-		if (!color) return
-
-		createSVG('rect', {
-			x: elX,
-			y: elY - 14,
-			rx: img_wh,
-			ry: img_wh,
-			width: img_wh,
-			height: img_wh,
-			class: 'resource-team-icon',
-			style: `fill:${color || '#000000'}`,
-			append_to: text_layer,
-		})
-	}
-
-	make_resource_sub_group_icon(icon, text_layer, elY, elX = 16, img_wh = 18) {
-		createSVG('foreignObject', {
-			x: elX,
-			y: elY - 10,
-			width: img_wh,
-			height: img_wh,
-			append_to: text_layer,
-			innerHTML: this.html_avatar(icon, img_wh, img_wh),
-		})
-	}
-
-	make_resource_sub_group_color(color, text_layer, elY, elX = 16, img_wh = 18) {
-		createSVG('rect', {
-			x: elX,
-			y: elY - 10,
-			rx: img_wh,
-			ry: img_wh,
-			width: img_wh,
-			height: img_wh,
-			class: 'resource-team-icon',
-			style: `fill:${color || '#000000'}`,
-			append_to: text_layer,
-		})
-	}
-
-	make_resource_workitem_type(type, text_layer, elY, elX = 8, img_wh = 14) {
+	make_resource_workitem_type(type, el_parent, elY, elX, img_wh) {
 		if (type.icon) {
 			createSVG('image', {
 				x: elX,
-				y: elY - 12,
+				y: elY,
 				width: img_wh,
 				height: img_wh,
 				class: 'resource-type-icon-img',
 				href: type.icon,
 				clipPath: 'clip_' + type.id,
-				append_to: text_layer,
+				append_to: el_parent,
 			})
 		} else if (type.color) {
 			createSVG('rect', {
 				x: elX,
-				y: elY - 12,
+				y: elY,
 				rx: img_wh,
 				ry: img_wh,
 				width: img_wh,
 				height: img_wh,
 				class: 'resource-type-icon',
 				style: `fill:${type.color || '#000000'}`,
-				append_to: text_layer,
+				append_to: el_parent,
 			})
 		}
 	}
@@ -1031,17 +1052,23 @@ export default class Gantt {
 		}
 	}
 
+	html_avatar(photo, w, y) {
+		const avatar = `<img class="avatar" src="${photo}" width="${w}px" height="${y}px" />`
+
+		return avatar
+	}
+
 	make_grid() {
 		this.make_grid_background()
-		this.make_grid_rows()
 		this.make_grid_header()
-		this.make_grid_ticks()
 		this.make_grid_highlights()
+		this.make_grid_rows()
+		this.make_grid_ticks()
 	}
 
 	make_grid_background() {
 		const grid_width =
-			this.resource_width + this.dates.length * this.options.column_width
+			this.resource_width + this.dates.length * this.column_width
 
 		const bar_height_padding = this.options.bar_height + this.options.padding
 
@@ -1068,18 +1095,14 @@ export default class Gantt {
 	}
 
 	make_grid_rows() {
-		const {
-			column_width,
-			header_height,
-			bar_height,
-			padding,
-			rows_alternate_background,
-		} = this.options
+		const { header_height, bar_height, padding, rows_alternate_background } =
+			this.options
 
 		const rows_layer = createSVG('g', { append_to: this.layers.grid })
 		const lines_layer = createSVG('g', { append_to: this.layers.grid })
 
-		const row_width = this.resource_width + this.dates.length * column_width
+		const row_width =
+			this.resource_width + this.dates.length * this.column_width
 
 		const row_height = bar_height + padding
 
@@ -1116,7 +1139,7 @@ export default class Gantt {
 
 	make_grid_header() {
 		const header_width =
-			this.resource_width + this.dates.length * this.options.column_width
+			this.resource_width + this.dates.length * this.column_width
 
 		const header_height = this.options.header_height + 10
 
@@ -1169,10 +1192,9 @@ export default class Gantt {
 			})
 
 			if (this.view_is(VIEW_MODE.MONTH)) {
-				tick_x +=
-					(date_utils.get_days_in_month(date) * this.options.column_width) / 30
+				tick_x += (date_utils.get_days_in_month(date) * this.column_width) / 30
 			} else {
-				tick_x += this.options.column_width
+				tick_x += this.column_width
 			}
 		}
 	}
@@ -1182,8 +1204,6 @@ export default class Gantt {
 		if (!this.view_is(VIEW_MODE.DAY)) return
 
 		const {
-			column_width,
-			step,
 			padding,
 			header_height,
 			bar_height,
@@ -1199,8 +1219,8 @@ export default class Gantt {
 
 		const today = date_utils.today()
 		const diff = date_utils.diff(today, this.gantt_start, 'hour')
-		const column_start = (diff / step) * column_width + resource_width
-		const x = column_start + column_width / 2 - 1
+		const column_start = (diff / this.step) * this.column_width + resource_width
+		const x = column_start + this.column_width / 2 - 1
 
 		const height =
 			(bar_height + padding) * this.resource_tree.length +
@@ -1209,28 +1229,36 @@ export default class Gantt {
 
 		createSVG('rect', {
 			x,
-			y: 0,
-			height,
+			y: header_height + 8,
+			height: height - header_height,
 			width: 2,
 			class: 'today-highlight',
-			append_to: this.layers.grid,
+			append_to: this.layers.date,
 		})
 
 		createSVG('rect', {
 			x: column_start,
 			y: header_height + 8,
 			height: 2,
-			width: column_width,
+			width: this.column_width,
 			class: 'today-highlight',
 			append_to: this.layers.date,
 		})
 
 		if (highlights_past_days) {
-			this.make_grid_highlights_past_days(column_width, resource_width, height)
+			this.make_grid_highlights_past_days(
+				this.column_width,
+				resource_width,
+				height
+			)
 		}
 
 		if (highlights_weekend) {
-			this.make_grid_highlights_weekend(column_width, resource_width, height)
+			this.make_grid_highlights_weekend(
+				this.column_width,
+				resource_width,
+				height
+			)
 		}
 	}
 
@@ -1382,27 +1410,26 @@ export default class Gantt {
 		}
 
 		const base_pos = {
-			x: i * this.options.column_width,
+			x: i * this.column_width,
 			lower_y: this.options.header_height,
 			upper_y: this.options.header_height - 25,
 		}
 
 		const x_pos = {
 			Hour_lower: 0,
-			Hour_upper: (this.options.column_width * 24) / 2,
+			Hour_upper: (this.column_width * 24) / 2,
 			'Quarter Day_lower': 0,
-			'Quarter Day_upper': (this.options.column_width * 4) / 2,
+			'Quarter Day_upper': (this.column_width * 4) / 2,
 			'Half Day_lower': 0,
-			'Half Day_upper': (this.options.column_width * 2) / 2,
-			Day_lower: this.options.column_width / 2,
-			Day_upper: (this.options.column_width * 30) / 2,
+			'Half Day_upper': (this.column_width * 2) / 2,
+			Day_lower: this.column_width / 2,
+			Day_upper: (this.column_width * 30) / 2,
 			Week_lower: 0,
-			Week_upper: (this.options.column_width * 4) / 2,
-			Month_lower: this.options.column_width / 2,
-			Month_upper:
-				(this.options.column_width * monthPerYears[date.getFullYear()]) / 2,
-			Year_lower: this.options.column_width / 2,
-			Year_upper: (this.options.column_width * 30) / 2,
+			Week_upper: (this.column_width * 4) / 2,
+			Month_lower: this.column_width / 2,
+			Month_upper: (this.column_width * monthPerYears[date.getFullYear()]) / 2,
+			Year_lower: this.column_width / 2,
+			Year_upper: (this.column_width * 30) / 2,
 		}
 
 		return {
@@ -1495,9 +1522,8 @@ export default class Gantt {
 		)
 
 		const scroll_pos =
-			(hours_before_first_task / this.options.step) *
-				this.options.column_width -
-			this.options.column_width
+			(hours_before_first_task / this.step) * this.column_width -
+			this.column_width
 
 		parent_element.scrollLeft = scroll_pos
 	}
@@ -1517,7 +1543,7 @@ export default class Gantt {
 	bind_bar_events() {
 		if (this.options.readonly) return
 
-		if (!this.options.draggable) {
+		if (!this.options.draggable_bar_handles) {
 			this.bind_bar_progress()
 
 			return
@@ -1612,7 +1638,7 @@ export default class Gantt {
 							x: $bar.ox + $bar.finaldx,
 						})
 					}
-				} else if (is_dragging && this.options.is_draggable) {
+				} else if (is_dragging && this.options.draggable_bar) {
 					bar.update_bar_position({ x: $bar.ox + $bar.finaldx })
 				}
 			})
@@ -1714,14 +1740,69 @@ export default class Gantt {
 			this.$container.scrollTo(left, this.$container.scrollTop)
 		})
 
-		$.on(
-			this.$svg,
-			'click',
-			['.resource-text.-team', '.resource-text.-sub-group'],
-			(event, element) => {
-				console.log('TESTE')
-			}
-		)
+		if (this.options.resource_collapse_enable) {
+			$.on(
+				this.$svg,
+				'click',
+				[
+					'.resource-text.-team',
+					'.resource-text.-sub-group',
+					'.resource-pointer',
+				],
+				(e, element) => {
+					const team_id = element.getAttribute('data-team-id')
+					const sub_group_id = element.getAttribute('data-sub-group-id')
+
+					let selector = team_id ? `[data-team-id="${team_id}"]` : ''
+					let start
+
+					if (sub_group_id) {
+						selector = `[data-sub-group-id="${sub_group_id}"]`
+
+						start = this.resource_tree.findIndex(
+							rt =>
+								rt.team_id == team_id &&
+								rt.type !== 'task' &&
+								rt.sub_group_id == sub_group_id
+						)
+					} else {
+						start = this.resource_tree.findIndex(
+							rt => rt.team_id == team_id && rt.type !== 'task'
+						)
+					}
+
+					const arrow = document.querySelector(selector + '.resource-arrow')
+
+					selector += ':not(.resource-pointer)'
+
+					const els = document.querySelectorAll(selector)
+
+					start++
+
+					const end = start + els.length - 2
+
+					const toggle = els[0].getAttribute('data-toggle')
+
+					const elements = this.resource_tree_open_hide_elements(start, end)
+
+					this.set_transform_origin_element(arrow)
+
+					if (!toggle || toggle === 'open') {
+						els[0].setAttribute('data-toggle', 'close')
+
+						arrow.classList.add('-close')
+
+						this.resource_tree_close(elements)
+					} else {
+						els[0].setAttribute('data-toggle', 'open')
+
+						arrow.classList.remove('-close')
+
+						this.resource_tree_open(elements)
+					}
+				}
+			)
+		}
 
 		if (this.options.resource_resize_enable) {
 			$.on(this.$svg, 'mousedown', '.resource-resize', (e, handle) => {
@@ -1752,6 +1833,7 @@ export default class Gantt {
 				this.resource_resize.setAttribute('x', posX)
 				this.resource_line.setAttribute('x', posX + 8)
 				this.resource_grid_row.setAttribute('width', posX + 8)
+				this.resource_background.setAttribute('width', posX + 8)
 				this.resource_header_text.setAttribute('width', posX + 8)
 				this.resource_grid_header_line.setAttribute('x2', posX + 8)
 				this.resource_grid_layer.forEach(x => {
@@ -1764,7 +1846,7 @@ export default class Gantt {
 				this.resource_item_title_list.forEach(x => {
 					const { element, padding, name } = x
 
-					element.setAttribute('width', posX + 8)
+					element.setAttribute('width', posX)
 
 					this.text_ellipsis(element, name, posX - padding)
 				})
@@ -1774,6 +1856,193 @@ export default class Gantt {
 				is_resizing = false
 			})
 		}
+	}
+
+	set_transform_origin_element(element) {
+		const { x, y } = element.getBBox()
+		const w = element.getWidth() / 2
+		const h = element.getHeight() / 2
+
+		element.setAttribute('transform-origin', `${x + w}px ${y + h}px`)
+	}
+
+	resource_tree_open_hide_elements(start, end) {
+		let [, childRows, childTexts, childLines] = this.layers.resource.children
+
+		const rows = [...childRows.children].filter(
+			(c, i) => i >= start && i <= end
+		)
+
+		const texts = [...childTexts.children].filter(
+			(c, i) => i >= start && i <= end
+		)
+
+		const lines = [...childLines.children]
+			.filter(c => c.nodeName === 'line')
+			.filter((c, i) => i >= start && i <= end)
+
+		const nextRows = [...childRows.children].filter((c, i) => i > end)
+
+		const nextTexts = [...childTexts.children].filter((c, i) => i > end)
+
+		const nextLines = [...childLines.children]
+			.filter(c => c.nodeName === 'line')
+			.filter((c, i) => i > end)
+
+		return {
+			rows,
+			texts,
+			lines,
+			nextRows,
+			nextTexts,
+			nextLines,
+		}
+	}
+
+	resource_tree_open_close_bar(
+		text,
+		is_next,
+		is_open,
+		next_texts,
+		rows_height
+	) {
+		const childrens = Array.from(text.children)
+
+		const element = childrens.find(child => child.getAttribute('data-id'))
+
+		if (!element) return
+
+		const task_id = element.getAttribute('data-id')
+
+		if (!task_id) return
+
+		const bar = this.bars.find(bar => bar.task.id == task_id)
+
+		if (!bar || !bar.bar_group) return
+
+		if (is_next) {
+			const rows_affected = next_texts.filter(
+				t => t.getAttribute('data-type') !== 'group'
+			).length
+
+			const height = rows_affected * rows_height
+
+			const y = is_open ? height : height * -1
+
+			if (bar.bar_group) {
+				const bar_groups = [...bar.bar_group.children]
+
+				bar_groups.forEach(el => {
+					el.setAttribute('y', el.getY() + y)
+				})
+			}
+
+			if (bar.handle_group) {
+				const handle_groups = [...bar.handle_group.children]
+
+				handle_groups.forEach(el => {
+					el.setAttribute('y', el.getY() + y)
+				})
+			}
+
+			const display = is_open ? 'block' : 'none'
+
+			bar.arrows.forEach(arrow => {
+				arrow.element.setAttribute('display', display)
+			})
+		} else {
+			const display = is_open ? 'block' : 'none'
+
+			bar.bar_group.setAttribute('display', display)
+
+			bar.arrows.forEach(arrow => {
+				arrow.element.setAttribute('display', display)
+			})
+		}
+	}
+
+	resource_tree_open_close_resize_gantt(is_open, height_row, total_rows) {
+		let height = height_row * total_rows
+
+		height = is_open ? height : height * -1
+
+		const svgHeight = this.$svg.getHeight()
+
+		this.$svg.setAttribute('height', svgHeight + height)
+	}
+
+	resource_tree_close({ rows, texts, lines, nextRows, nextTexts, nextLines }) {
+		rows.forEach((r, i) => {
+			rows[i].setAttribute('opacity', '0')
+			texts[i].setAttribute('opacity', '0')
+			lines[i].setAttribute('opacity', '0')
+
+			this.resource_tree_open_close_bar(texts[i], false, false)
+		})
+
+		const height = rows[0].getAttribute('height')
+		const ySize = height * rows.length
+
+		this.resource_tree_open_close_resize_gantt(false, height, rows.length)
+
+		if (!nextRows.length) return
+
+		nextLines.forEach(line => {
+			line.setAttribute('opacity', '0')
+		})
+
+		nextRows.forEach(row => {
+			row.setAttribute('y', row.getY() - ySize)
+		})
+
+		nextTexts.forEach(text => {
+			this.resource_tree_open_close_bar(text, true, false, texts, height)
+
+			Array.from(text.children).forEach(el => {
+				el.setAttribute('y', el.getY() - ySize)
+
+				if (el.getAttribute('transform-origin')) {
+					this.set_transform_origin_element(el)
+				}
+			})
+		})
+	}
+
+	resource_tree_open({ rows, texts, lines, nextRows, nextTexts, nextLines }) {
+		rows.forEach((r, i) => {
+			rows[i].setAttribute('opacity', '1')
+			texts[i].setAttribute('opacity', '1')
+			lines[i].setAttribute('opacity', '1')
+
+			this.resource_tree_open_close_bar(texts[i], false, true)
+		})
+
+		const height = rows[0].getAttribute('height')
+		const ySize = height * rows.length
+
+		this.resource_tree_open_close_resize_gantt(true, height, rows.length)
+
+		if (!nextRows.length) return
+
+		nextLines.forEach(line => {
+			line.setAttribute('opacity', '1')
+		})
+
+		nextRows.forEach(row => {
+			row.setAttribute('y', row.getY() + ySize)
+		})
+
+		nextTexts.forEach(text => {
+			this.resource_tree_open_close_bar(text, true, true, texts, height)
+
+			Array.from(text.children).forEach(el => {
+				el.setAttribute('y', el.getY() + ySize)
+
+				if (el.getAttribute('transform-origin')) {
+					this.set_transform_origin_element(el)
+				}
+			})
+		})
 	}
 
 	bind_bar_progress() {
@@ -1863,27 +2132,17 @@ export default class Gantt {
 			position
 
 		if (this.view_is(VIEW_MODE.WEEK)) {
-			rem = dx % (this.options.column_width / 7)
+			rem = dx % (this.column_width / 7)
 			position =
-				odx -
-				rem +
-				(rem < this.options.column_width / 14
-					? 0
-					: this.options.column_width / 7)
+				odx - rem + (rem < this.column_width / 14 ? 0 : this.column_width / 7)
 		} else if (this.view_is(VIEW_MODE.MONTH)) {
-			rem = dx % (this.options.column_width / 30)
+			rem = dx % (this.column_width / 30)
 			position =
-				odx -
-				rem +
-				(rem < this.options.column_width / 60
-					? 0
-					: this.options.column_width / 30)
+				odx - rem + (rem < this.column_width / 60 ? 0 : this.column_width / 30)
 		} else {
-			rem = dx % this.options.column_width
+			rem = dx % this.column_width
 			position =
-				odx -
-				rem +
-				(rem < this.options.column_width / 2 ? 0 : this.options.column_width)
+				odx - rem + (rem < this.column_width / 2 ? 0 : this.column_width)
 		}
 
 		return position
