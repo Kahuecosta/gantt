@@ -22,7 +22,7 @@ $max-height: calc(100vh - 100px);
 	margin-top: -1px;
 
 	.grid-background {
-		fill: none;
+		fill: $background;
 	}
 
 	.grid-header {
@@ -32,15 +32,29 @@ $max-height: calc(100vh - 100px);
 	}
 
 	.grid-row {
-		fill: $background;
+		&.-alt-bg {
+			fill: darken($background, 3%);
+			opacity: 0.5;
 
-		&.-alt-bg:nth-child(even) {
-			fill: darken($background, 1%);
+			&:nth-child(even) {
+				fill: darken($background, 5%);
+			}
 		}
 	}
 
 	.row-line {
-		stroke: darken($background, 1%);
+		stroke: none;
+	}
+
+	.resource {
+		fill: $background;
+	}
+
+	.resource-text-item {
+	}
+
+	.resource-title {
+		fill: $background;
 	}
 
 	.resource-resize {
@@ -60,7 +74,7 @@ $max-height: calc(100vh - 100px);
 	}
 
 	.tick {
-		stroke: darken($background, 16%);
+		stroke: darken($background, 30%);
 		stroke-width: 0.2;
 
 		&.thick {
@@ -73,11 +87,11 @@ $max-height: calc(100vh - 100px);
 	}
 
 	.weekend-highlight {
-		fill: darken($background, 4%);
+		fill: darken($background, 9%);
 	}
 
 	.past-days-highlight {
-		fill: darken($background, 2%);
+		fill: darken($background, 5%);
 	}
 
 	.arrow {
@@ -176,16 +190,30 @@ $max-height: calc(100vh - 100px);
 	.header-text {
 		font-size: 1.2em;
 		text-anchor: start;
+
+		&.resource-title {
+			font-weight: 600;
+			letter-spacing: 0.05em;
+		}
 	}
 
-	.resource-title {
-		font-weight: 600;
-		letter-spacing: 0.05em;
+	.resource-pointer {
+		cursor: pointer;
+	}
+
+	.resource-arrow {
+		transition: transform 0.2s linear;
+		transform: rotate(0deg);
+
+		&.-close {
+			transform: rotate(-90deg);
+		}
 	}
 
 	.resource-text {
 		font-size: 12px;
 		text-anchor: start;
+		fill: $text-color;
 
 		&.-task:hover {
 			cursor: pointer;

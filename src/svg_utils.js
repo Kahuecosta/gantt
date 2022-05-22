@@ -18,6 +18,14 @@ export function createSVG(tag, attrs) {
 		} else {
 			elem.setAttribute(attr, attrs[attr])
 		}
+
+		if (attr === 'y') {
+			elem.setAttribute('data-original-y', attrs[attr])
+		} else if (attr === 'x') {
+			elem.setAttribute('data-original-x', attrs[attr])
+		} else if (attr === 'height') {
+			elem.setAttribute('data-original-height', attrs[attr])
+		}
 	}
 
 	return elem

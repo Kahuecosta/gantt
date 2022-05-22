@@ -20,28 +20,28 @@ const teams = [
 		sub_group: [
 			{
 				name: 'A fazer',
-				id: 0,
+				id: 1,
 				color: '#e27d02',
 				icon: './images-example/icon-1.png',
 			},
 			{
 				name: 'Prioridade',
-				id: 1,
+				id: 2,
 				color: '#e27d02',
 			},
 			{
 				name: 'Em avaliação',
-				id: 2,
+				id: 3,
 				icon: './images-example/icon-2.png',
 			},
 			{
 				name: 'Fazendo',
-				id: 3,
+				id: 4,
 				color: '#d81e46',
 			},
 			{
 				name: 'Feito',
-				id: 4,
+				id: 5,
 				icon: './images-example/icon-3.png',
 			},
 		],
@@ -104,7 +104,6 @@ const workitems = [
 		end: getDate(8),
 		name: 'Lorem ipsum dolor sit amet',
 		progress: 20,
-		estimated: 100,
 		bar_color: '#E2445C',
 	},
 	{
@@ -112,17 +111,13 @@ const workitems = [
 		end: getDate(6),
 		name: 'Nulla aliquam egestas velit posuere commodo',
 		progress: 5,
-		estimated: 100,
 		bar_color: '#FDAB3D',
-		dependencies: '0',
 	},
 	{
 		start: getDate(4),
 		end: getDate(8),
 		name: 'Duis nec ornare massa. Vestibulum at consectetur arcu',
 		progress: 10,
-		estimated: 100,
-		dependencies: '1',
 		bar_color: '#FDAB3D',
 	},
 	{
@@ -130,8 +125,6 @@ const workitems = [
 		end: getDate(9),
 		name: 'Aenean maximus, odio sed rhoncus vulputate',
 		progress: 5,
-		estimated: 100,
-		dependencies: '2',
 		bar_color: '#579BFC',
 	},
 	{
@@ -140,16 +133,12 @@ const workitems = [
 		name: 'Curabitur venenatis ac lorem sed imperdiet',
 		bar_color: '#FDAB3D',
 		progress: 0,
-		estimated: 100,
-		dependencies: '2',
 	},
 	{
 		start: getDate(11),
 		duration: 2,
 		name: 'Quisque porta justo fringilla quam euismod, eu semper libero viverra',
 		progress: 0,
-		estimated: 100,
-		dependencies: '4',
 		bar_color: '#579BFC',
 	},
 	{
@@ -157,8 +146,6 @@ const workitems = [
 		end: getDate(16),
 		name: 'Maecenas augue nulla, luctus id rutrum at, efficitur id quam!',
 		progress: 20,
-		estimated: 100,
-		dependencies: '',
 		bar_color: '#9CD326',
 		thumbnail:
 			'https://www.clipartmax.com/png/middle/85-851687_campfire-icon-14-icon-success-error.png',
@@ -168,8 +155,6 @@ const workitems = [
 		end: getDate(18),
 		name: 'Etiam at suscipit ipsum, sollicitudin efficitur purus',
 		progress: 0,
-		estimated: 100,
-		dependencies: '0',
 		bar_color: '#E2445C',
 		thumbnail:
 			'https://image.similarpng.com/very-thumbnail/2021/06/Attention-sign-icon.png',
@@ -180,14 +165,12 @@ const workitems = [
 		name: 'Ut at mi dictum, bibendum augue quis, sagittis nisi',
 		bar_color: '#579BFC',
 		progress: 10,
-		estimated: 100,
 	},
 	{
 		start: getDate(5),
 		duration: 3,
 		name: 'Cras eget ornare leo, non congue leo. Aenean porttitor rutrum enim tincidunt rutrum',
 		progress: 40,
-		estimated: 100,
 	},
 	{
 		start: getDate(8),
@@ -195,7 +178,6 @@ const workitems = [
 		name: 'Proin id faucibus massa',
 		bar_color: '#E2445C',
 		progress: 0,
-		estimated: 100,
 	},
 	{
 		start: getDate(15),
@@ -203,7 +185,6 @@ const workitems = [
 		name: 'Nam condimentum nisl in diam molestie',
 		bar_color: '#E2445C',
 		progress: 0,
-		estimated: 100,
 	},
 	{
 		start: getDate(1),
@@ -211,11 +192,12 @@ const workitems = [
 		name: 'Quisque ac neque pulvinar, ullamcorper lorem at, vestibulum lectus',
 		bar_color: '#FDAB3D',
 		progress: 50,
-		estimated: 100,
 	},
 ]
 
-workitems.forEach((wi, i) => (wi.id = i))
+workitems.forEach((wi, i) => (wi.id = i + 1))
+
+const dependencies = [2, 5, 6, 9]
 
 workitems.forEach(wi => {
 	wi.team_id = parseInt(Math.random() * (teams.length + 1), 10)
@@ -231,6 +213,10 @@ workitems.forEach(wi => {
 	const w_team = teams.find(t => t.id === wi.team_id)
 	if (w_team && w_team.sub_group) {
 		wi.sub_group_id = parseInt(Math.random() * w_team.sub_group.length, 10)
+	}
+
+	if (dependencies.includes(wi.id)) {
+		wi.dependencies = [parseInt(Math.random() * (workitems.length + 1), 10)]
 	}
 })
 
@@ -257,20 +243,22 @@ const options = {
 	language: 'pt-br',
 	margin_bottom: -26,
 	disallow_popup: false,
+	arrow_curve: 15,
 	readonly: false,
-	draggable: true,
+	draggable_bar_handles: true,
 	hasArrows: true,
 	move_dependent: 'both',
 	fixed_label_location: false,
 	hide_labels: true,
 	horizontal_auto_scroll_labels: false,
-	is_draggable: true,
+	draggable_bar: true,
 	bar_height: 22,
 	handle_bar_color: '#333',
 	handle_progress_color: '#333',
 	resource_resize_enable: true,
 	resource_fixed: true,
 	resource_enable: true,
+	resource_collapse_enable: true,
 	resource_title: 'Desenvolvimento Evolutivo',
 	resource_width: 280,
 	responsables_enable: true,
@@ -279,7 +267,7 @@ const options = {
 	responsables_default_photo: './images-example/responsable-default.png',
 	teams_enable: true,
 	teams_sort_by: 'name', // 'default' - 'name'
-	rows_alternate_background: false,
+	rows_alternate_background: true,
 	grid_ticks: false,
 	bar_color_default: '#FFCC33',
 	highlights_weekend: true,
