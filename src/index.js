@@ -835,6 +835,8 @@ export default class Gantt {
 		let padding = 30
 		let item_title_css = 'resource-text '
 
+		el_parent.setAttribute('data-open', 'open')
+
 		if (groups_enable && item.is_group) {
 			if (resource_collapse_enable) {
 				this.make_resource_icon_color(item, el_parent, elY - 14, 18, 25)
@@ -871,6 +873,7 @@ export default class Gantt {
 			item_title_css += '-sub-group'
 
 			el_parent.setAttribute('data-type', 'sub-group')
+			el_parent.setAttribute('data-type-parent', 'group')
 		} else if (responsables_enable && item.is_responsable) {
 			this.make_resource_responsable_photo(
 				item.photo,
@@ -918,6 +921,12 @@ export default class Gantt {
 			}
 
 			el_parent.setAttribute('data-type', 'workitem')
+
+			if (item.group_id && item.sub_group_id) {
+				el_parent.setAttribute('data-type-parent', 'sub-group')
+			} else {
+				el_parent.setAttribute('data-type-parent', 'group')
+			}
 		}
 
 		const item_title = createSVG('text', {
@@ -1869,6 +1878,8 @@ export default class Gantt {
 	resource_tree_open_hide_elements(start, end) {
 		let [, childRows, childTexts, childLines] = this.layers.resource.children
 
+		const firstText = [...childTexts.children][start - 1]
+
 		const rows = [...childRows.children].filter(
 			(c, i) => i >= start && i <= end
 		)
@@ -1896,6 +1907,7 @@ export default class Gantt {
 			nextRows,
 			nextTexts,
 			nextLines,
+			firstText,
 		}
 	}
 
@@ -1971,8 +1983,29 @@ export default class Gantt {
 		this.$svg.setAttribute('height', svgHeight + height)
 	}
 
-	resource_tree_close({ rows, texts, lines, nextRows, nextTexts, nextLines }) {
-		rows.forEach((r, i) => {
+	resource_tree_close({
+		rows,
+		texts,
+		lines,
+		nextRows,
+		nextTexts,
+		nextLines,
+		firstText,
+	}) {
+		const type = firstText.getAttribute('data-type')
+
+		texts = texts.filter(
+			(r, i) =>
+				r.getAttribute('data-type-parent') === type ||
+				(r.getAttribute('data-type-parent') !== type &&
+					r.getAttribute('data-open') === 'open')
+		)
+
+		texts.forEach((r, i) => {
+			if (r.getAttribute('data-type-parent') === type) {
+				texts[i].setAttribute('data-open', 'close')
+			}
+
 			rows[i].setAttribute('opacity', '0')
 			texts[i].setAttribute('opacity', '0')
 			lines[i].setAttribute('opacity', '0')
@@ -1981,7 +2014,7 @@ export default class Gantt {
 		})
 
 		const height = rows[0].getAttribute('height')
-		const ySize = height * rows.length
+		const ySize = height * texts.length
 
 		this.resource_tree_open_close_resize_gantt(false, height, rows.length)
 
@@ -2008,8 +2041,29 @@ export default class Gantt {
 		})
 	}
 
-	resource_tree_open({ rows, texts, lines, nextRows, nextTexts, nextLines }) {
-		rows.forEach((r, i) => {
+	resource_tree_open({
+		rows,
+		texts,
+		lines,
+		nextRows,
+		nextTexts,
+		nextLines,
+		firstText,
+	}) {
+		const type = firstText.getAttribute('data-type')
+
+		texts = texts.filter(
+			(r, i) =>
+				r.getAttribute('data-type-parent') === type ||
+				(r.getAttribute('data-type-parent') !== type &&
+					r.getAttribute('data-open') === 'open')
+		)
+
+		texts.forEach((r, i) => {
+			if (r.getAttribute('data-type-parent') === type) {
+				texts[i].setAttribute('data-open', 'open')
+			}
+
 			rows[i].setAttribute('opacity', '1')
 			texts[i].setAttribute('opacity', '1')
 			lines[i].setAttribute('opacity', '1')
@@ -2018,7 +2072,7 @@ export default class Gantt {
 		})
 
 		const height = rows[0].getAttribute('height')
-		const ySize = height * rows.length
+		const ySize = height * texts.length
 
 		this.resource_tree_open_close_resize_gantt(true, height, rows.length)
 
