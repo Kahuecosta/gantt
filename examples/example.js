@@ -98,7 +98,7 @@ const year = date.getFullYear()
 const month = date.getMonth()
 const getDate = day => `${year}-${month + 1}-${day}`
 
-const workitems = [
+const workitemList = [
 	{
 		start: getDate(1),
 		end: getDate(8),
@@ -195,9 +195,17 @@ const workitems = [
 	},
 ]
 
-workitems.forEach((wi, i) => (wi.id = i + 1))
+const workitems = []
 
-const dependencies = [2, 5, 6, 9]
+for (let index = 0; index < 1; index++) {
+	workitemList.forEach(wi => workitems.push(Object.assign({}, wi)))
+}
+
+console.log('Total de workitems exibidos: ', workitems.length)
+
+workitems.forEach((wi, i) => (wi.id = (i + 1).toString()))
+
+const dependencies = ['2', '5', '6', '9']
 
 workitems.forEach(wi => {
 	wi.group_id = parseInt(Math.random() * (groups.length + 1), 10)
