@@ -1,7 +1,9 @@
 <div align="center">
     <h2 align="center">Frappe Gantt customized</h2>
     <p>A simple, interactive, modern gantt chart library for the web</p>
-    <img src="./gantt v1.0.png" />
+    <img src="./gantt-1 v1.0.png" />
+		<br /><br />
+		<img src="./gantt-2 v1.0.png" />
     <br /><br />
 </div>
 
