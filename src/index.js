@@ -11,6 +11,9 @@ import {
 	RESPONSABLE_DEFAULT_ID,
 	RESPONSABLE_TYPES,
 	RESPONSABLE_TYPES_ARR,
+	DATA_OPEN,
+	DATA_TYPE,
+	DATA_ATTR,
 } from './constants'
 
 export default class Gantt {
@@ -835,7 +838,7 @@ export default class Gantt {
 		let padding = 30
 		let item_title_css = 'resource-text '
 
-		el_parent.setAttribute('data-open', 'open')
+		el_parent.setAttribute(DATA_ATTR.OPEN, DATA_OPEN.OPEN)
 
 		if (groups_enable && item.is_group) {
 			if (resource_collapse_enable) {
@@ -854,7 +857,7 @@ export default class Gantt {
 			padding += 22
 			item_title_css += '-group'
 
-			el_parent.setAttribute('data-type', 'group')
+			el_parent.setAttribute(DATA_ATTR.TYPE, DATA_TYPE.GROUP)
 		} else if (groups_enable && item.is_sub_group) {
 			if (resource_collapse_enable) {
 				this.make_resource_icon_color(item, el_parent, elY - 10, 26, 18)
@@ -872,8 +875,8 @@ export default class Gantt {
 			padding += 22
 			item_title_css += '-sub-group'
 
-			el_parent.setAttribute('data-type', 'sub-group')
-			el_parent.setAttribute('data-type-parent', 'group')
+			el_parent.setAttribute(DATA_ATTR.TYPE, DATA_TYPE.SUB_GROUP)
+			el_parent.setAttribute(DATA_ATTR.TYPE_PARENT, DATA_TYPE.GROUP)
 		} else if (responsables_enable && item.is_responsable) {
 			this.make_resource_responsable_photo(
 				item.photo,
@@ -888,7 +891,7 @@ export default class Gantt {
 			padding += 22
 			item_title_css += '-responsable'
 
-			el_parent.setAttribute('data-type', 'responsable')
+			el_parent.setAttribute(DATA_ATTR.TYPE, DATA_TYPE.RESPONSABLE)
 		} else {
 			item_title_css += '-task'
 
@@ -920,21 +923,21 @@ export default class Gantt {
 				padding += 20
 			}
 
-			el_parent.setAttribute('data-type', 'workitem')
+			el_parent.setAttribute(DATA_ATTR.TYPE, DATA_TYPE.WORKITEM)
 
 			if (item.group_id && item.sub_group_id) {
-				el_parent.setAttribute('data-type-parent', 'sub-group')
+				el_parent.setAttribute(DATA_ATTR.TYPE_PARENT, DATA_TYPE.SUB_GROUP)
 			} else {
-				el_parent.setAttribute('data-type-parent', 'group')
+				el_parent.setAttribute(DATA_ATTR.TYPE_PARENT, DATA_TYPE.GROUP)
 			}
 		}
 
 		const item_title = createSVG('text', {
 			x: elX,
 			y: elY,
-			'data-id': item.id || '',
-			'data-group-id': item.group_id || '',
-			'data-sub-group-id': item.sub_group_id || '',
+			[DATA_ATTR.ID]: item.id || '',
+			[DATA_ATTR.GROUP_ID]: item.group_id || '',
+			[DATA_ATTR.SUB_GROUP_ID]: item.sub_group_id || '',
 			class: item_title_css,
 			append_to: el_parent,
 		})
@@ -970,9 +973,9 @@ export default class Gantt {
 				width: img_wh,
 				height: img_wh,
 				append_to: el_parent,
-				'data-id': item.id || '',
-				'data-group-id': item.group_id || '',
-				'data-sub-group-id': item.sub_group_id || '',
+				[DATA_ATTR.ID]: item.id || '',
+				[DATA_ATTR.GROUP_ID]: item.group_id || '',
+				[DATA_ATTR.SUB_GROUP_ID]: item.sub_group_id || '',
 				class: this.options.resource_collapse_enable ? 'resource-pointer' : '',
 				innerHTML: this.html_avatar(item.icon, img_wh, img_wh),
 			})
@@ -984,9 +987,9 @@ export default class Gantt {
 				ry: img_wh,
 				width: img_wh,
 				height: img_wh,
-				'data-id': item.id || '',
-				'data-group-id': item.group_id || '',
-				'data-sub-group-id': item.sub_group_id || '',
+				[DATA_ATTR.ID]: item.id || '',
+				[DATA_ATTR.GROUP_ID]: item.group_id || '',
+				[DATA_ATTR.SUB_GROUP_ID]: item.sub_group_id || '',
 				style: `fill:${item.color || '#000000'}`,
 				class: this.options.resource_collapse_enable ? 'resource-pointer' : '',
 				append_to: el_parent,
@@ -1003,9 +1006,9 @@ export default class Gantt {
 			width: img_wh,
 			height: img_wh,
 			append_to: el_parent,
-			'data-id': item.id || '',
-			'data-group-id': item.group_id || '',
-			'data-sub-group-id': item.sub_group_id || '',
+			[DATA_ATTR.ID]: item.id || '',
+			[DATA_ATTR.GROUP_ID]: item.group_id || '',
+			[DATA_ATTR.SUB_GROUP_ID]: item.sub_group_id || '',
 			class: 'resource-pointer resource-arrow',
 			href: 'dist/assets/angle-down-solid.svg',
 		})
@@ -1590,7 +1593,7 @@ export default class Gantt {
 			x_on_start = e.clientX
 			y_on_start = e.clientY
 
-			parent_bar_id = bar_wrapper.getAttribute('data-id')
+			parent_bar_id = bar_wrapper.getAttribute(DATA_ATTR.ID)
 
 			const ids = [
 				parent_bar_id,
@@ -1682,7 +1685,7 @@ export default class Gantt {
 			}
 
 			Array.prototype.forEach.call(elements, function (el, i) {
-				ids.push(el.getAttribute('data-id'))
+				ids.push(el.getAttribute(DATA_ATTR.ID))
 			})
 
 			if (dx && this.options.horizontal_auto_scroll_labels) {
@@ -1738,7 +1741,7 @@ export default class Gantt {
 		$.on(this.$svg, 'click', '.resource-text.-task', (event, element) => {
 			this.hide_popup()
 
-			const id = element.getAttribute('data-id')
+			const id = element.getAttribute(DATA_ATTR.ID)
 
 			const bar = this.get_bar(id)
 
@@ -1759,8 +1762,8 @@ export default class Gantt {
 					'.resource-pointer',
 				],
 				(e, element) => {
-					const group_id = element.getAttribute('data-group-id')
-					const sub_group_id = element.getAttribute('data-sub-group-id')
+					const group_id = element.getAttribute(DATA_ATTR.GROUP_ID)
+					const sub_group_id = element.getAttribute(DATA_ATTR.SUB_GROUP_ID)
 
 					let selector = group_id ? `[data-group-id="${group_id}"]` : ''
 					let start
@@ -1790,24 +1793,30 @@ export default class Gantt {
 
 					const end = start + els.length - 2
 
-					const toggle = els[0].getAttribute('data-toggle')
+					const toggle = els[0].getAttribute(DATA_ATTR.TOGGLE)
 
-					const elements = this.resource_tree_open_hide_elements(start, end)
+					const elements = this.resource_tree_get_open_hide_elements(start, end)
 
 					this.set_transform_origin_element(arrow)
 
-					if (!toggle || toggle === 'open') {
-						els[0].setAttribute('data-toggle', 'close')
+					if (!toggle || toggle === DATA_OPEN.OPEN) {
+						els[0].setAttribute(DATA_ATTR.TOGGLE, DATA_OPEN.CLOSE)
 
 						arrow.classList.add('-close')
 
-						this.resource_tree_close(elements)
+						this.resource_tree_open_hide({
+							...elements,
+							is_open: false,
+						})
 					} else {
-						els[0].setAttribute('data-toggle', 'open')
+						els[0].setAttribute(DATA_ATTR.TOGGLE, DATA_OPEN.OPEN)
 
 						arrow.classList.remove('-close')
 
-						this.resource_tree_open(elements)
+						this.resource_tree_open_hide({
+							...elements,
+							is_open: true,
+						})
 					}
 				}
 			)
@@ -1875,10 +1884,11 @@ export default class Gantt {
 		element.setAttribute('transform-origin', `${x + w}px ${y + h}px`)
 	}
 
-	resource_tree_open_hide_elements(start, end) {
+	resource_tree_get_open_hide_elements(start, end) {
 		let [, childRows, childTexts, childLines] = this.layers.resource.children
 
 		const firstText = [...childTexts.children][start - 1]
+		const firstType = firstText.getAttribute(DATA_ATTR.TYPE)
 
 		const rows = [...childRows.children].filter(
 			(c, i) => i >= start && i <= end
@@ -1907,7 +1917,7 @@ export default class Gantt {
 			nextRows,
 			nextTexts,
 			nextLines,
-			firstText,
+			firstType,
 		}
 	}
 
@@ -1920,11 +1930,11 @@ export default class Gantt {
 	) {
 		const childrens = Array.from(text.children)
 
-		const element = childrens.find(child => child.getAttribute('data-id'))
+		const element = childrens.find(child => child.getAttribute(DATA_ATTR.ID))
 
 		if (!element) return
 
-		const task_id = element.getAttribute('data-id')
+		const task_id = element.getAttribute(DATA_ATTR.ID)
 
 		if (!task_id) return
 
@@ -1934,7 +1944,7 @@ export default class Gantt {
 
 		if (is_next) {
 			const rows_affected = next_texts.filter(
-				t => t.getAttribute('data-type') !== 'group'
+				t => t.getAttribute(DATA_ATTR.TYPE) !== DATA_TYPE.GROUP
 			).length
 
 			const height = rows_affected * rows_height
@@ -1957,10 +1967,10 @@ export default class Gantt {
 				})
 			}
 
-			const display = is_open ? 'block' : 'none'
+			const arrow_pos_y = is_open ? 0 : next_texts.length * rows_height * -1
 
 			bar.arrows.forEach(arrow => {
-				arrow.element.setAttribute('display', display)
+				arrow.element.style.transform = `translate(0px, ${arrow_pos_y}px)`
 			})
 		} else {
 			const display = is_open ? 'block' : 'none'
@@ -1983,114 +1993,64 @@ export default class Gantt {
 		this.$svg.setAttribute('height', svgHeight + height)
 	}
 
-	resource_tree_close({
+	resource_tree_open_hide({
 		rows,
 		texts,
 		lines,
 		nextRows,
 		nextTexts,
 		nextLines,
-		firstText,
+		firstType,
+		is_open,
 	}) {
-		const type = firstText.getAttribute('data-type')
+		const opacity = is_open ? '1' : '0'
+		const open = is_open ? DATA_OPEN.OPEN : DATA_OPEN.CLOSE
 
 		texts = texts.filter(
-			(r, i) =>
-				r.getAttribute('data-type-parent') === type ||
-				(r.getAttribute('data-type-parent') !== type &&
-					r.getAttribute('data-open') === 'open')
+			text =>
+				text.getAttribute(DATA_ATTR.TYPE_PARENT) === firstType ||
+				(text.getAttribute(DATA_ATTR.TYPE_PARENT) !== firstType &&
+					text.getAttribute(DATA_ATTR.OPEN) === DATA_OPEN.OPEN)
 		)
 
-		texts.forEach((r, i) => {
-			if (r.getAttribute('data-type-parent') === type) {
-				texts[i].setAttribute('data-open', 'close')
+		texts.forEach((text, i) => {
+			if (text.getAttribute(DATA_ATTR.TYPE_PARENT) === firstType) {
+				text.setAttribute(DATA_ATTR.OPEN, open)
 			}
 
-			rows[i].setAttribute('opacity', '0')
-			texts[i].setAttribute('opacity', '0')
-			lines[i].setAttribute('opacity', '0')
+			text.setAttribute('opacity', opacity)
+			rows[i].setAttribute('opacity', opacity)
+			lines[i].setAttribute('opacity', opacity)
 
-			this.resource_tree_open_close_bar(texts[i], false, false)
+			this.resource_tree_open_close_bar(text, false, is_open)
 		})
 
 		const height = rows[0].getAttribute('height')
-		const ySize = height * texts.length
+		const y_size = height * texts.length
 
-		this.resource_tree_open_close_resize_gantt(false, height, rows.length)
+		this.resource_tree_open_close_resize_gantt(is_open, height, rows.length)
 
 		if (!nextRows.length) return
 
-		nextLines.forEach(line => {
-			line.setAttribute('opacity', '0')
-		})
+		nextLines.forEach(line => line.setAttribute('opacity', opacity))
 
 		nextRows.forEach(row => {
-			row.setAttribute('y', row.getY() - ySize)
+			if (is_open) {
+				row.setAttribute('y', row.getY() + y_size)
+			} else {
+				row.setAttribute('y', row.getY() - y_size)
+			}
 		})
 
 		nextTexts.forEach(text => {
-			this.resource_tree_open_close_bar(text, true, false, texts, height)
+			this.resource_tree_open_close_bar(text, true, is_open, texts, height)
 
 			Array.from(text.children).forEach(el => {
-				el.setAttribute('y', el.getY() - ySize)
-
-				if (el.getAttribute('transform-origin')) {
-					this.set_transform_origin_element(el)
+				if (is_open) {
+					el.setAttribute('y', el.getY() + y_size)
+				} else {
+					el.setAttribute('y', el.getY() - y_size)
 				}
-			})
-		})
-	}
-
-	resource_tree_open({
-		rows,
-		texts,
-		lines,
-		nextRows,
-		nextTexts,
-		nextLines,
-		firstText,
-	}) {
-		const type = firstText.getAttribute('data-type')
-
-		texts = texts.filter(
-			(r, i) =>
-				r.getAttribute('data-type-parent') === type ||
-				(r.getAttribute('data-type-parent') !== type &&
-					r.getAttribute('data-open') === 'open')
-		)
-
-		texts.forEach((r, i) => {
-			if (r.getAttribute('data-type-parent') === type) {
-				texts[i].setAttribute('data-open', 'open')
-			}
-
-			rows[i].setAttribute('opacity', '1')
-			texts[i].setAttribute('opacity', '1')
-			lines[i].setAttribute('opacity', '1')
-
-			this.resource_tree_open_close_bar(texts[i], false, true)
-		})
-
-		const height = rows[0].getAttribute('height')
-		const ySize = height * texts.length
-
-		this.resource_tree_open_close_resize_gantt(true, height, rows.length)
-
-		if (!nextRows.length) return
-
-		nextLines.forEach(line => {
-			line.setAttribute('opacity', '1')
-		})
-
-		nextRows.forEach(row => {
-			row.setAttribute('y', row.getY() + ySize)
-		})
-
-		nextTexts.forEach(text => {
-			this.resource_tree_open_close_bar(text, true, true, texts, height)
-
-			Array.from(text.children).forEach(el => {
-				el.setAttribute('y', el.getY() + ySize)
 
 				if (el.getAttribute('transform-origin')) {
 					this.set_transform_origin_element(el)
@@ -2115,7 +2075,7 @@ export default class Gantt {
 			y_on_start = e.clientY
 
 			const $bar_wrapper = $.closest('.bar-wrapper', handle)
-			const id = $bar_wrapper.getAttribute('data-id')
+			const id = $bar_wrapper.getAttribute(DATA_ATTR.ID)
 
 			bar = this.get_bar(id)
 

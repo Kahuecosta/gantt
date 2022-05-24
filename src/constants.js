@@ -6,6 +6,28 @@ export const MINUTE = 'minute'
 export const SECOND = 'second'
 export const MILLISECOND = 'millisecond'
 
+export const DATA_OPEN = {
+	OPEN: 'open',
+	CLOSE: 'close',
+}
+
+export const DATA_TYPE = {
+	GROUP: 'group',
+	SUB_GROUP: 'sub-group',
+	WORKITEM: 'workitem',
+	RESPONSABLE: 'responsable',
+}
+
+export const DATA_ATTR = {
+	ID: 'data-id',
+	OPEN: 'data-open',
+	TYPE: 'data-type',
+	TOGGLE: 'data-toggle',
+	GROUP_ID: 'data-group-id',
+	TYPE_PARENT: 'data-type-parent',
+	SUB_GROUP_ID: 'data-sub-group-id',
+}
+
 export const GROUPS_TYPES = {
 	DEFAULT: 'default',
 	NAME: 'name',
