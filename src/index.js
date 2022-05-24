@@ -125,7 +125,7 @@ export default class Gantt {
 			responsables_enable: false,
 			responsables_sort_by: 'default', // 'default' - 'name'
 			responsables_default_name: 'Não atribuido',
-			responsables_default_photo: './assets/responsable-default.png',
+			responsables_default_photo: '../dist/assets/responsable-default.png',
 			groups_enable: false,
 			groups_sort_by: 'name', // 'default' - 'name'
 			rows_alternate_background: true,
@@ -134,7 +134,10 @@ export default class Gantt {
 			highlights_weekend: true,
 			highlights_past_days: true,
 			link_detail_text: 'Ver detalhes',
+			dir_assets: '../dist/assets',
 		}
+
+		default_options.responsables_default_photo = `${default_options.dir_assets}/responsable-default.png`
 
 		this.options = Object.assign({}, default_options, options)
 	}
@@ -755,7 +758,7 @@ export default class Gantt {
 				height: 16,
 				fill: '#000',
 				class: 'resource-resize',
-				href: 'dist/assets/resize.png',
+				href: `${this.options.dir_assets}/resize.png`,
 				clipPath: 'clip_resize',
 				append_to: resource_title_layer,
 			})
@@ -1010,7 +1013,7 @@ export default class Gantt {
 			[DATA_ATTR.GROUP_ID]: item.group_id || '',
 			[DATA_ATTR.SUB_GROUP_ID]: item.sub_group_id || '',
 			class: 'resource-pointer resource-arrow',
-			href: 'dist/assets/angle-down-solid.svg',
+			href: `${this.options.dir_assets}/angle-down-solid.svg`,
 		})
 	}
 
