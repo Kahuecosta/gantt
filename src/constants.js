@@ -26,6 +26,7 @@ export const DATA_ATTR = {
 	GROUP_ID: 'data-group-id',
 	TYPE_PARENT: 'data-type-parent',
 	SUB_GROUP_ID: 'data-sub-group-id',
+	OPACITY: 'opacity',
 }
 
 export const GROUPS_TYPES = {

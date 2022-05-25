@@ -88,6 +88,7 @@ You can also pass various options to the Gantt constructor:
 | link_detail_text              | Texto do link dentro do popup para a abertura de detalhes de uma demanda                       |
 | highlights_weekend            | Marcar colunas de finais de semana com fundo diferenciado                                      |
 | highlights_past_days          | Marcar colunas de dias no passado com fundo diferenciado                                       |
+| dir_assets                    | Caminho relativo para assets do componente                                                     |
 
 | EVENTOS             | DESCRIÇÃO                                                    |
 | ------------------- | ------------------------------------------------------------ |
@@ -191,6 +192,7 @@ const options = {
 	highlights_weekend: true,
 	highlights_past_days: true,
 	link_detail_text: 'Ver detalhes',
+	dir_assets: '../dist/assets',
 }
 
 const gantt = new Gantt(
