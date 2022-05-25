@@ -9,12 +9,35 @@ var Gantt = (function () {
 	const SECOND = 'second';
 	const MILLISECOND = 'millisecond';
 
-	const TEAMS_TYPES = {
+	const DATA_OPEN = {
+		OPEN: 'open',
+		CLOSE: 'close',
+	};
+
+	const DATA_TYPE = {
+		GROUP: 'group',
+		SUB_GROUP: 'sub-group',
+		WORKITEM: 'workitem',
+		RESPONSABLE: 'responsable',
+	};
+
+	const DATA_ATTR = {
+		ID: 'data-id',
+		OPEN: 'data-open',
+		TYPE: 'data-type',
+		TOGGLE: 'data-toggle',
+		GROUP_ID: 'data-group-id',
+		TYPE_PARENT: 'data-type-parent',
+		SUB_GROUP_ID: 'data-sub-group-id',
+		OPACITY: 'opacity',
+	};
+
+	const GROUPS_TYPES = {
 		DEFAULT: 'default',
 		NAME: 'name',
 	};
 
-	const TEAMS_TYPES_ARR = [TEAMS_TYPES.DEFAULT, TEAMS_TYPES.NAME];
+	const GROUPS_TYPES_ARR = [GROUPS_TYPES.DEFAULT, GROUPS_TYPES.NAME];
 
 	const RESPONSABLE_DEFAULT_ID = 0;
 
@@ -973,14 +996,16 @@ var Gantt = (function () {
 			const offset = from_is_below_to
 				? end_y + this.gantt.options.arrow_curve
 				: end_y - this.gantt.options.arrow_curve;
-			this.path = `
-            M ${start_x} ${start_y}
-            V ${offset}
-            a ${curve} ${curve} 0 0 ${clockwise} ${curve} ${curve_y}
-            L ${end_x} ${end_y}
-            m -5 -5
-            l 5 5
-            l -5 5`;
+
+			const M = `M ${start_x} ${start_y}`;
+			const V = `V ${offset}`;
+			const a = `a ${curve} ${curve} 0 0 ${clockwise} ${curve} ${curve_y}`;
+			const L = `L ${end_x} ${end_y}`;
+			const m = `m -5 -5`;
+			const l1 = `l 5 5`;
+			const l2 = `l -5 5`;
+
+			this.path = `${M}  ${V}  ${a}  ${L}  ${m} ${l1} ${l2}`;
 
 			if (this.to_task.$bar.getX() < this.from_task.$bar.getX() + padding) {
 				const down_1 = padding / 2 - curve;
@@ -988,18 +1013,19 @@ var Gantt = (function () {
 					this.to_task.$bar.getY() + this.to_task.$bar.getHeight() / 2 - curve_y;
 				const left = this.to_task.$bar.getX() - padding;
 
-				this.path = `
-                M ${start_x} ${start_y}
-                v ${down_1}
-                a ${curve} ${curve} 0 0 1 -${curve} ${curve}
-                H ${left}
-                a ${curve} ${curve} 0 0 ${clockwise} -${curve} ${curve_y}
-                V ${down_2}
-                a ${curve} ${curve} 0 0 ${clockwise} ${curve} ${curve_y}
-                L ${end_x} ${end_y}
-                m -5 -5
-                l 5 5
-                l -5 5`;
+				const M = `M ${start_x} ${start_y}`;
+				const Mv = `v ${down_1}`;
+				const Ma = `a ${curve} ${curve} 0 0 1 -${curve} ${curve}`;
+				const H = `H ${left}`;
+				const Ha = `a ${curve} ${curve} 0 0 ${clockwise} -${curve} ${curve_y}`;
+				const V = `V ${down_2}`;
+				const Va = `a ${curve} ${curve} 0 0 ${clockwise} ${curve} ${curve_y}`;
+				const L = `L ${end_x} ${end_y}`;
+				const Lm = `m -5 -5`;
+				const Ll = `l 5 5`;
+				const Lll = `l -5 5`;
+
+				this.path = `${M} ${Mv} ${Ma} ${H} ${Ha}  ${V}  ${Va}  ${L}  ${Lm} ${Ll} ${Lll}`;
 			}
 		}
 
@@ -1186,7 +1212,7 @@ var Gantt = (function () {
 			workItems,
 			workItemTypes,
 			responsables = [],
-			teams = [],
+			groups = [],
 			options
 		) {
 			this.VIEW_MODE = VIEW_MODE;
@@ -1197,7 +1223,7 @@ var Gantt = (function () {
 			this.setup_wrapper(wrapper);
 			this.setup_options(options);
 			this.setup_responsables(responsables);
-			this.setup_teams(teams);
+			this.setup_groups(groups);
 			this.setup_workItem_types(workItemTypes);
 			this.setup_tasks(workItems);
 
@@ -1289,27 +1315,29 @@ var Gantt = (function () {
 				responsables_enable: false,
 				responsables_sort_by: 'default', // 'default' - 'name'
 				responsables_default_name: 'Não atribuido',
-				responsables_default_photo: './images-example/responsable-default.png',
-				teams_enable: false,
-				teams_sort_by: 'name', // 'default' - 'name'
+				groups_enable: false,
+				groups_sort_by: 'name', // 'default' - 'name'
 				rows_alternate_background: true,
 				grid_ticks: true,
 				bar_color_default: '#FFCC33',
 				highlights_weekend: true,
 				highlights_past_days: true,
 				link_detail_text: 'Ver detalhes',
+				dir_assets: '../dist/assets',
 			};
+
+			default_options.responsables_default_photo = `${default_options.dir_assets}/responsable-default.png`;
 
 			this.options = Object.assign({}, default_options, options);
 		}
 
-		setup_teams(teams) {
-			if (this.options.teams_enable) {
-				this.teams = teams;
+		setup_groups(groups) {
+			if (this.options.groups_enable) {
+				this.groups = groups;
 
-				this.sort_teams();
+				this.sort_groups();
 			} else {
-				this.teams = [];
+				this.groups = [];
 			}
 		}
 
@@ -1356,15 +1384,15 @@ var Gantt = (function () {
 			}
 		}
 
-		sort_teams() {
-			const { teams_sort_by } = this.options;
+		sort_groups() {
+			const { groups_sort_by } = this.options;
 
-			if (!TEAMS_TYPES_ARR.includes(teams_sort_by)) {
-				throw new TypeError('The teams_sort_by is invalid!')
+			if (!GROUPS_TYPES_ARR.includes(groups_sort_by)) {
+				throw new TypeError('The groups_sort_by is invalid!')
 			}
 
-			if (teams_sort_by === TEAMS_TYPES.NAME) {
-				this.teams = teams.sort((a, b) => {
+			if (groups_sort_by === GROUPS_TYPES.NAME) {
+				this.groups = groups.sort((a, b) => {
 					if (a.name > b.name) return 1
 
 					if (a.name < b.name) return -1
@@ -1392,15 +1420,15 @@ var Gantt = (function () {
 			return ordened_tasks
 		}
 
-		sort_tasks_by_teams(tasks) {
-			if (!this.options.teams_enable) {
+		sort_tasks_by_groups(tasks) {
+			if (!this.options.groups_enable) {
 				return tasks
 			}
 
 			let ordened_tasks = [];
 
-			this.teams.forEach(team => {
-				const list_tasks = tasks.filter(task => task.team_id === team.id);
+			this.groups.forEach(group => {
+				const list_tasks = tasks.filter(task => task.group_id === group.id);
 
 				ordened_tasks = [...ordened_tasks, ...list_tasks];
 			});
@@ -1424,11 +1452,11 @@ var Gantt = (function () {
 			});
 		}
 
-		set_task_index_by_teams() {
+		set_task_index_by_groups() {
 			let index = 0;
 
 			this.resource_tree.forEach(item => {
-				if (item.type === 'teams' || item.type === 'sub_group') {
+				if (item.type === 'groups' || item.type === 'sub_group') {
 					index++;
 				} else {
 					const task = this.get_task(item.task_id);
@@ -1440,11 +1468,11 @@ var Gantt = (function () {
 			});
 		}
 
-		resource_tree_team_push_task(team, sub_group) {
+		resource_tree_group_push_task(group, sub_group) {
 			let tasks = [...this.tasks];
 
-			if (team) {
-				tasks = tasks.filter(task => task.team_id === team.id);
+			if (group) {
+				tasks = tasks.filter(task => task.group_id === group.id);
 			}
 
 			if (sub_group) {
@@ -1455,18 +1483,18 @@ var Gantt = (function () {
 				this.resource_tree.push({
 					type: 'task',
 					task_id: task.id,
-					team_id: team.id,
+					group_id: group.id,
 					sub_group_id: sub_group ? sub_group.id : null,
 				});
 			});
 		}
 
 		set_resource_tree() {
-			const { responsables_enable, teams_enable } = this.options;
+			const { responsables_enable, groups_enable } = this.options;
 
 			this.resource_tree = [];
 
-			if (!responsables_enable && !teams_enable) {
+			if (!responsables_enable && !groups_enable) {
 				this.resource_tree = this.tasks.map(task => ({
 					type: 'task',
 					task_id: task.id,
@@ -1475,33 +1503,33 @@ var Gantt = (function () {
 				return
 			}
 
-			if (teams_enable) {
-				this.teams.forEach(team => {
+			if (groups_enable) {
+				this.groups.forEach(group => {
 					this.resource_tree.push({
-						type: 'teams',
-						team_id: team.id,
-						team_name: team.name,
-						team_icon: team.icon,
-						color: team.color,
+						type: 'groups',
+						group_id: group.id,
+						group_name: group.name,
+						group_icon: group.icon,
+						color: group.color,
 					});
 
-					if (team.sub_group) {
-						team.sub_group.forEach(sg => {
+					if (group.sub_group) {
+						group.sub_group.forEach(sg => {
 							this.resource_tree.push({
 								type: 'sub_group',
 								sub_group_id: sg.id,
 								sub_group_name: sg.name,
 								sub_group_icon: sg.icon,
 								color: sg.color,
-								team_id: team.id,
+								group_id: group.id,
 							});
 
-							this.resource_tree_team_push_task(team, sg);
+							this.resource_tree_group_push_task(group, sg);
 						});
 					} else {
-						team.sub_group = [];
+						group.sub_group = [];
 
-						this.resource_tree_team_push_task(team);
+						this.resource_tree_group_push_task(group);
 					}
 				});
 
@@ -1617,12 +1645,12 @@ var Gantt = (function () {
 					task._responsable = this.responsables[this.responsables.length - 1];
 				}
 
-				// workItem teams
+				// workItem groups
 				if (
-					typeof task.team_id !== 'undefined' &&
-					this.teams.hasOwnProperty(task.team_id)
+					typeof task.group_id !== 'undefined' &&
+					this.groups.hasOwnProperty(task.group_id)
 				) {
-					task._team = this.teams.find(item => item.id === task.team_id);
+					task._group = this.groups.find(item => item.id === task.group_id);
 				}
 
 				this.task_map[task.id] = task;
@@ -1630,16 +1658,16 @@ var Gantt = (function () {
 				return task
 			});
 
-			if (this.options.teams_enable) {
-				this.tasks = this.sort_tasks_by_teams(tasks_map);
+			if (this.options.groups_enable) {
+				this.tasks = this.sort_tasks_by_groups(tasks_map);
 			} else {
 				this.tasks = this.sort_tasks_by_responsable(tasks_map);
 			}
 
 			this.set_resource_tree();
 
-			if (this.options.teams_enable) {
-				this.set_task_index_by_teams();
+			if (this.options.groups_enable) {
+				this.set_task_index_by_groups();
 			} else {
 				this.set_task_index_by_responsable();
 			}
@@ -1847,7 +1875,7 @@ var Gantt = (function () {
 			this.resource_item_title_list = [];
 
 			const row_width = this.options.resource_width;
-			const row_height = this.options.bar_height + this.options.padding;
+			const row_height = this.get_rows_height();
 
 			this.resource_background = createSVG('rect', {
 				x: 1,
@@ -1913,7 +1941,7 @@ var Gantt = (function () {
 					height: 16,
 					fill: '#000',
 					class: 'resource-resize',
-					href: 'dist/assets/resize.png',
+					href: `${this.options.dir_assets}/resize.png`,
 					clipPath: 'clip_resize',
 					append_to: resource_title_layer,
 				});
@@ -1922,13 +1950,13 @@ var Gantt = (function () {
 			this.resource_tree.forEach(tree => {
 				let item;
 
-				if (tree.type === 'teams') {
+				if (tree.type === 'groups') {
 					item = {
-						name: tree.team_name,
-						icon: tree.team_icon,
+						name: tree.group_name,
+						icon: tree.group_icon,
 						color: tree.color,
-						team_id: tree.team_id,
-						is_team: true,
+						group_id: tree.group_id,
+						is_group: true,
 					};
 				} else if (tree.type === 'sub_group') {
 					item = {
@@ -1936,7 +1964,7 @@ var Gantt = (function () {
 						icon: tree.sub_group_icon,
 						color: tree.color,
 						sub_group_id: tree.sub_group_id,
-						team_id: tree.team_id,
+						group_id: tree.group_id,
 						is_sub_group: true,
 					};
 				} else if (tree.type === 'responsable') {
@@ -1983,12 +2011,12 @@ var Gantt = (function () {
 				this.resource_grid_layer.push(task_grid_layer);
 				this.resource_line_grid_layer.push(line_grid_layer);
 
-				row_y += this.options.bar_height + this.options.padding;
+				row_y += this.get_rows_height();
 			});
 		}
 
 		make_resource_text(item, row_y, row_width, row_height, el_parent) {
-			const { responsables_enable, teams_enable, resource_collapse_enable } =
+			const { responsables_enable, groups_enable, resource_collapse_enable } =
 				this.options;
 
 			let elY = row_y + row_height / 2 + 2;
@@ -1996,7 +2024,9 @@ var Gantt = (function () {
 			let padding = 30;
 			let item_title_css = 'resource-text ';
 
-			if (teams_enable && item.is_team) {
+			el_parent.setAttribute(DATA_ATTR.OPEN, DATA_OPEN.OPEN);
+
+			if (groups_enable && item.is_group) {
 				if (resource_collapse_enable) {
 					this.make_resource_icon_color(item, el_parent, elY - 14, 18, 25);
 
@@ -2011,10 +2041,10 @@ var Gantt = (function () {
 				elX += 30;
 				elY += 3;
 				padding += 22;
-				item_title_css += '-team';
+				item_title_css += '-group';
 
-				el_parent.setAttribute('data-type', 'group');
-			} else if (teams_enable && item.is_sub_group) {
+				el_parent.setAttribute(DATA_ATTR.TYPE, DATA_TYPE.GROUP);
+			} else if (groups_enable && item.is_sub_group) {
 				if (resource_collapse_enable) {
 					this.make_resource_icon_color(item, el_parent, elY - 10, 26, 18);
 
@@ -2031,7 +2061,8 @@ var Gantt = (function () {
 				padding += 22;
 				item_title_css += '-sub-group';
 
-				el_parent.setAttribute('data-type', 'sub-group');
+				el_parent.setAttribute(DATA_ATTR.TYPE, DATA_TYPE.SUB_GROUP);
+				el_parent.setAttribute(DATA_ATTR.TYPE_PARENT, DATA_TYPE.GROUP);
 			} else if (responsables_enable && item.is_responsable) {
 				this.make_resource_responsable_photo(
 					item.photo,
@@ -2046,16 +2077,16 @@ var Gantt = (function () {
 				padding += 22;
 				item_title_css += '-responsable';
 
-				el_parent.setAttribute('data-type', 'responsable');
+				el_parent.setAttribute(DATA_ATTR.TYPE, DATA_TYPE.RESPONSABLE);
 			} else {
 				item_title_css += '-task';
 
-				if (responsables_enable || teams_enable) {
+				if (responsables_enable || groups_enable) {
 					elX += 20;
 					padding += 20;
 				}
 
-				if (teams_enable && responsables_enable) {
+				if (groups_enable && responsables_enable) {
 					this.make_resource_responsable_photo(
 						item._responsable.photo,
 						el_parent,
@@ -2078,15 +2109,22 @@ var Gantt = (function () {
 					padding += 20;
 				}
 
-				el_parent.setAttribute('data-type', 'workitem');
+				el_parent.setAttribute(DATA_ATTR.TYPE, DATA_TYPE.WORKITEM);
+				el_parent.setAttribute(DATA_ATTR.ID, item.id);
+
+				if (item.group_id && item.sub_group_id) {
+					el_parent.setAttribute(DATA_ATTR.TYPE_PARENT, DATA_TYPE.SUB_GROUP);
+				} else {
+					el_parent.setAttribute(DATA_ATTR.TYPE_PARENT, DATA_TYPE.GROUP);
+				}
 			}
 
 			const item_title = createSVG('text', {
 				x: elX,
 				y: elY,
-				'data-id': item.id || '',
-				'data-team-id': item.team_id || '',
-				'data-sub-group-id': item.sub_group_id || '',
+				[DATA_ATTR.ID]: item.id || '',
+				[DATA_ATTR.GROUP_ID]: item.group_id || '',
+				[DATA_ATTR.SUB_GROUP_ID]: item.sub_group_id || '',
 				class: item_title_css,
 				append_to: el_parent,
 			});
@@ -2122,9 +2160,9 @@ var Gantt = (function () {
 					width: img_wh,
 					height: img_wh,
 					append_to: el_parent,
-					'data-id': item.id || '',
-					'data-team-id': item.team_id || '',
-					'data-sub-group-id': item.sub_group_id || '',
+					[DATA_ATTR.ID]: item.id || '',
+					[DATA_ATTR.GROUP_ID]: item.group_id || '',
+					[DATA_ATTR.SUB_GROUP_ID]: item.sub_group_id || '',
 					class: this.options.resource_collapse_enable ? 'resource-pointer' : '',
 					innerHTML: this.html_avatar(item.icon, img_wh, img_wh),
 				});
@@ -2136,9 +2174,9 @@ var Gantt = (function () {
 					ry: img_wh,
 					width: img_wh,
 					height: img_wh,
-					'data-id': item.id || '',
-					'data-team-id': item.team_id || '',
-					'data-sub-group-id': item.sub_group_id || '',
+					[DATA_ATTR.ID]: item.id || '',
+					[DATA_ATTR.GROUP_ID]: item.group_id || '',
+					[DATA_ATTR.SUB_GROUP_ID]: item.sub_group_id || '',
 					style: `fill:${item.color || '#000000'}`,
 					class: this.options.resource_collapse_enable ? 'resource-pointer' : '',
 					append_to: el_parent,
@@ -2155,11 +2193,11 @@ var Gantt = (function () {
 				width: img_wh,
 				height: img_wh,
 				append_to: el_parent,
-				'data-id': item.id || '',
-				'data-team-id': item.team_id || '',
-				'data-sub-group-id': item.sub_group_id || '',
+				[DATA_ATTR.ID]: item.id || '',
+				[DATA_ATTR.GROUP_ID]: item.group_id || '',
+				[DATA_ATTR.SUB_GROUP_ID]: item.sub_group_id || '',
 				class: 'resource-pointer resource-arrow',
-				href: 'dist/assets/angle-down-solid.svg',
+				href: `${this.options.dir_assets}/angle-down-solid.svg`,
 			});
 		}
 
@@ -2231,7 +2269,7 @@ var Gantt = (function () {
 			const grid_width =
 				this.resource_width + this.dates.length * this.column_width;
 
-			const bar_height_padding = this.options.bar_height + this.options.padding;
+			const bar_height_padding = this.get_rows_height();
 
 			const grid_height =
 				this.options.header_height +
@@ -2320,9 +2358,7 @@ var Gantt = (function () {
 
 			let tick_x = this.resource_width;
 			let tick_y = this.options.header_height + this.options.padding / 2;
-			let tick_height =
-				(this.options.bar_height + this.options.padding) *
-				this.resource_tree.length;
+			let tick_height = this.get_rows_height() * this.resource_tree.length;
 
 			for (let date of this.dates) {
 				let tick_class = 'tick';
@@ -2649,6 +2685,13 @@ var Gantt = (function () {
 			}
 		}
 
+		remake_arrows() {
+			this.arrows = [];
+			this.layers.arrow.innerHTML = '';
+
+			this.make_arrows();
+		}
+
 		map_arrows_on_bars() {
 			if (!this.options.hasArrows) return
 
@@ -2742,7 +2785,7 @@ var Gantt = (function () {
 				x_on_start = e.clientX;
 				y_on_start = e.clientY;
 
-				parent_bar_id = bar_wrapper.getAttribute('data-id');
+				parent_bar_id = bar_wrapper.getAttribute(DATA_ATTR.ID);
 
 				const ids = [
 					parent_bar_id,
@@ -2834,7 +2877,7 @@ var Gantt = (function () {
 				}
 
 				Array.prototype.forEach.call(elements, function (el, i) {
-					ids.push(el.getAttribute('data-id'));
+					ids.push(el.getAttribute(DATA_ATTR.ID));
 				});
 
 				if (dx && this.options.horizontal_auto_scroll_labels) {
@@ -2890,7 +2933,7 @@ var Gantt = (function () {
 			$.on(this.$svg, 'click', '.resource-text.-task', (event, element) => {
 				this.hide_popup();
 
-				const id = element.getAttribute('data-id');
+				const id = element.getAttribute(DATA_ATTR.ID);
 
 				const bar = this.get_bar(id);
 
@@ -2906,61 +2949,71 @@ var Gantt = (function () {
 					this.$svg,
 					'click',
 					[
-						'.resource-text.-team',
+						'.resource-text.-group',
 						'.resource-text.-sub-group',
 						'.resource-pointer',
 					],
 					(e, element) => {
-						const team_id = element.getAttribute('data-team-id');
-						const sub_group_id = element.getAttribute('data-sub-group-id');
+						const group_id = element.getAttribute(DATA_ATTR.GROUP_ID);
+						const sub_group_id = element.getAttribute(DATA_ATTR.SUB_GROUP_ID);
 
-						let selector = team_id ? `[data-team-id="${team_id}"]` : '';
+						let selector = group_id ? `[data-group-id="${group_id}"]` : '';
 						let start;
+						let is_open;
 
 						if (sub_group_id) {
 							selector = `[data-sub-group-id="${sub_group_id}"]`;
 
 							start = this.resource_tree.findIndex(
 								rt =>
-									rt.team_id == team_id &&
+									rt.group_id == group_id &&
 									rt.type !== 'task' &&
 									rt.sub_group_id == sub_group_id
 							);
 						} else {
 							start = this.resource_tree.findIndex(
-								rt => rt.team_id == team_id && rt.type !== 'task'
+								rt => rt.group_id == group_id && rt.type !== 'task'
 							);
 						}
 
 						const arrow = document.querySelector(selector + '.resource-arrow');
 
+						this.set_transform_origin_element(arrow);
+
 						selector += ':not(.resource-pointer)';
 
 						const els = document.querySelectorAll(selector);
+
+						const toggle = els[0].getAttribute(DATA_ATTR.TOGGLE);
+
+						if (!toggle || toggle === DATA_OPEN.OPEN) {
+							els[0].setAttribute(DATA_ATTR.TOGGLE, DATA_OPEN.CLOSE);
+
+							arrow.classList.add('-close');
+
+							is_open = false;
+						} else {
+							els[0].setAttribute(DATA_ATTR.TOGGLE, DATA_OPEN.OPEN);
+
+							arrow.classList.remove('-close');
+
+							is_open = true;
+						}
 
 						start++;
 
 						const end = start + els.length - 2;
 
-						const toggle = els[0].getAttribute('data-toggle');
+						const elements = this.get_open_hide_elements(start, end);
 
-						const elements = this.resource_tree_open_hide_elements(start, end);
-
-						this.set_transform_origin_element(arrow);
-
-						if (!toggle || toggle === 'open') {
-							els[0].setAttribute('data-toggle', 'close');
-
-							arrow.classList.add('-close');
-
-							this.resource_tree_close(elements);
-						} else {
-							els[0].setAttribute('data-toggle', 'open');
-
-							arrow.classList.remove('-close');
-
-							this.resource_tree_open(elements);
-						}
+						this.resource_tree_open_hide({
+							...elements,
+							is_open,
+						});
+						this.reset_index();
+						this.remake_arrows();
+						this.display_arrows();
+						this.vertical_resize_gantt();
 					}
 				);
 			}
@@ -3027,8 +3080,11 @@ var Gantt = (function () {
 			element.setAttribute('transform-origin', `${x + w}px ${y + h}px`);
 		}
 
-		resource_tree_open_hide_elements(start, end) {
+		get_open_hide_elements(start, end) {
 			let [, childRows, childTexts, childLines] = this.layers.resource.children;
+
+			const firstText = [...childTexts.children][start - 1];
+			const firstType = firstText.getAttribute(DATA_ATTR.TYPE);
 
 			const rows = [...childRows.children].filter(
 				(c, i) => i >= start && i <= end
@@ -3057,23 +3113,58 @@ var Gantt = (function () {
 				nextRows,
 				nextTexts,
 				nextLines,
+				firstType,
 			}
 		}
 
-		resource_tree_open_close_bar(
-			text,
-			is_next,
-			is_open,
-			next_texts,
-			rows_height
-		) {
+		reset_index() {
+			const g_texts = this.get_g_texts();
+
+			let index = 0;
+
+			for (let i = 0; i < g_texts.length; i++) {
+				const g = g_texts[i];
+
+				if (
+					g.getAttribute(DATA_ATTR.TYPE) === DATA_TYPE.WORKITEM &&
+					g.getAttribute(DATA_ATTR.ID)
+				) {
+					const task = this.get_task(g.getAttribute(DATA_ATTR.ID));
+
+					if (task) {
+						task._index = index;
+					}
+				}
+
+				if (
+					g.getAttribute(DATA_ATTR.OPEN) === DATA_OPEN.OPEN &&
+					g.getAttribute(DATA_ATTR.OPACITY) !== '0'
+				) {
+					index++;
+				}
+			}
+		}
+
+		display_arrows() {
+			this.arrows.forEach(arrow => {
+				const display_from = arrow.from_task.bar_group.getAttribute('display');
+				const display_to = arrow.to_task.bar_group.getAttribute('display');
+
+				const display =
+					display_from === 'none' || display_to === 'none' ? 'none' : 'block';
+
+				arrow.element.setAttribute('display', display);
+			});
+		}
+
+		open_close_bar(text, is_next, is_open, texts, rows_height) {
 			const childrens = Array.from(text.children);
 
-			const element = childrens.find(child => child.getAttribute('data-id'));
+			const element = childrens.find(child => child.getAttribute(DATA_ATTR.ID));
 
 			if (!element) return
 
-			const task_id = element.getAttribute('data-id');
+			const task_id = element.getAttribute(DATA_ATTR.ID);
 
 			if (!task_id) return
 
@@ -3081,21 +3172,33 @@ var Gantt = (function () {
 
 			if (!bar || !bar.bar_group) return
 
+			let y = 0;
+
 			if (is_next) {
-				const rows_affected = next_texts.filter(
-					t => t.getAttribute('data-type') !== 'group'
+				const rows_affected = texts.filter(
+					t => t.getAttribute(DATA_ATTR.TYPE) !== DATA_TYPE.GROUP
 				).length;
 
 				const height = rows_affected * rows_height;
 
-				const y = is_open ? height : height * -1;
+				y = is_open ? height : height * -1;
 
 				if (bar.bar_group) {
 					const bar_groups = [...bar.bar_group.children];
 
+					let el_y = 0;
+
 					bar_groups.forEach(el => {
-						el.setAttribute('y', el.getY() + y);
+						el_y = el.getY() + y;
+
+						el.setAttribute('y', el_y);
 					});
+
+					if (bar.arrows) {
+						bar.arrows.forEach(arrow => {
+							arrow.from_task.y = el_y;
+						});
+					}
 				}
 
 				if (bar.handle_group) {
@@ -3105,105 +3208,96 @@ var Gantt = (function () {
 						el.setAttribute('y', el.getY() + y);
 					});
 				}
-
-				const display = is_open ? 'block' : 'none';
-
-				bar.arrows.forEach(arrow => {
-					arrow.element.setAttribute('display', display);
-				});
 			} else {
 				const display = is_open ? 'block' : 'none';
 
 				bar.bar_group.setAttribute('display', display);
-
-				bar.arrows.forEach(arrow => {
-					arrow.element.setAttribute('display', display);
-				});
 			}
 		}
 
-		resource_tree_open_close_resize_gantt(is_open, height_row, total_rows) {
-			let height = height_row * total_rows;
+		vertical_resize_gantt() {
+			const g_texts = this.get_g_texts();
 
-			height = is_open ? height : height * -1;
+			const rows_height = this.get_rows_height();
 
-			const svgHeight = this.$svg.getHeight();
+			const total_rows = g_texts.reduce((value, g) => {
+				const is_open =
+					g.getAttribute(DATA_ATTR.OPEN) !== DATA_OPEN.CLOSE &&
+					g.getAttribute(DATA_ATTR.OPACITY) !== '0';
 
-			this.$svg.setAttribute('height', svgHeight + height);
+				return is_open ? value + 1 : value
+			}, 0);
+
+			let height = rows_height * total_rows;
+			height += this.options.header_height;
+			height += this.options.padding / 2;
+
+			this.$svg.setAttribute('height', height);
 		}
 
-		resource_tree_close({ rows, texts, lines, nextRows, nextTexts, nextLines }) {
-			rows.forEach((r, i) => {
-				rows[i].setAttribute('opacity', '0');
-				texts[i].setAttribute('opacity', '0');
-				lines[i].setAttribute('opacity', '0');
+		resource_tree_open_hide({
+			rows,
+			texts,
+			lines,
+			nextRows,
+			nextTexts,
+			nextLines,
+			firstType,
+			is_open,
+		}) {
+			const opacity = is_open ? '1' : '0';
+			const open = is_open ? DATA_OPEN.OPEN : DATA_OPEN.CLOSE;
 
-				this.resource_tree_open_close_bar(texts[i], false, false);
+			const rows_height = this.get_rows_height();
+
+			texts = texts.filter(
+				text =>
+					text.getAttribute(DATA_ATTR.TYPE_PARENT) === firstType ||
+					(text.getAttribute(DATA_ATTR.TYPE_PARENT) !== firstType &&
+						text.getAttribute(DATA_ATTR.OPEN) === DATA_OPEN.OPEN)
+			);
+
+			texts.forEach((text, i) => {
+				if (text.getAttribute(DATA_ATTR.TYPE_PARENT) === firstType) {
+					text.setAttribute(DATA_ATTR.OPEN, open);
+				}
+
+				text.setAttribute('opacity', opacity);
+				rows[i].setAttribute('opacity', opacity);
+				lines[i].setAttribute('opacity', opacity);
+
+				this.open_close_bar(text, false, is_open);
 			});
 
-			const height = rows[0].getAttribute('height');
-			const ySize = height * rows.length;
+			if (nextRows.length) {
+				const y_size = rows_height * texts.length;
 
-			this.resource_tree_open_close_resize_gantt(false, height, rows.length);
+				nextLines.forEach(line => line.setAttribute('opacity', opacity));
 
-			if (!nextRows.length) return
-
-			nextLines.forEach(line => {
-				line.setAttribute('opacity', '0');
-			});
-
-			nextRows.forEach(row => {
-				row.setAttribute('y', row.getY() - ySize);
-			});
-
-			nextTexts.forEach(text => {
-				this.resource_tree_open_close_bar(text, true, false, texts, height);
-
-				Array.from(text.children).forEach(el => {
-					el.setAttribute('y', el.getY() - ySize);
-
-					if (el.getAttribute('transform-origin')) {
-						this.set_transform_origin_element(el);
+				nextRows.forEach(row => {
+					if (is_open) {
+						row.setAttribute('y', row.getY() + y_size);
+					} else {
+						row.setAttribute('y', row.getY() - y_size);
 					}
 				});
-			});
-		}
 
-		resource_tree_open({ rows, texts, lines, nextRows, nextTexts, nextLines }) {
-			rows.forEach((r, i) => {
-				rows[i].setAttribute('opacity', '1');
-				texts[i].setAttribute('opacity', '1');
-				lines[i].setAttribute('opacity', '1');
+				nextTexts.forEach(text => {
+					this.open_close_bar(text, true, is_open, texts, rows_height);
 
-				this.resource_tree_open_close_bar(texts[i], false, true);
-			});
+					Array.from(text.children).forEach(el => {
+						if (is_open) {
+							el.setAttribute('y', el.getY() + y_size);
+						} else {
+							el.setAttribute('y', el.getY() - y_size);
+						}
 
-			const height = rows[0].getAttribute('height');
-			const ySize = height * rows.length;
-
-			this.resource_tree_open_close_resize_gantt(true, height, rows.length);
-
-			if (!nextRows.length) return
-
-			nextLines.forEach(line => {
-				line.setAttribute('opacity', '1');
-			});
-
-			nextRows.forEach(row => {
-				row.setAttribute('y', row.getY() + ySize);
-			});
-
-			nextTexts.forEach(text => {
-				this.resource_tree_open_close_bar(text, true, true, texts, height);
-
-				Array.from(text.children).forEach(el => {
-					el.setAttribute('y', el.getY() + ySize);
-
-					if (el.getAttribute('transform-origin')) {
-						this.set_transform_origin_element(el);
-					}
+						if (el.getAttribute('transform-origin')) {
+							this.set_transform_origin_element(el);
+						}
+					});
 				});
-			});
+			}
 		}
 
 		bind_bar_progress() {
@@ -3222,7 +3316,7 @@ var Gantt = (function () {
 				y_on_start = e.clientY;
 
 				const $bar_wrapper = $.closest('.bar-wrapper', handle);
-				const id = $bar_wrapper.getAttribute('data-id');
+				const id = $bar_wrapper.getAttribute(DATA_ATTR.ID);
 
 				bar = this.get_bar(id);
 
@@ -3268,6 +3362,20 @@ var Gantt = (function () {
 				bar.progress_changed();
 				bar.set_action_completed();
 			});
+		}
+
+		get_g_texts() {
+			let [, , childTexts] = this.layers.resource.children;
+
+			const g_texts = [...childTexts.children];
+
+			return g_texts
+		}
+
+		get_rows_height() {
+			const height = this.options.bar_height + this.options.padding;
+
+			return height
 		}
 
 		get_all_dependent_tasks(task_id) {

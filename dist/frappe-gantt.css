@@ -363,7 +363,7 @@
   font-size: 13px;
   font-weight: bold;
 }
-.gantt-svg .resource-text.-team {
+.gantt-svg .resource-text.-group {
   font-size: 13px;
   font-weight: bold;
   cursor: pointer;
