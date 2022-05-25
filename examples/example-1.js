@@ -2,12 +2,12 @@ const responsables = [
 	{
 		id: 1,
 		name: 'José Santos Oliveira Rodrigues',
-		photo: './examples/images/responsable-1.jpg',
+		photo: './images/responsable-1.jpg',
 	},
 	{
 		id: 2,
 		name: 'Roberta Souza de Melo',
-		photo: './examples/images/responsable-default.png',
+		photo: './images/responsable-default.png',
 	},
 ]
 
@@ -16,13 +16,13 @@ const groups = [
 		name: 'Agiboard V2',
 		id: 1,
 		color: '#e27d02',
-		icon: './examples/images/icon-1.png',
+		icon: './images/icon-1.png',
 		sub_group: [
 			{
 				name: 'A fazer',
 				id: 1,
 				color: '#e27d02',
-				icon: './examples/images/icon-1.png',
+				icon: './images/icon-1.png',
 			},
 			{
 				name: 'Prioridade',
@@ -32,7 +32,7 @@ const groups = [
 			{
 				name: 'Em avaliação',
 				id: 3,
-				icon: './examples/images/icon-2.png',
+				icon: './images/icon-2.png',
 			},
 			{
 				name: 'Fazendo',
@@ -42,20 +42,20 @@ const groups = [
 			{
 				name: 'Feito',
 				id: 5,
-				icon: './examples/images/icon-3.png',
+				icon: './images/icon-3.png',
 			},
 		],
 	},
 	{
 		name: 'Implantação',
 		id: 2,
-		icon: './examples/images/icon-2.png',
+		icon: './images/icon-2.png',
 	},
 	{
 		name: 'Produto',
 		id: 3,
 		color: '#d81e46',
-		icon: './examples/images/icon-3.png',
+		icon: './images/icon-3.png',
 	},
 	{
 		name: 'Tecnologia',
@@ -70,20 +70,20 @@ const types = [
 		name: 'Hotfix',
 		bar_class: 'bar-hotfix',
 		color: '#e27d02',
-		icon: './examples/images/icon-1.png',
+		icon: './images/icon-1.png',
 	},
 	{
 		id: 2,
 		name: 'Task',
 		bar_class: 'bar-task',
 		color: '#0758b3',
-		icon: './examples/images/icon-2.png',
+		icon: './images/icon-2.png',
 	},
 	{
 		id: 3,
 		name: 'Débito Técnico',
 		bar_class: 'bar-debit',
-		icon: './examples/images/icon-3.png',
+		icon: './images/icon-3.png',
 	},
 	{
 		id: 4,
@@ -228,6 +228,8 @@ workitems.forEach(wi => {
 	}
 })
 
+console.log('Workitems: ', workitems)
+
 const options = {
 	on_click: function (workitem) {
 		console.log('on_click', workitem)
@@ -257,7 +259,7 @@ const options = {
 	hasArrows: true,
 	move_dependent: 'both',
 	fixed_label_location: false,
-	hide_labels: true,
+	hide_labels: false,
 	horizontal_auto_scroll_labels: false,
 	draggable_bar: true,
 	bar_height: 22,
@@ -272,7 +274,7 @@ const options = {
 	responsables_enable: true,
 	responsables_sort_by: 'name', // 'default' - 'name'
 	responsables_default_name: 'Não atribuido',
-	responsables_default_photo: './examples/images/responsable-default.png',
+	responsables_default_photo: './images/responsable-default.png',
 	groups_enable: true,
 	groups_sort_by: 'name', // 'default' - 'name'
 	rows_alternate_background: true,
@@ -281,6 +283,7 @@ const options = {
 	highlights_weekend: true,
 	highlights_past_days: true,
 	link_detail_text: 'Ver detalhes',
+	dir_assets: '../dist/assets',
 }
 
 const gantt = new Gantt(

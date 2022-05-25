@@ -1,7 +1,9 @@
 <div align="center">
     <h2 align="center">Frappe Gantt customized</h2>
     <p>A simple, interactive, modern gantt chart library for the web</p>
-    <img src="./gantt v1.0.png" />
+    <img src="./gantt-1 v1.0.png" />
+		<br /><br />
+		<img src="./gantt-2 v1.0.png" />
     <br /><br />
 </div>
 
@@ -86,6 +88,7 @@ You can also pass various options to the Gantt constructor:
 | link_detail_text              | Texto do link dentro do popup para a abertura de detalhes de uma demanda                       |
 | highlights_weekend            | Marcar colunas de finais de semana com fundo diferenciado                                      |
 | highlights_past_days          | Marcar colunas de dias no passado com fundo diferenciado                                       |
+| dir_assets                    | Caminho relativo para assets do componente                                                     |
 
 | EVENTOS             | DESCRIÇÃO                                                    |
 | ------------------- | ------------------------------------------------------------ |
@@ -189,6 +192,7 @@ const options = {
 	highlights_weekend: true,
 	highlights_past_days: true,
 	link_detail_text: 'Ver detalhes',
+	dir_assets: '../dist/assets',
 }
 
 const gantt = new Gantt(
