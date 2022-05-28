@@ -1374,7 +1374,7 @@ var Gantt = (function () {
 			}
 
 			if (responsables_sort_by === RESPONSABLE_TYPES.NAME) {
-				this.responsables = responsables.sort((a, b) => {
+				this.responsables = this.responsables.sort((a, b) => {
 					if (a.name > b.name) return 1
 
 					if (a.name < b.name) return -1
@@ -1392,7 +1392,7 @@ var Gantt = (function () {
 			}
 
 			if (groups_sort_by === GROUPS_TYPES.NAME) {
-				this.groups = groups.sort((a, b) => {
+				this.groups = this.groups.sort((a, b) => {
 					if (a.name > b.name) return 1
 
 					if (a.name < b.name) return -1
