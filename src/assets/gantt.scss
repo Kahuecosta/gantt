@@ -41,6 +41,8 @@ $max-height: calc(100vh - 100px);
 	}
 
 	.grid-row {
+		fill: none;
+		
 		&.-alt-bg {
 			fill: darken($background, 3%);
 			opacity: 0.5;

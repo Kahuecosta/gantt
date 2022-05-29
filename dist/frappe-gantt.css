@@ -23,6 +23,9 @@
   stroke: #e0e0e0;
   stroke-width: 1.4;
 }
+.gantt-svg .grid-row {
+  fill: none;
+}
 .gantt-svg .grid-row.-alt-bg {
   fill: #e7eaef;
   opacity: 0.5;
