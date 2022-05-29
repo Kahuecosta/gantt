@@ -310,7 +310,7 @@ const options = {
 	groups_enable: true,
 	groups_sort_by: 'name',
 	workitems_sort_by: 'name',
-	rows_alternate_background: true,
+	rows_alternate_background: false,
 	grid_ticks: false,
 	bar_color_default: '#FFCC33',
 	highlights_weekend: true,
