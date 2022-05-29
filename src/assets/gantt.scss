@@ -18,6 +18,15 @@ $max-height: calc(100vh - 100px);
 	border: 1px solid $border-color;
 }
 
+.mousegrab {
+	cursor: grab !important;
+
+	&:hover,
+	* {
+		cursor: grab;
+	}
+}
+
 .gantt-svg {
 	margin-top: -1px;
 
@@ -44,33 +53,6 @@ $max-height: calc(100vh - 100px);
 
 	.row-line {
 		stroke: none;
-	}
-
-	.resource {
-		fill: $background;
-	}
-
-	.resource-text-item {
-	}
-
-	.resource-title {
-		fill: $background;
-	}
-
-	.resource-resize {
-		outline: none;
-		user-select: none;
-		opacity: 0.2;
-
-		&:hover {
-			cursor: pointer;
-			opacity: 1;
-		}
-	}
-
-	.resource-line {
-		stroke: #e0e0e0;
-		stroke-width: 1;
 	}
 
 	.tick {
@@ -187,11 +169,36 @@ $max-height: calc(100vh - 100px);
 		fill: $text-color;
 	}
 
-	.header-text {
+	.resource {
+		fill: $background;
+	}
+
+	.resource-line {
+		outline: none;
+		user-select: none;
+		stroke: #e0e0e0;
+		stroke-width: 3;
+
+		&.resource-resize {
+			cursor: col-resize;
+
+			&:hover,
+			&:active {
+				stroke: #ff7e57;
+				opacity: 0.5;
+			}
+		}
+	}
+
+	.resource-header-row {
+		fill: $background;
+	}
+
+	.resource-header-text {
 		font-size: 1.2em;
 		text-anchor: start;
 
-		&.resource-title {
+		&.resource-header-row {
 			font-weight: 600;
 			letter-spacing: 0.05em;
 		}

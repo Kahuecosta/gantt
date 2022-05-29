@@ -32,24 +32,7 @@ var Gantt = (function () {
 		OPACITY: 'opacity',
 	};
 
-	const GROUPS_TYPES = {
-		DEFAULT: 'default',
-		NAME: 'name',
-	};
-
-	const GROUPS_TYPES_ARR = [GROUPS_TYPES.DEFAULT, GROUPS_TYPES.NAME];
-
 	const RESPONSABLE_DEFAULT_ID = 0;
-
-	const RESPONSABLE_TYPES = {
-		DEFAULT: 'default',
-		NAME: 'name',
-	};
-
-	const RESPONSABLE_TYPES_ARR = [
-		RESPONSABLE_TYPES.DEFAULT,
-		RESPONSABLE_TYPES.NAME,
-	];
 
 	const VIEW_MODE = {
 		HOUR: 'Hour',
@@ -1313,10 +1296,11 @@ var Gantt = (function () {
 				resource_title: 'Tasks',
 				resource_width: 250,
 				responsables_enable: false,
-				responsables_sort_by: 'default', // 'default' - 'name'
+				responsables_sort_by: 'name',
 				responsables_default_name: 'Não atribuido',
 				groups_enable: false,
-				groups_sort_by: 'name', // 'default' - 'name'
+				groups_sort_by: 'name',
+				workitems_sort_by: 'name',
 				rows_alternate_background: true,
 				grid_ticks: true,
 				bar_color_default: '#FFCC33',
@@ -1369,50 +1353,50 @@ var Gantt = (function () {
 		sort_responsables() {
 			const { responsables_sort_by } = this.options;
 
-			if (!RESPONSABLE_TYPES_ARR.includes(responsables_sort_by)) {
-				throw new TypeError('The responsables_sort_by is invalid!')
-			}
+			this.responsables = this.responsables.sort((a, b) => {
+				if (a[responsables_sort_by] > b[responsables_sort_by]) return 1
 
-			if (responsables_sort_by === RESPONSABLE_TYPES.NAME) {
-				this.responsables = this.responsables.sort((a, b) => {
-					if (a.name > b.name) return 1
+				if (a[responsables_sort_by] < b[responsables_sort_by]) return -1
 
-					if (a.name < b.name) return -1
-
-					return 0
-				});
-			}
+				return 0
+			});
 		}
 
 		sort_groups() {
 			const { groups_sort_by } = this.options;
 
-			if (!GROUPS_TYPES_ARR.includes(groups_sort_by)) {
-				throw new TypeError('The groups_sort_by is invalid!')
-			}
+			this.groups = this.groups.sort((a, b) => {
+				if (a[groups_sort_by] > b[groups_sort_by]) return 1
 
-			if (groups_sort_by === GROUPS_TYPES.NAME) {
-				this.groups = this.groups.sort((a, b) => {
-					if (a.name > b.name) return 1
+				if (a[groups_sort_by] < b[groups_sort_by]) return -1
 
-					if (a.name < b.name) return -1
+				return 0
+			});
+		}
 
-					return 0
-				});
-			}
+		sort_tasks(tasks) {
+			const { workitems_sort_by } = this.options;
+
+			return tasks.sort((a, b) => {
+				if (a[workitems_sort_by] > b[workitems_sort_by]) return 1
+
+				if (a[workitems_sort_by] < b[workitems_sort_by]) return -1
+
+				return 0
+			})
 		}
 
 		sort_tasks_by_responsable(tasks) {
 			if (!this.options.responsables_enable) {
-				return tasks
+				return this.sort_tasks(tasks)
 			}
 
 			let ordened_tasks = [];
 
-			this.responsables.forEach(responsable => {
-				const list_tasks = tasks.filter(
-					task => task.responsable_id === responsable.id
-				);
+			this.responsables.forEach(item => {
+				let list_tasks = tasks.filter(task => task.responsable_id === item.id);
+
+				list_tasks = this.sort_tasks(list_tasks);
 
 				ordened_tasks = [...ordened_tasks, ...list_tasks];
 			});
@@ -1422,13 +1406,15 @@ var Gantt = (function () {
 
 		sort_tasks_by_groups(tasks) {
 			if (!this.options.groups_enable) {
-				return tasks
+				return this.sort_tasks(tasks)
 			}
 
 			let ordened_tasks = [];
 
 			this.groups.forEach(group => {
-				const list_tasks = tasks.filter(task => task.group_id === group.id);
+				let list_tasks = tasks.filter(task => task.group_id === group.id);
+
+				list_tasks = this.sort_tasks(list_tasks);
 
 				ordened_tasks = [...ordened_tasks, ...list_tasks];
 			});
@@ -1704,25 +1690,25 @@ var Gantt = (function () {
 
 			if (view_mode === VIEW_MODE.HOUR) {
 				this.step = 24 / 24;
-				this.column_width = 38;
+				this.column_width = 50;
 			} else if (view_mode === VIEW_MODE.DAY) {
 				this.step = 24;
-				this.column_width = 60;
+				this.column_width = 100;
 			} else if (view_mode === VIEW_MODE.HALF_DAY) {
 				this.step = 24 / 2;
-				this.column_width = 60;
+				this.column_width = 100;
 			} else if (view_mode === VIEW_MODE.QUARTER_DAY) {
 				this.step = 24 / 4;
-				this.column_width = 60;
+				this.column_width = 100;
 			} else if (view_mode === VIEW_MODE.WEEK) {
 				this.step = 24 * 7;
-				this.column_width = 140;
+				this.column_width = 200;
 			} else if (view_mode === VIEW_MODE.MONTH) {
 				this.step = 24 * 30;
-				this.column_width = 120;
+				this.column_width = 300;
 			} else if (view_mode === VIEW_MODE.YEAR) {
 				this.step = 24 * 365;
-				this.column_width = 120;
+				this.column_width = 400;
 			}
 		}
 
@@ -1819,7 +1805,7 @@ var Gantt = (function () {
 		}
 
 		bind_events() {
-			this.bind_grid_click();
+			this.bind_grid_events();
 			this.bind_bar_events();
 			this.bind_resource_events();
 		}
@@ -1877,13 +1863,18 @@ var Gantt = (function () {
 			const row_width = this.options.resource_width;
 			const row_height = this.get_rows_height();
 
+			this.clip_resource_background = createSVG('clipPath', {
+				id: 'clip-resource-background',
+				append_to: this.layers.resource,
+			});
+
 			this.resource_background = createSVG('rect', {
 				x: 1,
 				y: 1,
 				width: row_width,
 				height: '100%',
 				class: 'resource-background',
-				append_to: this.layers.resource,
+				append_to: this.clip_resource_background,
 			});
 
 			const grid_layer = createSVG('g', { append_to: this.layers.resource });
@@ -1896,12 +1887,12 @@ var Gantt = (function () {
 				append_to: this.layers.resource_title,
 			});
 
-			this.resource_grid_row = createSVG('rect', {
-				x: 1,
+			this.resource_header_row = createSVG('rect', {
+				x: 0,
 				y: 1,
 				width: row_width,
 				height: row_height + this.options.header_height - 32,
-				class: 'resource-title',
+				class: 'resource-header-row',
 				append_to: resource_title_layer,
 			});
 
@@ -1911,41 +1902,25 @@ var Gantt = (function () {
 				width: row_width,
 				height: row_height,
 				innerHTML: this.options.resource_title,
-				class: 'header-text',
+				class: 'resource-header-text',
 				append_to: resource_title_layer,
+				clipPath: 'clip-resource-background',
 			});
 
-			this.resource_grid_header_line = createSVG('line', {
-				x1: 0,
-				y1: row_y,
-				x2: row_width,
-				y2: row_y + 1,
-				class: 'grid-header',
-				append_to: resource_title_layer,
-			});
+			let resource_line_class = 'resource-line';
+
+			if (this.options.resource_resize_enable) {
+				resource_line_class += ' resource-resize';
+			}
 
 			this.resource_line = createSVG('rect', {
 				x: row_width,
 				y: 0,
 				width: 1,
 				height: '100%',
-				class: 'resource-line',
-				append_to: lines_layer,
+				class: resource_line_class,
+				append_to: resource_title_layer,
 			});
-
-			if (this.options.resource_resize_enable) {
-				this.resource_resize = createSVG('image', {
-					x: row_width - 8,
-					y: 14,
-					width: 16,
-					height: 16,
-					fill: '#000',
-					class: 'resource-resize',
-					href: `${this.options.dir_assets}/resize.png`,
-					clipPath: 'clip_resize',
-					append_to: resource_title_layer,
-				});
-			}
 
 			this.resource_tree.forEach(tree => {
 				let item;
@@ -2038,27 +2013,35 @@ var Gantt = (function () {
 					this.make_resource_icon_color(item, el_parent, elY - 14, 10, 25);
 				}
 
-				elX += 30;
+				if (item.icon || item.color) {
+					elX += 30;
+					padding += 22;
+				}
+
 				elY += 3;
-				padding += 22;
 				item_title_css += '-group';
 
 				el_parent.setAttribute(DATA_ATTR.TYPE, DATA_TYPE.GROUP);
 			} else if (groups_enable && item.is_sub_group) {
 				if (resource_collapse_enable) {
-					this.make_resource_icon_color(item, el_parent, elY - 10, 26, 18);
+					this.make_resource_icon_color(item, el_parent, elY - 10, 30, 18);
 
-					this.make_resource_arrow(item, el_parent, elY, 10, 12);
+					this.make_resource_arrow(item, el_parent, elY, 14, 12);
 
-					elX += 12;
-					padding += 14;
+					elX += 16;
+					padding += 18;
 				} else {
 					this.make_resource_icon_color(item, el_parent, elY - 10, 18, 18);
 				}
 
-				elX += 30;
+				if (item.icon || item.color) {
+					elX += 30;
+					padding += 22;
+				} else {
+					elX += 4;
+				}
+
 				elY += 3;
-				padding += 22;
 				item_title_css += '-sub-group';
 
 				el_parent.setAttribute(DATA_ATTR.TYPE, DATA_TYPE.SUB_GROUP);
@@ -2127,6 +2110,7 @@ var Gantt = (function () {
 				[DATA_ATTR.SUB_GROUP_ID]: item.sub_group_id || '',
 				class: item_title_css,
 				append_to: el_parent,
+				clipPath: 'clip-resource-background',
 			});
 
 			this.resource_item_title_list.push({
@@ -2348,7 +2332,6 @@ var Gantt = (function () {
 				width: header_width,
 				height: header_height,
 				class: 'grid-header',
-				// append_to: this.layers.grid,
 				append_to: this.layers.date,
 			});
 		}
@@ -2732,16 +2715,52 @@ var Gantt = (function () {
 			parent_element.scrollLeft = scroll_pos;
 		}
 
-		bind_grid_click() {
-			$.on(
-				this.$svg,
-				this.options.popup_trigger,
-				['.grid-row, .grid-header', '.weekend-highlight', '.past-days-highlight'],
-				() => {
-					this.unselect_all();
-					this.hide_popup();
+		bind_grid_events() {
+			const elements = [
+				'.grid-row, .grid-header',
+				'.weekend-highlight',
+				'.past-days-highlight',
+			];
+
+			$.on(this.$svg, this.options.popup_trigger, elements, () => {
+				this.unselect_all();
+				this.hide_popup();
+			});
+
+			let scrolling_active = false;
+			let x_on_start;
+			let y_on_start;
+			let left;
+			let top;
+
+			$.on(this.$svg, 'mousedown', elements, e => {
+				this.$container.classList.add('mousegrab');
+
+				this.unselect_all();
+				this.hide_popup();
+
+				scrolling_active = true;
+				x_on_start = e.clientX;
+				y_on_start = e.clientY;
+
+				left = this.$container.scrollLeft;
+				top = this.$container.scrollTop;
+			});
+
+			$.on(this.$svg, 'mousemove', elements, e => {
+				if (scrolling_active) {
+					const dx = e.clientX - x_on_start;
+					const dy = e.clientY - y_on_start;
+
+					this.$container.scrollTo(left - dx, top - dy);
 				}
-			);
+			});
+
+			$.on(this.$svg, 'mouseup', elements, e => {
+				scrolling_active = false;
+
+				this.$container.classList.remove('mousegrab');
+			});
 		}
 
 		bind_bar_events() {
@@ -2937,7 +2956,7 @@ var Gantt = (function () {
 
 				const bar = this.get_bar(id);
 
-				const grid_row_width = this.resource_grid_row.getWidth();
+				const grid_row_width = this.resource_header_row.getWidth();
 
 				const left = bar.x - (grid_row_width + 50);
 
@@ -3019,13 +3038,15 @@ var Gantt = (function () {
 			}
 
 			if (this.options.resource_resize_enable) {
-				$.on(this.$svg, 'mousedown', '.resource-resize', (e, handle) => {
+				let posX;
+
+				$.on(this.$svg, 'mousedown', '.resource-resize', e => {
 					is_resizing = true;
 					x_on_start = e.clientX;
 
-					$resource_resize = this.resource_resize;
-					$resource_resize.owidth = this.resource_resize.getWidth();
-					$resource_resize.ox = this.resource_resize.getX();
+					$resource_resize = this.resource_line;
+					$resource_resize.owidth = this.resource_line.getWidth();
+					$resource_resize.ox = this.resource_line.getX();
 				});
 
 				$.on(this.$svg, 'mousemove', e => {
@@ -3033,29 +3054,32 @@ var Gantt = (function () {
 
 					let dx = e.clientX - x_on_start;
 
-					const posX = $resource_resize.ox + dx;
+					posX = $resource_resize.ox + dx;
 
 					if (
 						!posX ||
 						isNaN(posX) ||
-						posX <= this.resource_width ||
-						posX >= this.resource_width + 180
+						posX <= 50 ||
+						posX <= this.resource_width - 200 ||
+						posX >= this.resource_width + 200
 					) {
 						return
 					}
 
-					this.resource_resize.setAttribute('x', posX);
 					this.resource_line.setAttribute('x', posX + 8);
-					this.resource_grid_row.setAttribute('width', posX + 8);
+					this.resource_header_row.setAttribute('width', posX + 8);
 					this.resource_background.setAttribute('width', posX + 8);
 					this.resource_header_text.setAttribute('width', posX + 8);
-					this.resource_grid_header_line.setAttribute('x2', posX + 8);
 					this.resource_grid_layer.forEach(x => {
 						x.setAttribute('width', posX + 8);
 					});
 					this.resource_line_grid_layer.forEach(x => {
 						x.setAttribute('width', posX + 8);
 					});
+				});
+
+				$.on(this.$svg, 'mouseup', () => {
+					is_resizing = false;
 
 					this.resource_item_title_list.forEach(x => {
 						const { element, padding, name } = x;
@@ -3064,10 +3088,6 @@ var Gantt = (function () {
 
 						this.text_ellipsis(element, name, posX - padding);
 					});
-				});
-
-				$.on(this.$svg, 'mouseup', () => {
-					is_resizing = false;
 				});
 			}
 		}

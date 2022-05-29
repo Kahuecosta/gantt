@@ -82,6 +82,7 @@ You can also pass various options to the Gantt constructor:
 | responsables_default_photo    | Foto padrão de responsável para a demanda não possui um responsável                            |
 | groups_enable                 | Desabilitar ou habilitar grupos na árvore de demandas                                          |
 | groups_sort_by                | Ordenação de grupos na árvore de demandas                                                      |
+| workitems_sort_by             | Ordenação de tarefas na árvore de demandas                                                     |
 | rows_alternate_background     | Desabilitar ou habilitar linhas zebradas                                                       |
 | grid_ticks                    | Desabilitar ou habilitar as linhas de marcação das colunas                                     |
 | bar_color_default             | Cor padrão das barras para quando a cor não é informada no workitem                            |
@@ -181,11 +182,12 @@ const options = {
 	resource_title: 'Tasks',
 	resource_width: 250,
 	responsables_enable: true,
-	responsables_sort_by: 'default', // 'default' - 'name'
+	responsables_sort_by: 'default',
 	responsables_default_name: 'Não atribuido',
 	responsables_default_photo: './images/responsable-default.png',
 	groups_enable: false,
-	groups_sort_by: 'name', // 'default' - 'name'
+	groups_sort_by: 'name',
+	workitems_sort_by: 'name',
 	rows_alternate_background: false,
 	grid_ticks: true,
 	bar_color_default: '#f3f2f2',

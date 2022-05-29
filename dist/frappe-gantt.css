@@ -4,6 +4,14 @@
   border: 1px solid #e0e0e0;
 }
 
+.mousegrab {
+  cursor: grab !important;
+}
+.mousegrab:hover,
+.mousegrab * {
+  cursor: grab;
+}
+
 .gantt-svg {
   margin-top: -1px;
 }
@@ -24,25 +32,6 @@
 }
 .gantt-svg .row-line {
   stroke: none;
-}
-.gantt-svg .resource {
-  fill: #f0f2f5;
-}
-.gantt-svg .resource-title {
-  fill: #f0f2f5;
-}
-.gantt-svg .resource-resize {
-  outline: none;
-  user-select: none;
-  opacity: 0.2;
-}
-.gantt-svg .resource-resize:hover {
-  cursor: pointer;
-  opacity: 1;
-}
-.gantt-svg .resource-line {
-  stroke: #e0e0e0;
-  stroke-width: 1;
 }
 .gantt-svg .tick {
   stroke: #94a2b8;
@@ -132,11 +121,30 @@
 .gantt-svg .lower-text {
   fill: #333;
 }
-.gantt-svg .header-text {
+.gantt-svg .resource {
+  fill: #f0f2f5;
+}
+.gantt-svg .resource-line {
+  outline: none;
+  user-select: none;
+  stroke: #e0e0e0;
+  stroke-width: 3;
+}
+.gantt-svg .resource-line.resource-resize {
+  cursor: col-resize;
+}
+.gantt-svg .resource-line.resource-resize:hover, .gantt-svg .resource-line.resource-resize:active {
+  stroke: #ff7e57;
+  opacity: 0.5;
+}
+.gantt-svg .resource-header-row {
+  fill: #f0f2f5;
+}
+.gantt-svg .resource-header-text {
   font-size: 1.2em;
   text-anchor: start;
 }
-.gantt-svg .header-text.resource-title {
+.gantt-svg .resource-header-text.resource-header-row {
   font-weight: 600;
   letter-spacing: 0.05em;
 }
