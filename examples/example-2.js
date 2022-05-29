@@ -32,7 +32,6 @@ const groups = [
 			{
 				name: 'Em avaliação',
 				id: 3,
-				icon: './images/icon-2.png',
 			},
 			{
 				name: 'Fazendo',
@@ -49,7 +48,6 @@ const groups = [
 	{
 		name: 'Implantação',
 		id: 2,
-		icon: './images/icon-2.png',
 	},
 	{
 		name: 'Produto',
@@ -304,13 +302,14 @@ const options = {
 	resource_enable: true,
 	resource_collapse_enable: true,
 	resource_title: 'Desenvolvimento Evolutivo',
-	resource_width: 280,
+	resource_width: 350,
 	responsables_enable: true,
-	responsables_sort_by: 'name', // 'default' - 'name'
+	responsables_sort_by: 'name',
 	responsables_default_name: 'Não atribuido',
 	responsables_default_photo: './images/responsable-default.png',
 	groups_enable: true,
-	groups_sort_by: 'name', // 'default' - 'name'
+	groups_sort_by: 'name',
+	workitems_sort_by: 'name',
 	rows_alternate_background: true,
 	grid_ticks: false,
 	bar_color_default: '#FFCC33',
