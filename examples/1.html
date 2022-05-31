@@ -14,8 +14,23 @@
 </head>
 <body>
 	<h3>Interactive Gantt Chart entirely made in SVG!</h3>
+	<div>
+		<span>View Mode: </span>
+		<button onclick="gantt.change_view_mode('Hour')">Hour</button>
+		<button onclick="gantt.change_view_mode('Quarter Day')">Quarter Day</button>
+		<button onclick="gantt.change_view_mode('Half Day')">Half Day</button>
+		<button onclick="gantt.change_view_mode('Day')">Day</button>
+		<button onclick="gantt.change_view_mode('Week')">Week</button>
+		<button onclick="gantt.change_view_mode('Month')">Month</button>
+		<button onclick="gantt.change_view_mode('Year')">Year</button>
+		<span class="divisor"> | </span>
+		<button onclick="gantt.scrolling_today()">Today</button>
+		<span class="divisor"> | </span>
+		<button onclick="reload()">Reload</button>
+		<br><br>
+	</div>
 	<div class="gantt-wrapper">
-		<div class="gantt-target"></div>
+		<div id="gantt-target" class="gantt-target"></div>
 	</div>
 
 	<script defer src="./example-1.js"></script>

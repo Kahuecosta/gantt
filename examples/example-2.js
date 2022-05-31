@@ -257,7 +257,7 @@ const workitems = [
 		name: 'Quisque ac neque pulvinar, ullamcorper lorem at, vestibulum lectus',
 		progress: 50,
 		responsable_id: 2,
-		start: '2022-5-1',
+		start: '2023-5-1',
 		type_id: 4,
 	},
 ]
@@ -311,7 +311,7 @@ const options = {
 	groups_sort_by: 'name',
 	workitems_sort_by: 'name',
 	rows_alternate_background: false,
-	grid_ticks: false,
+	grid_ticks: true,
 	bar_color_default: '#FFCC33',
 	highlights_weekend: true,
 	highlights_past_days: true,
@@ -319,11 +319,23 @@ const options = {
 	dir_assets: '../dist/assets',
 }
 
-const gantt = new Gantt(
-	'.gantt-target',
-	workitems,
-	types,
-	responsables,
-	groups,
-	options
-)
+let gantt
+
+const reload = () => {
+	document.getElementById('gantt-target').innerHTML = ''
+
+	init()
+}
+
+const init = () => {
+	gantt = new Gantt(
+		'.gantt-target',
+		workitems,
+		types,
+		responsables,
+		groups,
+		options
+	)
+}
+
+init()

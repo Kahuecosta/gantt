@@ -4,11 +4,11 @@
   border: 1px solid #e0e0e0;
 }
 
-.mousegrab {
-  cursor: grab !important;
-}
-.mousegrab:hover,
-.mousegrab * {
+.grid,
+.grid-row,
+.grid-header,
+.weekend-highlight,
+.past-days-highlight {
   cursor: grab;
 }
 
@@ -33,15 +33,15 @@
 .gantt-svg .grid-row.-alt-bg:nth-child(even) {
   fill: #e1e5eb;
 }
+.gantt-svg .date {
+  outline: none;
+  user-select: none;
+}
 .gantt-svg .row-line {
   stroke: none;
 }
 .gantt-svg .tick {
-  stroke: #94a2b8;
-  stroke-width: 0.2;
-}
-.gantt-svg .tick.thick {
-  stroke-width: 0.4;
+  fill: #94a2b8;
 }
 .gantt-svg .today-highlight {
   fill: #f8b386;
@@ -143,6 +143,9 @@
 .gantt-svg .resource-header-row {
   fill: #f0f2f5;
 }
+.gantt-svg .resource-header-line {
+  fill: #e0e0e0;
+}
 .gantt-svg .resource-header-text {
   font-size: 1.2em;
   text-anchor: start;
@@ -195,7 +198,7 @@
   position: relative;
   overflow: auto;
   font-size: 12px;
-  max-height: calc(100vh - 100px);
+  max-height: calc(100vh - 150px);
 }
 .gantt-container .popup-wrapper {
   position: absolute;

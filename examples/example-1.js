@@ -286,11 +286,23 @@ const options = {
 	dir_assets: '../dist/assets',
 }
 
-const gantt = new Gantt(
-	'.gantt-target',
-	workitems,
-	types,
-	responsables,
-	groups,
-	options
-)
+let gantt
+
+const reload = () => {
+	document.getElementById('gantt-target').innerHTML = ''
+
+	init()
+}
+
+const init = () => {
+	gantt = new Gantt(
+		'.gantt-target',
+		workitems,
+		types,
+		responsables,
+		groups,
+		options
+	)
+}
+
+init()

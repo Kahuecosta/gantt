@@ -1,4 +1,4 @@
-import { $ } from './svg_utils'
+import { $ } from '../utilities/svg'
 
 export default class Popup {
 	constructor(gantt, parent, custom_html, container) {
