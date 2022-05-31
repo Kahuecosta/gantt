@@ -1,5 +1,5 @@
-import date_utils from './date_utils'
-import { $, createSVG, animateSVG } from './svg_utils'
+import date_utils from '../utilities/date'
+import { $, createSVG } from '../utilities/svg'
 
 export default class Bar {
 	constructor(gantt, task, resource_width) {

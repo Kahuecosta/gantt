@@ -6,7 +6,7 @@ import {
 	MINUTE,
 	SECOND,
 	MILLISECOND,
-} from './constants'
+} from '../constants'
 
 const utils = {
 	parse(date, date_separator = '-', time_separator = /[.:]/) {

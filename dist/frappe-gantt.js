@@ -1189,6 +1189,43 @@ var Gantt = (function () {
 		}
 	}
 
+	class GanttUtilities {
+		constructor() {}
+
+		text_ellipsis(el, text, width) {
+			if (typeof el.getSubStringLength !== 'undefined') {
+				el.innerHTML = text;
+				let len = text.length;
+
+				while (el.getSubStringLength(0, len--) > width) {
+					el.innerHTML = text.slice(0, len) + '...';
+				}
+			} else if (typeof el.getComputedTextLength !== 'undefined') {
+				while (el.getComputedTextLength() > width) {
+					text = text.slice(0, -1);
+					el.innerHTML = text + '...';
+				}
+			} else {
+				// the last fallback
+				while (el.getBBox().width > width) {
+					text = text.slice(0, -1);
+					// we need to update the textContent to update the boundary width
+					el.innerHTML = text + '...';
+				}
+			}
+		}
+
+		html_avatar(photo, w, y) {
+			const avatar = `<img class="avatar" src="${photo}" width="${w}px" height="${y}px" />`;
+
+			return avatar
+		}
+
+		generate_id(task) {
+			return task.name + '_' + Math.random().toString(36).slice(2, 12)
+		}
+	}
+
 	class Gantt {
 		constructor(
 			wrapper,
@@ -1198,17 +1235,25 @@ var Gantt = (function () {
 			groups = [],
 			options
 		) {
+			this.utilities = new GanttUtilities();
+
 			this.VIEW_MODE = VIEW_MODE;
 
 			this.step = 24;
 			this.column_width = 38;
 
+			const optionsCopy = JSON.parse(JSON.stringify(options));
+			const responsablesCopy = JSON.parse(JSON.stringify(responsables));
+			const groupsCopy = JSON.parse(JSON.stringify(groups));
+			const workItemTypesCopy = JSON.parse(JSON.stringify(workItemTypes));
+			const workItemsCopy = JSON.parse(JSON.stringify(workItems));
+
 			this.setup_wrapper(wrapper);
-			this.setup_options(options);
-			this.setup_responsables(responsables);
-			this.setup_groups(groups);
-			this.setup_workItem_types(workItemTypes);
-			this.setup_tasks(workItems);
+			this.setup_options(optionsCopy);
+			this.setup_responsables(responsablesCopy);
+			this.setup_groups(groupsCopy);
+			this.setup_workItem_types(workItemTypesCopy);
+			this.setup_tasks(workItemsCopy);
 
 			// initialize with default view mode
 			this.change_view_mode();
@@ -1681,7 +1726,6 @@ var Gantt = (function () {
 			this.update_view_scale(mode);
 			this.setup_dates();
 			this.render();
-			// fire viewmode_change event
 			this.trigger_event('view_change', [mode]);
 		}
 
@@ -1721,7 +1765,6 @@ var Gantt = (function () {
 			this.gantt_start = this.gantt_end = null;
 
 			for (let task of this.tasks) {
-				// set global start and end date
 				if (!this.gantt_start || task._start < this.gantt_start) {
 					this.gantt_start = task._start;
 				}
@@ -1743,7 +1786,6 @@ var Gantt = (function () {
 
 			const { HOUR, QUARTER_DAY, HALF_DAY, DAY, WEEK, MONTH, YEAR } = VIEW_MODE;
 
-			// add date padding on both sides
 			if (this.view_is([HOUR, QUARTER_DAY, HALF_DAY, DAY])) {
 				this.gantt_start = utils.add(this.gantt_start, -padd_start, 'day');
 
@@ -1837,7 +1879,6 @@ var Gantt = (function () {
 				'resource_title',
 			];
 
-			// make group layers
 			for (let layer of layers) {
 				this.layers[layer] = createSVG('g', {
 					class: layer,
@@ -1847,23 +1888,34 @@ var Gantt = (function () {
 		}
 
 		make_resource() {
-			if (!this.options.resource_enable) {
-				this.resource_width = 0;
+			const {
+				resource_enable,
+				resource_width,
+				resource_title,
+				resource_resize_enable,
+				header_height,
+				padding,
+			} = this.options;
 
-				return
-			}
+			this.resource_width = 0;
 
-			//define width size
-			this.resource_width = this.options.resource_width - 30;
+			if (!resource_enable) return
+
+			const row_width = resource_width;
+			const row_height = this.get_rows_height();
 
 			this.resource_grid_layer = [];
 			this.resource_line_grid_layer = [];
 			this.resource_item_title_list = [];
+			this.resource_width = resource_width;
 
-			const row_width = this.options.resource_width;
-			const row_height = this.get_rows_height();
+			const grid_layer = createSVG('g', { append_to: this.layers.resource });
+			const text_layer = createSVG('g', { append_to: this.layers.resource });
+			const lines_layer = createSVG('g', { append_to: this.layers.resource });
 
-			this.clip_resource_background = createSVG('clipPath', {
+			let row_y = header_height + padding / 2;
+
+			this.resource_background_clip = createSVG('clipPath', {
 				id: 'clip-resource-background',
 				append_to: this.layers.resource,
 			});
@@ -1874,26 +1926,29 @@ var Gantt = (function () {
 				width: row_width,
 				height: '100%',
 				class: 'resource-background',
-				append_to: this.clip_resource_background,
+				append_to: this.resource_background_clip,
 			});
 
-			const grid_layer = createSVG('g', { append_to: this.layers.resource });
-			const text_layer = createSVG('g', { append_to: this.layers.resource });
-			const lines_layer = createSVG('g', { append_to: this.layers.resource });
-
-			let row_y = this.options.header_height + this.options.padding / 2;
-
-			const resource_title_layer = createSVG('g', {
+			this.resource_header = createSVG('g', {
 				append_to: this.layers.resource_title,
 			});
 
 			this.resource_header_row = createSVG('rect', {
 				x: 0,
-				y: 1,
+				y: 0,
 				width: row_width,
-				height: row_height + this.options.header_height - 32,
+				height: row_height + header_height - 32,
 				class: 'resource-header-row',
-				append_to: resource_title_layer,
+				append_to: this.resource_header,
+			});
+
+			this.resource_header_line = createSVG('rect', {
+				x: 0,
+				y: row_height + header_height - 30,
+				width: row_width,
+				height: 1,
+				class: 'resource-header-line',
+				append_to: this.resource_header,
 			});
 
 			this.resource_header_text = createSVG('text', {
@@ -1901,25 +1956,19 @@ var Gantt = (function () {
 				y: row_y - 20,
 				width: row_width,
 				height: row_height,
-				innerHTML: this.options.resource_title,
+				innerHTML: resource_title,
 				class: 'resource-header-text',
-				append_to: resource_title_layer,
+				append_to: this.resource_header,
 				clipPath: 'clip-resource-background',
 			});
-
-			let resource_line_class = 'resource-line';
-
-			if (this.options.resource_resize_enable) {
-				resource_line_class += ' resource-resize';
-			}
 
 			this.resource_line = createSVG('rect', {
 				x: row_width,
 				y: 0,
 				width: 1,
 				height: '100%',
-				class: resource_line_class,
-				append_to: resource_title_layer,
+				class: `resource-line ${resource_resize_enable ? 'resource-resize' : ''}`,
+				append_to: this.resource_header,
 			});
 
 			this.resource_tree.forEach(tree => {
@@ -2120,7 +2169,7 @@ var Gantt = (function () {
 				name: item.name,
 			});
 
-			this.text_ellipsis(item_title, item.name, row_width - padding);
+			this.utilities.text_ellipsis(item_title, item.name, row_width - padding);
 		}
 
 		make_resource_responsable_photo(photo, el_parent, elY, elX, img_wh) {
@@ -2132,7 +2181,7 @@ var Gantt = (function () {
 				width: img_wh,
 				height: img_wh,
 				append_to: el_parent,
-				innerHTML: this.html_avatar(photo, img_wh, img_wh),
+				innerHTML: this.utilities.html_avatar(photo, img_wh, img_wh),
 			});
 		}
 
@@ -2148,7 +2197,7 @@ var Gantt = (function () {
 					[DATA_ATTR.GROUP_ID]: item.group_id || '',
 					[DATA_ATTR.SUB_GROUP_ID]: item.sub_group_id || '',
 					class: this.options.resource_collapse_enable ? 'resource-pointer' : '',
-					innerHTML: this.html_avatar(item.icon, img_wh, img_wh),
+					innerHTML: this.utilities.html_avatar(item.icon, img_wh, img_wh),
 				});
 			} else if (item.color) {
 				createSVG('rect', {
@@ -2212,35 +2261,6 @@ var Gantt = (function () {
 			}
 		}
 
-		text_ellipsis(el, text, width) {
-			if (typeof el.getSubStringLength !== 'undefined') {
-				el.innerHTML = text;
-				let len = text.length;
-
-				while (el.getSubStringLength(0, len--) > width) {
-					el.innerHTML = text.slice(0, len) + '...';
-				}
-			} else if (typeof el.getComputedTextLength !== 'undefined') {
-				while (el.getComputedTextLength() > width) {
-					text = text.slice(0, -1);
-					el.innerHTML = text + '...';
-				}
-			} else {
-				// the last fallback
-				while (el.getBBox().width > width) {
-					text = text.slice(0, -1);
-					// we need to update the textContent to update the boundary width
-					el.innerHTML = text + '...';
-				}
-			}
-		}
-
-		html_avatar(photo, w, y) {
-			const avatar = `<img class="avatar" src="${photo}" width="${w}px" height="${y}px" />`;
-
-			return avatar
-		}
-
 		make_grid() {
 			this.make_grid_background();
 			this.make_grid_header();
@@ -2299,7 +2319,7 @@ var Gantt = (function () {
 
 			for (let i = 0; i < total_rows; i++) {
 				createSVG('rect', {
-					x: this.resource_width,
+					x: 0,
 					y: row_y,
 					width: row_width,
 					height: row_height,
@@ -2308,7 +2328,7 @@ var Gantt = (function () {
 				});
 
 				createSVG('line', {
-					x1: this.resource_width,
+					x1: 0,
 					y1: row_y + row_height,
 					x2: row_width,
 					y2: row_y + row_height,
@@ -2327,7 +2347,7 @@ var Gantt = (function () {
 			const header_height = this.options.header_height + 10;
 
 			createSVG('rect', {
-				x: this.resource_width,
+				x: 0,
 				y: 0,
 				width: header_width,
 				height: header_height,
@@ -2343,33 +2363,39 @@ var Gantt = (function () {
 			let tick_y = this.options.header_height + this.options.padding / 2;
 			let tick_height = this.get_rows_height() * this.resource_tree.length;
 
-			for (let date of this.dates) {
-				let tick_class = 'tick';
+			this.grid_ticks = [];
 
-				// thick tick for monday
+			const grid_ticks_g = createSVG('g', { append_to: this.layers.grid });
+
+			for (let date of this.dates) {
+				let width = 0.2;
+
 				if (this.view_is(VIEW_MODE.DAY) && date.getDate() === 1) {
-					tick_class += ' thick';
+					width = 0.4;
 				}
 
-				// thick tick for first week
 				if (
 					this.view_is(VIEW_MODE.WEEK) &&
 					date.getDate() >= 1 &&
 					date.getDate() < 8
 				) {
-					tick_class += ' thick';
+					width = 0.4;
 				}
 
-				// thick ticks for quarters
 				if (this.view_is(VIEW_MODE.MONTH) && (date.getMonth() + 1) % 3 === 0) {
-					tick_class += ' thick';
+					width = 0.4;
 				}
 
-				createSVG('path', {
-					d: `M ${tick_x} ${tick_y} v ${tick_height}`,
-					class: tick_class,
-					append_to: this.layers.grid,
+				const grid_tick = createSVG('rect', {
+					x: tick_x,
+					y: tick_y,
+					height: tick_height,
+					width: width,
+					class: 'tick',
+					append_to: grid_ticks_g,
 				});
+
+				this.grid_ticks.push(grid_tick);
 
 				if (this.view_is(VIEW_MODE.MONTH)) {
 					tick_x += (utils.get_days_in_month(date) * this.column_width) / 30;
@@ -2380,7 +2406,6 @@ var Gantt = (function () {
 		}
 
 		make_grid_highlights() {
-			// highlight today's date
 			if (!this.view_is(VIEW_MODE.DAY)) return
 
 			const {
@@ -2394,7 +2419,7 @@ var Gantt = (function () {
 			let resource_width = 0;
 
 			if (this.options.resource_enable) {
-				resource_width = this.options.resource_width - 30;
+				resource_width = this.options.resource_width;
 			}
 
 			const today = utils.today();
@@ -2407,7 +2432,7 @@ var Gantt = (function () {
 				header_height +
 				padding / 2;
 
-			createSVG('rect', {
+			this.today_highlight_line_1 = createSVG('rect', {
 				x,
 				y: header_height + 8,
 				height: height - header_height,
@@ -2416,7 +2441,7 @@ var Gantt = (function () {
 				append_to: this.layers.date,
 			});
 
-			createSVG('rect', {
+			this.today_highlight_line_2 = createSVG('rect', {
 				x: column_start,
 				y: header_height + 8,
 				height: 2,
@@ -2449,18 +2474,24 @@ var Gantt = (function () {
 			let now = utils.clone(start);
 			let index = 0;
 
+			this.grid_highlights_weekend = [];
+
 			while (index < total) {
 				now = utils.add(now, 1, 'day');
 
 				if (now.getDay() === 6) {
-					createSVG('rect', {
-						x: column_width * (index + 1) + resource_width,
+					const colX = column_width * (index + 1);
+
+					const element = createSVG('rect', {
+						x: colX + resource_width,
 						y: 0,
 						height,
 						width: column_width * 2,
 						class: 'weekend-highlight',
 						append_to: this.layers.grid,
 					});
+
+					this.grid_highlights_weekend.push(element);
 				}
 
 				index++;
@@ -2471,7 +2502,7 @@ var Gantt = (function () {
 			const today = utils.today();
 			const diff = utils.diff(today, this.gantt_start, 'day');
 
-			createSVG('rect', {
+			this.grid_highlights_past_days = createSVG('rect', {
 				x: resource_width,
 				y: 0,
 				height,
@@ -2482,8 +2513,11 @@ var Gantt = (function () {
 		}
 
 		make_dates() {
+			this.text_dates = [];
+			this.text_dates_upper = [];
+
 			for (let date of this.get_dates_to_draw()) {
-				createSVG('text', {
+				const text_date = createSVG('text', {
 					x: this.resource_width + date.lower_x,
 					y: date.lower_y,
 					innerHTML: date.lower_text,
@@ -2491,8 +2525,10 @@ var Gantt = (function () {
 					append_to: this.layers.date,
 				});
 
+				this.text_dates.push(text_date);
+
 				if (date.upper_text) {
-					const $upper_text = createSVG('text', {
+					const text_date_upper = createSVG('text', {
 						x: this.resource_width + date.upper_x,
 						y: date.upper_y,
 						innerHTML: date.upper_text,
@@ -2500,9 +2536,10 @@ var Gantt = (function () {
 						append_to: this.layers.date,
 					});
 
-					// remove out-of-bound dates
-					if ($upper_text.getBBox().x2 > this.layers.grid.getBBox().width) {
-						$upper_text.remove();
+					if (text_date_upper.getBBox().x2 > this.layers.grid.getBBox().width) {
+						text_date_upper.remove();
+					} else {
+						this.text_dates_upper.push(text_date_upper);
 					}
 				}
 			}
@@ -2559,25 +2596,21 @@ var Gantt = (function () {
 						: '',
 				'Quarter Day_upper':
 					date.getDate() !== last_date.getDate()
-						? utils.format(date, 'D MMM', this.options.language)
+						? utils.format(date, 'D MMM YYYY', this.options.language)
 						: '',
 				'Half Day_upper':
 					date.getDate() !== last_date.getDate()
 						? date.getMonth() !== last_date.getMonth()
-							? utils.format(date, 'D MMM', this.options.language)
+							? utils.format(date, 'D MMM YYYY', this.options.language)
 							: utils.format(date, 'D ddd', this.options.language)
 						: '',
 				Day_upper:
 					date.getMonth() !== last_date.getMonth()
-						? utils.format(date, 'MMMM', this.options.language)
+						? utils.format(date, 'MMMM YYYY', this.options.language)
 						: '',
 				Week_upper:
 					date.getMonth() !== last_date.getMonth()
-						? utils.format(
-								date,
-								`MMMM${i < 5 || date.getMonth() === 0 ? ' YYYY' : ''}`,
-								this.options.language
-						  )
+						? utils.format(date, `MMMM YYYY`, this.options.language)
 						: '',
 				Month_upper:
 					date.getFullYear() !== last_date.getFullYear()
@@ -2673,6 +2706,7 @@ var Gantt = (function () {
 			this.layers.arrow.innerHTML = '';
 
 			this.make_arrows();
+			this.map_arrows_on_bars();
 		}
 
 		map_arrows_on_bars() {
@@ -2715,17 +2749,36 @@ var Gantt = (function () {
 			parent_element.scrollLeft = scroll_pos;
 		}
 
+		scrolling_today() {
+			const dateChilds = [...this.layers.date.children];
+			const th = 'today-highlight';
+			const today = dateChilds.find(item => item.getAttribute('class') === th);
+
+			if (!today) return
+
+			const posX = today.getX();
+
+			if (!posX) return
+
+			const colsWidth = this.column_width * 2;
+			const clientWidth = this.$container.clientWidth / 2;
+			const width = clientWidth + this.resource_width - colsWidth;
+			const left = posX - width;
+			const top = this.$container.scrollTop;
+
+			this.$container.scrollTo(left, top);
+		}
+
 		bind_grid_events() {
 			const elements = [
-				'.grid-row, .grid-header',
+				'.grid',
+				'.grid-row',
 				'.weekend-highlight',
 				'.past-days-highlight',
+				'.arrow path',
+				'.row-line',
+				'.tick',
 			];
-
-			$.on(this.$svg, this.options.popup_trigger, elements, () => {
-				this.unselect_all();
-				this.hide_popup();
-			});
 
 			let scrolling_active = false;
 			let x_on_start;
@@ -2733,33 +2786,39 @@ var Gantt = (function () {
 			let left;
 			let top;
 
-			$.on(this.$svg, 'mousedown', elements, e => {
-				this.$container.classList.add('mousegrab');
-
+			$.on(this.$svg, this.options.popup_trigger, elements, () => {
 				this.unselect_all();
 				this.hide_popup();
+			});
 
+			$.on(this.$container, 'mousedown', elements, e => {
 				scrolling_active = true;
+
 				x_on_start = e.clientX;
 				y_on_start = e.clientY;
 
 				left = this.$container.scrollLeft;
 				top = this.$container.scrollTop;
+
+				this.unselect_all();
+				this.hide_popup();
 			});
 
-			$.on(this.$svg, 'mousemove', elements, e => {
-				if (scrolling_active) {
-					const dx = e.clientX - x_on_start;
-					const dy = e.clientY - y_on_start;
+			$.on(this.$container, 'mousemove', elements, e => {
+				if (!scrolling_active) return
 
-					this.$container.scrollTo(left - dx, top - dy);
-				}
+				const dx = e.clientX - x_on_start;
+				const dy = e.clientY - y_on_start;
+
+				this.$container.scrollTo(left - dx, top - dy);
 			});
 
-			$.on(this.$svg, 'mouseup', elements, e => {
+			$.on(this.$container, 'mouseup', () => {
 				scrolling_active = false;
+			});
 
-				this.$container.classList.remove('mousegrab');
+			$.on(this.$container, 'mouseout', () => {
+				scrolling_active = false;
 			});
 		}
 
@@ -2775,7 +2834,6 @@ var Gantt = (function () {
 			let is_dragging = false;
 			let x_on_start = this.resource_width || 0;
 			let x_on_scroll_start = 0;
-			let y_on_start = 0;
 			let is_resizing_left = false;
 			let is_resizing_right = false;
 			let parent_bar_id = null;
@@ -2800,9 +2858,7 @@ var Gantt = (function () {
 
 				bar_wrapper.classList.add('active');
 
-				// use clientX and Y offset doesn't work properly in firefox
 				x_on_start = e.clientX;
-				y_on_start = e.clientY;
 
 				parent_bar_id = bar_wrapper.getAttribute(DATA_ATTR.ID);
 
@@ -2817,6 +2873,7 @@ var Gantt = (function () {
 
 				bars.forEach(bar => {
 					const $bar = bar.$bar;
+
 					$bar.ox = $bar.getX();
 					$bar.oy = $bar.getY();
 					$bar.owidth = $bar.getWidth();
@@ -2827,9 +2884,7 @@ var Gantt = (function () {
 			$.on(this.$svg, 'mousemove', e => {
 				if (!action_in_progress()) return
 
-				// use clientX and Y offset doesn't work properly in firefox
 				const dx = e.clientX - x_on_start;
-				e.clientY - y_on_start;
 
 				bars.forEach(bar => {
 					const $bar = bar.$bar;
@@ -2933,7 +2988,6 @@ var Gantt = (function () {
 
 					if (!$bar.finaldx) return
 
-					// reset value, otherwise event fires multiple times
 					$bar.finaldx = 0;
 
 					bar.date_changed();
@@ -2973,6 +3027,8 @@ var Gantt = (function () {
 						'.resource-pointer',
 					],
 					(e, element) => {
+						this.hide_popup();
+
 						const group_id = element.getAttribute(DATA_ATTR.GROUP_ID);
 						const sub_group_id = element.getAttribute(DATA_ATTR.SUB_GROUP_ID);
 
@@ -3038,6 +3094,7 @@ var Gantt = (function () {
 			}
 
 			if (this.options.resource_resize_enable) {
+				let dx;
 				let posX;
 
 				$.on(this.$svg, 'mousedown', '.resource-resize', e => {
@@ -3052,33 +3109,36 @@ var Gantt = (function () {
 				$.on(this.$svg, 'mousemove', e => {
 					if (!is_resizing) return
 
-					let dx = e.clientX - x_on_start;
+					dx = e.clientX - x_on_start;
 
 					posX = $resource_resize.ox + dx;
 
 					if (
 						!posX ||
 						isNaN(posX) ||
-						posX <= 50 ||
+						posX <= this.column_width ||
 						posX <= this.resource_width - 200 ||
 						posX >= this.resource_width + 200
 					) {
 						return
 					}
 
-					this.resource_line.setAttribute('x', posX + 8);
-					this.resource_header_row.setAttribute('width', posX + 8);
-					this.resource_background.setAttribute('width', posX + 8);
-					this.resource_header_text.setAttribute('width', posX + 8);
+					this.resource_line.setAttribute('x', posX);
+					this.resource_header_row.setAttribute('width', posX);
+					this.resource_header_line.setAttribute('width', posX);
+					this.resource_background.setAttribute('width', posX);
+					this.resource_header_text.setAttribute('width', posX);
 					this.resource_grid_layer.forEach(x => {
-						x.setAttribute('width', posX + 8);
+						x.setAttribute('width', posX);
 					});
 					this.resource_line_grid_layer.forEach(x => {
-						x.setAttribute('width', posX + 8);
+						x.setAttribute('width', posX);
 					});
 				});
 
 				$.on(this.$svg, 'mouseup', () => {
+					if (!is_resizing) return
+
 					is_resizing = false;
 
 					this.resource_item_title_list.forEach(x => {
@@ -3086,10 +3146,38 @@ var Gantt = (function () {
 
 						element.setAttribute('width', posX);
 
-						this.text_ellipsis(element, name, posX - padding);
+						this.utilities.text_ellipsis(element, name, posX - padding);
 					});
+
+					this.text_dates.forEach(x => {
+						x.setAttribute('x', x.getX() + dx);
+					});
+
+					this.text_dates_upper.forEach(x => {
+						x.setAttribute('x', x.getX() + dx);
+					});
+
+					this.set_x_grid_highlights(dx, posX);
 				});
 			}
+		}
+
+		set_x_grid_highlights(dx, posX) {
+			const line1 = this.today_highlight_line_1;
+			const line2 = this.today_highlight_line_2;
+
+			line1.setAttribute('x', line1.getX() + dx);
+			line2.setAttribute('x', line2.getX() + dx);
+
+			this.grid_highlights_weekend.forEach(x => {
+				x.setAttribute('x', x.getX() + dx);
+			});
+
+			this.grid_ticks.forEach(x => {
+				x.setAttribute('x', x.getX() + dx);
+			});
+
+			this.grid_highlights_past_days.setAttribute('x', posX);
 		}
 
 		set_transform_origin_element(element) {
@@ -3101,7 +3189,7 @@ var Gantt = (function () {
 		}
 
 		get_open_hide_elements(start, end) {
-			let [, childRows, childTexts, childLines] = this.layers.resource.children;
+			let [childRows, childTexts, childLines] = this.layers.resource.children;
 
 			const firstText = [...childTexts.children][start - 1];
 			const firstType = firstText.getAttribute(DATA_ATTR.TYPE);
@@ -3283,7 +3371,9 @@ var Gantt = (function () {
 				}
 
 				text.setAttribute('opacity', opacity);
+
 				rows[i].setAttribute('opacity', opacity);
+
 				lines[i].setAttribute('opacity', opacity);
 
 				this.open_close_bar(text, false, is_open);
@@ -3322,7 +3412,6 @@ var Gantt = (function () {
 
 		bind_bar_progress() {
 			let x_on_start = this.resource_width || 0;
-			let y_on_start = 0;
 			let is_resizing = null;
 			let bar = null;
 			let $bar_progress = null;
@@ -3331,9 +3420,7 @@ var Gantt = (function () {
 			$.on(this.$svg, 'mousedown', '.handle.progress', (e, handle) => {
 				is_resizing = true;
 
-				// use clientX and Y offset doesn't work properly in firefox
 				x_on_start = e.clientX;
-				y_on_start = e.clientY;
 
 				const $bar_wrapper = $.closest('.bar-wrapper', handle);
 				const id = $bar_wrapper.getAttribute(DATA_ATTR.ID);
@@ -3352,13 +3439,12 @@ var Gantt = (function () {
 			$.on(this.$svg, 'mousemove', e => {
 				if (!is_resizing) return
 
-				// use clientX and Y offset doesn't work properly in firefox
 				let dx = e.clientX - x_on_start;
-				e.clientY - y_on_start;
 
 				if (dx > $bar_progress.max_dx) {
 					dx = $bar_progress.max_dx;
 				}
+
 				if (dx < $bar_progress.min_dx) {
 					dx = $bar_progress.min_dx;
 				}
@@ -3376,7 +3462,6 @@ var Gantt = (function () {
 
 				if (!($bar_progress && $bar_progress.finaldx)) return
 
-				// reset value, otherwise event fires multiple times
 				$bar_progress.finaldx = 0;
 
 				bar.progress_changed();
@@ -3385,11 +3470,9 @@ var Gantt = (function () {
 		}
 
 		get_g_texts() {
-			let [, , childTexts] = this.layers.resource.children;
+			const [, childTexts] = this.layers.resource.children;
 
-			const g_texts = [...childTexts.children];
-
-			return g_texts
+			return [...childTexts.children]
 		}
 
 		get_rows_height() {
@@ -3403,12 +3486,13 @@ var Gantt = (function () {
 			let to_process = [task_id];
 
 			while (to_process.length) {
-				const deps = to_process.reduce((acc, curr) => {
-					acc = acc.concat(this.dependency_map[curr]);
-					return acc
-				}, []);
+				const deps = to_process.reduce(
+					(acc, curr) => acc.concat(this.dependency_map[curr]),
+					[]
+				);
 
 				out = out.concat(deps);
+
 				to_process = deps.filter(d => !to_process.includes(d));
 			}
 
@@ -3487,7 +3571,7 @@ var Gantt = (function () {
 		}
 
 		get_oldest_starting_date() {
-			if (this.tasks.length == 0) return this.gantt_start
+			if (!this.tasks.length) return this.gantt_start
 
 			return this.tasks
 				.map(task => task._start)
@@ -3498,10 +3582,6 @@ var Gantt = (function () {
 
 		clear() {
 			this.$svg.innerHTML = '';
-		}
-
-		generate_id(task) {
-			return task.name + '_' + Math.random().toString(36).slice(2, 12)
 		}
 	}
 

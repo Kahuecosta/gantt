@@ -10,7 +10,7 @@ $primary: #f2711c !default;
 
 $background: #f0f2f5;
 
-$max-height: calc(100vh - 100px);
+$max-height: calc(100vh - 150px);
 
 .gantt-wrapper {
 	width: calc(100% - 20px);
@@ -18,13 +18,12 @@ $max-height: calc(100vh - 100px);
 	border: 1px solid $border-color;
 }
 
-.mousegrab {
-	cursor: grab !important;
-
-	&:hover,
-	* {
-		cursor: grab;
-	}
+.grid,
+.grid-row,
+.grid-header,
+.weekend-highlight,
+.past-days-highlight {
+	cursor: grab;
 }
 
 .gantt-svg {
@@ -42,7 +41,7 @@ $max-height: calc(100vh - 100px);
 
 	.grid-row {
 		fill: none;
-		
+
 		&.-alt-bg {
 			fill: darken($background, 3%);
 			opacity: 0.5;
@@ -53,17 +52,17 @@ $max-height: calc(100vh - 100px);
 		}
 	}
 
+	.date {
+		outline: none;
+		user-select: none;
+	}
+
 	.row-line {
 		stroke: none;
 	}
 
 	.tick {
-		stroke: darken($background, 30%);
-		stroke-width: 0.2;
-
-		&.thick {
-			stroke-width: 0.4;
-		}
+		fill: darken($background, 30%);
 	}
 
 	.today-highlight {
@@ -194,6 +193,10 @@ $max-height: calc(100vh - 100px);
 
 	.resource-header-row {
 		fill: $background;
+	}
+
+	.resource-header-line {
+		fill: #e0e0e0;
 	}
 
 	.resource-header-text {
