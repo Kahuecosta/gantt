@@ -1,0 +1,22 @@
+{
+	"editor.formatOnSave": true,
+	"editor.tabSize": 2,
+	"editor.detectIndentation": true,
+	"editor.wrappingIndent": "indent",
+	"editor.autoIndent": "advanced",
+	"editor.useTabStops": true,
+	"editor.tabCompletion": "on",
+	"eslint.enable": true,
+	"eslint.validate": ["javascript"],
+	"files.exclude": {
+		"**/.git": true,
+		"**/.svn": true,
+		"**/.hg": true,
+		"**/CVS": true,
+		"**/.DS_Store": true,
+		"node_modules": true
+	},
+	"editor.codeActionsOnSave": {
+		"source.fixAll.eslint": true
+	}
+}

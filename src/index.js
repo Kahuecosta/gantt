@@ -1711,7 +1711,7 @@ export default class Gantt {
 			})
 		})
 
-		document.addEventListener('mouseup', e => {
+		document.addEventListener('mouseup', () => {
 			if (is_dragging || is_resizing_left || is_resizing_right) {
 				bars.forEach(bar => bar.group.classList.remove('active'))
 			}
@@ -1739,7 +1739,7 @@ export default class Gantt {
 				dx = e.currentTarget.scrollLeft - x_on_scroll_start
 			}
 
-			Array.prototype.forEach.call(elements, function (el, i) {
+			Array.prototype.forEach.call(elements, function (el) {
 				ids.push(el.getAttribute(DATA_ATTR.ID))
 			})
 
@@ -1774,7 +1774,7 @@ export default class Gantt {
 			}
 		})
 
-		$.on(this.$svg, 'mouseup', e => {
+		$.on(this.$svg, 'mouseup', () => {
 			this.bar_being_dragged = null
 
 			bars.forEach(bar => {
@@ -2317,9 +2317,11 @@ export default class Gantt {
 	}
 
 	unselect_all() {
-		;[...this.$svg.querySelectorAll('.bar-wrapper')].forEach(el => {
-			el.classList.remove('active')
-		})
+		let bars = this.$svg.querySelectorAll('.bar-wrapper')
+
+		bars = [...bars]
+
+		bars.forEach(el => el.classList.remove('active'))
 	}
 
 	view_is(modes) {

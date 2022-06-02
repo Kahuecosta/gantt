@@ -508,6 +508,7 @@ var Gantt = (function () {
 			});
 
 			// labels get BBox in the next tick
+			// eslint-disable-next-line no-undef
 			requestAnimationFrame(() => this.update_label_position());
 		}
 
@@ -602,16 +603,18 @@ var Gantt = (function () {
 		get_progress_polygon_points() {
 			const bar_progress = this.$bar_progress;
 
-			return bar_progress
-				? [
-						bar_progress.getEndX() - 5,
-						bar_progress.getY() + bar_progress.getHeight(),
-						bar_progress.getEndX() + 5,
-						bar_progress.getY() + bar_progress.getHeight(),
-						bar_progress.getEndX(),
-						bar_progress.getY() + bar_progress.getHeight() - 12.66,
-				  ]
-				: []
+			if (!bar_progress) {
+				return []
+			}
+
+			return [
+				bar_progress.getEndX() - 5,
+				bar_progress.getY() + bar_progress.getHeight(),
+				bar_progress.getEndX() + 5,
+				bar_progress.getY() + bar_progress.getHeight(),
+				bar_progress.getEndX(),
+				bar_progress.getY() + bar_progress.getHeight() - 12.66,
+			]
 		}
 
 		bind() {
@@ -621,7 +624,7 @@ var Gantt = (function () {
 		}
 
 		setup_click_event() {
-			$.on(this.group, 'focus ' + this.gantt.options.popup_trigger, e => {
+			$.on(this.group, 'focus ' + this.gantt.options.popup_trigger, () => {
 				if (this.action_completed) {
 					// just finished a move action, wait for a few seconds
 					return
@@ -634,7 +637,7 @@ var Gantt = (function () {
 				}
 			});
 
-			$.on(this.group, 'dblclick', e => {
+			$.on(this.group, 'dblclick', () => {
 				if (this.action_completed) {
 					// just finished a move action, wait for a few seconds
 					return
@@ -643,7 +646,7 @@ var Gantt = (function () {
 				this.gantt.trigger_event('dblclick', [this.task]);
 			});
 
-			$.on(this.group, 'click', e => {
+			$.on(this.group, 'click', () => {
 				if (this.action_completed) {
 					// just finished a move action, wait for a few seconds
 					return
@@ -2924,7 +2927,7 @@ var Gantt = (function () {
 				});
 			});
 
-			document.addEventListener('mouseup', e => {
+			document.addEventListener('mouseup', () => {
 				if (is_dragging || is_resizing_left || is_resizing_right) {
 					bars.forEach(bar => bar.group.classList.remove('active'));
 				}
@@ -2952,7 +2955,7 @@ var Gantt = (function () {
 					dx = e.currentTarget.scrollLeft - x_on_scroll_start;
 				}
 
-				Array.prototype.forEach.call(elements, function (el, i) {
+				Array.prototype.forEach.call(elements, function (el) {
 					ids.push(el.getAttribute(DATA_ATTR.ID));
 				});
 
@@ -2987,7 +2990,7 @@ var Gantt = (function () {
 				}
 			});
 
-			$.on(this.$svg, 'mouseup', e => {
+			$.on(this.$svg, 'mouseup', () => {
 				this.bar_being_dragged = null;
 
 				bars.forEach(bar => {
@@ -3530,9 +3533,11 @@ var Gantt = (function () {
 		}
 
 		unselect_all() {
-	[...this.$svg.querySelectorAll('.bar-wrapper')].forEach(el => {
-				el.classList.remove('active');
-			});
+			let bars = this.$svg.querySelectorAll('.bar-wrapper');
+
+			bars = [...bars];
+
+			bars.forEach(el => el.classList.remove('active'));
 		}
 
 		view_is(modes) {
