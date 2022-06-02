@@ -8,6 +8,9 @@
 			font-family: Arial, Helvetica, sans-serif;
 			background: #FFFFFF;
 		}
+		.gantt-target {
+			height: calc(100vh - 150px);
+		}
 	</style>
 	<link rel="stylesheet" href="../dist/frappe-gantt.css" />
 	<script src="../dist/frappe-gantt.js"></script>
@@ -29,10 +32,8 @@
 		<button onclick="reload()">Reload</button>
 		<br><br>
 	</div>
-	<div class="gantt-wrapper">
-		<div id="gantt-target" class="gantt-target"></div>
-	</div>
-
+	<div id="gantt-target" class="gantt-target"></div>
+	
 	<script defer src="./example-1.js"></script>
 </body>
 </html>
