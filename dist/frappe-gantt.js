@@ -1875,6 +1875,7 @@ var Gantt = (function () {
 				'bar',
 				'details',
 				'date',
+				'resource_bg',
 				'resource',
 				'resource_title',
 			];
@@ -1920,13 +1921,22 @@ var Gantt = (function () {
 				append_to: this.layers.resource,
 			});
 
-			this.resource_background = createSVG('rect', {
+			this.resource_background_r_clip = createSVG('rect', {
 				x: 1,
 				y: 1,
 				width: row_width,
 				height: '100%',
 				class: 'resource-background',
 				append_to: this.resource_background_clip,
+			});
+
+			this.resource_background = createSVG('rect', {
+				x: 1,
+				y: 1,
+				width: row_width,
+				height: '100%',
+				class: 'resource-background',
+				append_to: this.layers.resource_bg,
 			});
 
 			this.resource_header = createSVG('g', {
@@ -2437,7 +2447,7 @@ var Gantt = (function () {
 				y: header_height + 8,
 				height: height - header_height,
 				width: 2,
-				class: 'today-highlight',
+				class: 'today-highlight -col',
 				append_to: this.layers.date,
 			});
 
@@ -2451,23 +2461,15 @@ var Gantt = (function () {
 			});
 
 			if (highlights_past_days) {
-				this.make_grid_highlights_past_days(
-					this.column_width,
-					resource_width,
-					height
-				);
+				this.make_grid_highlights_past_days(this.column_width, resource_width);
 			}
 
 			if (highlights_weekend) {
-				this.make_grid_highlights_weekend(
-					this.column_width,
-					resource_width,
-					height
-				);
+				this.make_grid_highlights_weekend(this.column_width, resource_width);
 			}
 		}
 
-		make_grid_highlights_weekend(column_width, resource_width, height) {
+		make_grid_highlights_weekend(column_width, resource_width) {
 			const start = this.gantt_start;
 			const end = this.gantt_end;
 			const total = utils.diff(end, start, 'day');
@@ -2485,7 +2487,7 @@ var Gantt = (function () {
 					const element = createSVG('rect', {
 						x: colX + resource_width,
 						y: 0,
-						height,
+						height: '100%',
 						width: column_width * 2,
 						class: 'weekend-highlight',
 						append_to: this.layers.grid,
@@ -2498,14 +2500,14 @@ var Gantt = (function () {
 			}
 		}
 
-		make_grid_highlights_past_days(column_width, resource_width, height) {
+		make_grid_highlights_past_days(column_width, resource_width) {
 			const today = utils.today();
 			const diff = utils.diff(today, this.gantt_start, 'day');
 
 			this.grid_highlights_past_days = createSVG('rect', {
 				x: resource_width,
 				y: 0,
-				height,
+				height: '100%',
 				width: column_width * diff,
 				class: 'past-days-highlight',
 				append_to: this.layers.grid,
@@ -2977,6 +2979,11 @@ var Gantt = (function () {
 						'transform',
 						`translate(${x_on_scroll_start},0)`
 					);
+
+					this.layers.resource_bg.setAttribute(
+						'transform',
+						`translate(${x_on_scroll_start},0)`
+					);
 				}
 			});
 
@@ -3127,6 +3134,7 @@ var Gantt = (function () {
 					this.resource_header_row.setAttribute('width', posX);
 					this.resource_header_line.setAttribute('width', posX);
 					this.resource_background.setAttribute('width', posX);
+					this.resource_background_r_clip.setAttribute('width', posX);
 					this.resource_header_text.setAttribute('width', posX);
 					this.resource_grid_layer.forEach(x => {
 						x.setAttribute('width', posX);
