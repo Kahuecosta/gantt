@@ -1242,6 +1242,8 @@ var Gantt = (function () {
 
 			this.VIEW_MODE = VIEW_MODE;
 
+			this.zoom_size = 0;
+			this.zoom_width = 20;
 			this.step = 24;
 			this.column_width = 38;
 
@@ -1295,6 +1297,8 @@ var Gantt = (function () {
 				this.$svg = svg_element;
 				this.$svg.classList.add('gantt-svg');
 			}
+
+			this.$wrapper = element;
 
 			// wrapper element
 			this.$container = document.createElement('div');
@@ -1356,6 +1360,7 @@ var Gantt = (function () {
 				highlights_past_days: true,
 				link_detail_text: 'Ver detalhes',
 				dir_assets: '../dist/assets',
+				zoom_max: 5,
 			};
 
 			default_options.responsables_default_photo = `${default_options.dir_assets}/responsable-default.png`;
@@ -1474,7 +1479,7 @@ var Gantt = (function () {
 			let index = 0;
 
 			this.resource_tree.forEach(item => {
-				if (item.type === 'responsable') {
+				if (item.type === DATA_TYPE.RESPONSABLE) {
 					index++;
 				} else {
 					const task = this.get_task(item.task_id);
@@ -1490,7 +1495,7 @@ var Gantt = (function () {
 			let index = 0;
 
 			this.resource_tree.forEach(item => {
-				if (item.type === 'groups' || item.type === 'sub_group') {
+				if (item.type === DATA_TYPE.GROUP || item.type === DATA_TYPE.SUB_GROUP) {
 					index++;
 				} else {
 					const task = this.get_task(item.task_id);
@@ -1540,7 +1545,7 @@ var Gantt = (function () {
 			if (groups_enable) {
 				this.groups.forEach(group => {
 					this.resource_tree.push({
-						type: 'groups',
+						type: DATA_TYPE.GROUP,
 						group_id: group.id,
 						group_name: group.name,
 						group_icon: group.icon,
@@ -1550,7 +1555,7 @@ var Gantt = (function () {
 					if (group.sub_group) {
 						group.sub_group.forEach(sg => {
 							this.resource_tree.push({
-								type: 'sub_group',
+								type: DATA_TYPE.SUB_GROUP,
 								sub_group_id: sg.id,
 								sub_group_name: sg.name,
 								sub_group_icon: sg.icon,
@@ -1572,7 +1577,7 @@ var Gantt = (function () {
 
 			this.responsables.forEach(responsable => {
 				this.resource_tree.push({
-					type: 'responsable',
+					type: DATA_TYPE.RESPONSABLE,
 					responsable_id: responsable.id,
 					responsable_name: responsable.name,
 					responsable_photo: responsable.photo,
@@ -1726,10 +1731,55 @@ var Gantt = (function () {
 		}
 
 		change_view_mode(mode = this.options.view_mode) {
+			this.zoom_reset_size();
 			this.update_view_scale(mode);
 			this.setup_dates();
 			this.render();
 			this.trigger_event('view_change', [mode]);
+		}
+
+		fullscreen(active = true) {
+			if (active) {
+				this.$wrapper.classList.add('gantt-fullscreen');
+			} else {
+				this.$wrapper.classList.remove('gantt-fullscreen');
+			}
+		}
+
+		zoom() {
+			this.column_width =
+				this.column_width_original + this.zoom_width * this.zoom_size;
+
+			this.setup_dates();
+			this.render();
+		}
+
+		zoom_reset_size() {
+			this.zoom_size = 0;
+		}
+
+		zoom_reset() {
+			if (this.zoom_size !== 0) {
+				this.zoom_reset_size();
+
+				this.zoom();
+			}
+		}
+
+		zoom_in() {
+			if (this.zoom_size < this.options.zoom_max) {
+				this.zoom_size++;
+
+				this.zoom();
+			}
+		}
+
+		zoom_out() {
+			if (this.zoom_size > 0) {
+				this.zoom_size--;
+
+				this.zoom();
+			}
 		}
 
 		update_view_scale(view_mode) {
@@ -1738,25 +1788,34 @@ var Gantt = (function () {
 			if (view_mode === VIEW_MODE.HOUR) {
 				this.step = 24 / 24;
 				this.column_width = 50;
+				this.zoom_width = 20;
 			} else if (view_mode === VIEW_MODE.DAY) {
 				this.step = 24;
 				this.column_width = 100;
+				this.zoom_width = 30;
 			} else if (view_mode === VIEW_MODE.HALF_DAY) {
 				this.step = 24 / 2;
 				this.column_width = 100;
+				this.zoom_width = 30;
 			} else if (view_mode === VIEW_MODE.QUARTER_DAY) {
 				this.step = 24 / 4;
 				this.column_width = 100;
+				this.zoom_width = 50;
 			} else if (view_mode === VIEW_MODE.WEEK) {
 				this.step = 24 * 7;
 				this.column_width = 200;
+				this.zoom_width = 60;
 			} else if (view_mode === VIEW_MODE.MONTH) {
 				this.step = 24 * 30;
 				this.column_width = 300;
+				this.zoom_width = 80;
 			} else if (view_mode === VIEW_MODE.YEAR) {
 				this.step = 24 * 365;
 				this.column_width = 400;
+				this.zoom_width = 100;
 			}
+
+			this.column_width_original = this.column_width;
 		}
 
 		setup_dates() {
@@ -1987,7 +2046,7 @@ var Gantt = (function () {
 			this.resource_tree.forEach(tree => {
 				let item;
 
-				if (tree.type === 'groups') {
+				if (tree.type === DATA_TYPE.GROUP) {
 					item = {
 						name: tree.group_name,
 						icon: tree.group_icon,
@@ -1995,7 +2054,7 @@ var Gantt = (function () {
 						group_id: tree.group_id,
 						is_group: true,
 					};
-				} else if (tree.type === 'sub_group') {
+				} else if (tree.type === DATA_TYPE.SUB_GROUP) {
 					item = {
 						name: tree.sub_group_name,
 						icon: tree.sub_group_icon,
@@ -2004,7 +2063,7 @@ var Gantt = (function () {
 						group_id: tree.group_id,
 						is_sub_group: true,
 					};
-				} else if (tree.type === 'responsable') {
+				} else if (tree.type === DATA_TYPE.RESPONSABLE) {
 					item = {
 						name: tree.responsable_name,
 						photo: tree.responsable_photo,
@@ -2248,30 +2307,36 @@ var Gantt = (function () {
 		}
 
 		make_resource_workitem_type(type, el_parent, elY, elX, img_wh) {
-			if (type.icon) {
-				createSVG('image', {
-					x: elX,
-					y: elY,
-					width: img_wh,
-					height: img_wh,
-					class: 'resource-type-icon-img',
-					href: type.icon,
-					clipPath: 'clip_' + type.id,
-					append_to: el_parent,
-				});
+			let tag;
+			let x = elX;
+			let y = elY;
+			let w = img_wh;
+			let h = img_wh;
+
+			if (type.imageIcon) {
+				tag = `<img title="${type.name}" src="${type.imageIcon}" class="resource-type-icon -img" />`;
+			} else if (type.fontIcon) {
+				tag = `<i title="${type.name}" class="resource-type-icon -font ${type.fontIcon} icon"></i>`;
+
+				x += 2;
+				y += 2;
+				w += 4;
+				h += 4;
 			} else if (type.color) {
-				createSVG('rect', {
-					x: elX,
-					y: elY,
-					rx: img_wh,
-					ry: img_wh,
-					width: img_wh,
-					height: img_wh,
-					class: 'resource-type-icon',
-					style: `fill:${type.color || '#000000'}`,
-					append_to: el_parent,
-				});
+				const style = `style="background:${type.color || '#000000'}"`;
+				tag = `<spam title="${type.name}" class="resource-type-icon -color" ${style}></spam>`;
 			}
+
+			if (!tag) return
+
+			createSVG('foreignObject', {
+				x,
+				y,
+				width: w,
+				height: h,
+				append_to: el_parent,
+				innerHTML: tag,
+			});
 		}
 
 		make_grid() {
@@ -3006,6 +3071,132 @@ var Gantt = (function () {
 			});
 
 			this.bind_bar_progress();
+		}
+
+		resource_expand_all() {
+			if (!this.options.resource_collapse_enable) return
+
+			this.hide_popup();
+
+			const is_open = true;
+
+			const groups = [];
+
+			this.resource_tree.forEach((item, i) => {
+				if (item.type === DATA_TYPE.GROUP) {
+					groups.push({
+						start: i + 1,
+					});
+				} else {
+					groups[groups.length - 1].end = i;
+				}
+			});
+
+			const last_group = groups[groups.length - 1];
+
+			if (last_group && last_group.end === 0) {
+				last_group.end = this.resource_tree.length;
+			}
+
+			if (last_group.start === last_group.end) {
+				groups.pop();
+			}
+
+			groups.forEach(group => {
+				const first = this.resource_tree[group.start - 1];
+
+				let selector = `[data-group-id="${first.group_id}"]`;
+
+				const arrow = document.querySelector(selector + '.resource-arrow');
+
+				this.set_transform_origin_element(arrow);
+
+				selector += ':not(.resource-pointer)';
+
+				const els = document.querySelectorAll(selector);
+
+				const toggle = els[0].getAttribute(DATA_ATTR.TOGGLE);
+
+				if (!toggle || toggle === DATA_OPEN.OPEN) return
+
+				els[0].setAttribute(DATA_ATTR.TOGGLE, DATA_OPEN.OPEN);
+
+				arrow.classList.remove('-close');
+
+				const elements = this.get_open_hide_elements(group.start, group.end);
+
+				this.resource_tree_open_hide({
+					...elements,
+					is_open,
+				});
+				this.reset_index();
+				this.remake_arrows();
+				this.display_arrows();
+				this.vertical_resize_gantt();
+			});
+		}
+
+		resource_collapse_all() {
+			if (!this.options.resource_collapse_enable) return
+
+			this.hide_popup();
+
+			const is_open = false;
+
+			const groups = [];
+
+			this.resource_tree.forEach((item, i) => {
+				if (item.type === DATA_TYPE.GROUP) {
+					groups.push({
+						start: i + 1,
+					});
+				} else {
+					groups[groups.length - 1].end = i;
+				}
+			});
+
+			const last_group = groups[groups.length - 1];
+
+			if (last_group && last_group.end === 0) {
+				last_group.end = this.resource_tree.length;
+			}
+
+			if (last_group.start === last_group.end) {
+				groups.pop();
+			}
+
+			groups.forEach(group => {
+				const first = this.resource_tree[group.start];
+
+				let selector = `[data-group-id="${first.group_id}"]`;
+
+				const arrow = document.querySelector(selector + '.resource-arrow');
+
+				this.set_transform_origin_element(arrow);
+
+				selector += ':not(.resource-pointer)';
+
+				const els = document.querySelectorAll(selector);
+
+				const toggle = els[0].getAttribute(DATA_ATTR.TOGGLE);
+
+				if (toggle === DATA_OPEN.CLOSE) return
+
+				els[0].setAttribute(DATA_ATTR.TOGGLE, DATA_OPEN.CLOSE);
+
+				arrow.classList.add('-close');
+
+				const elements = this.get_open_hide_elements(group.start, group.end);
+
+				this.resource_tree_open_hide({
+					...elements,
+					is_open,
+				});
+				this.reset_index();
+				this.remake_arrows();
+				this.display_arrows();
+				this.vertical_resize_gantt();
+			});
 		}
 
 		bind_resource_events() {
