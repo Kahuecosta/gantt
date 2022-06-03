@@ -9,11 +9,13 @@ module.exports = {
 	globals: {
 		Atomics: 'readonly',
 		SharedArrayBuffer: 'readonly',
+		document: true,
+		SVGElement: true,
+		HTMLElement: true,
 	},
 	parserOptions: {
 		ecmaVersion: 2018,
 		sourceType: 'module',
 	},
 	rules: {},
-	ignorePatterns: ['/dist /**/*.js', '/src/vendor /**/*.js'],
 }

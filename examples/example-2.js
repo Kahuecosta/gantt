@@ -1,3 +1,7 @@
+/* eslint-disable no-undef */
+/* eslint-disable no-unused-vars */
+/* eslint-disable no-console */
+
 const responsables = [
 	{
 		id: 1,
@@ -68,20 +72,20 @@ const types = [
 		name: 'Hotfix',
 		bar_class: 'bar-hotfix',
 		color: '#e27d02',
-		icon: './images/icon-1.png',
+		fontIcon: 'fa-map',
 	},
 	{
 		id: 2,
 		name: 'Task',
 		bar_class: 'bar-task',
 		color: '#0758b3',
-		icon: './images/icon-2.png',
+		imageIcon: './images/icon-2.png',
 	},
 	{
 		id: 3,
 		name: 'Débito Técnico',
 		bar_class: 'bar-debit',
-		icon: './images/icon-3.png',
+		imageIcon: './images/icon-3.png',
 	},
 	{
 		id: 4,
@@ -90,11 +94,6 @@ const types = [
 		color: '#d81e46',
 	},
 ]
-
-const date = new Date()
-const year = date.getFullYear()
-const month = date.getMonth()
-const getDate = day => `${year}-${month + 1}-${day}`
 
 const workitems = [
 	{
@@ -317,12 +316,13 @@ const options = {
 	highlights_past_days: true,
 	link_detail_text: 'Ver detalhes',
 	dir_assets: '../dist/assets',
+	zoom_max: 5,
 }
 
 let gantt
 
 const reload = () => {
-	document.getElementById('gantt-target').innerHTML = ''
+	document.getElementsByClassName('gantt-container')[0].remove()
 
 	init()
 }

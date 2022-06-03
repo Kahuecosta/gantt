@@ -1,3 +1,7 @@
+/* eslint-disable no-undef */
+/* eslint-disable no-unused-vars */
+/* eslint-disable no-console */
+
 const responsables = [
 	{
 		id: 1,
@@ -284,12 +288,13 @@ const options = {
 	highlights_past_days: true,
 	link_detail_text: 'Ver detalhes',
 	dir_assets: '../dist/assets',
+	zoom_max: 5,
 }
 
 let gantt
 
 const reload = () => {
-	document.getElementById('gantt-target').innerHTML = ''
+	document.getElementsByClassName('gantt-container')[0].remove()
 
 	init()
 }

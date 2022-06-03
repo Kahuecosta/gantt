@@ -111,7 +111,7 @@ export default class Bar {
 	}
 
 	draw_label() {
-		let x_coord, y_coord
+		let x_coord
 		let padding = 5
 
 		if (this.task.img) {
@@ -129,6 +129,7 @@ export default class Bar {
 		})
 
 		// labels get BBox in the next tick
+		// eslint-disable-next-line no-undef
 		requestAnimationFrame(() => this.update_label_position())
 	}
 
@@ -223,16 +224,18 @@ export default class Bar {
 	get_progress_polygon_points() {
 		const bar_progress = this.$bar_progress
 
-		return bar_progress
-			? [
-					bar_progress.getEndX() - 5,
-					bar_progress.getY() + bar_progress.getHeight(),
-					bar_progress.getEndX() + 5,
-					bar_progress.getY() + bar_progress.getHeight(),
-					bar_progress.getEndX(),
-					bar_progress.getY() + bar_progress.getHeight() - 12.66,
-			  ]
-			: []
+		if (!bar_progress) {
+			return []
+		}
+
+		return [
+			bar_progress.getEndX() - 5,
+			bar_progress.getY() + bar_progress.getHeight(),
+			bar_progress.getEndX() + 5,
+			bar_progress.getY() + bar_progress.getHeight(),
+			bar_progress.getEndX(),
+			bar_progress.getY() + bar_progress.getHeight() - 12.66,
+		]
 	}
 
 	bind() {
@@ -242,7 +245,7 @@ export default class Bar {
 	}
 
 	setup_click_event() {
-		$.on(this.group, 'focus ' + this.gantt.options.popup_trigger, e => {
+		$.on(this.group, 'focus ' + this.gantt.options.popup_trigger, () => {
 			if (this.action_completed) {
 				// just finished a move action, wait for a few seconds
 				return
@@ -255,7 +258,7 @@ export default class Bar {
 			}
 		})
 
-		$.on(this.group, 'dblclick', e => {
+		$.on(this.group, 'dblclick', () => {
 			if (this.action_completed) {
 				// just finished a move action, wait for a few seconds
 				return
@@ -264,7 +267,7 @@ export default class Bar {
 			this.gantt.trigger_event('dblclick', [this.task])
 		})
 
-		$.on(this.group, 'click', e => {
+		$.on(this.group, 'click', () => {
 			if (this.action_completed) {
 				// just finished a move action, wait for a few seconds
 				return
