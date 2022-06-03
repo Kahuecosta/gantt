@@ -72,20 +72,20 @@ const types = [
 		name: 'Hotfix',
 		bar_class: 'bar-hotfix',
 		color: '#e27d02',
-		icon: './images/icon-1.png',
+		fontIcon: 'fa-map',
 	},
 	{
 		id: 2,
 		name: 'Task',
 		bar_class: 'bar-task',
 		color: '#0758b3',
-		icon: './images/icon-2.png',
+		imageIcon: './images/icon-2.png',
 	},
 	{
 		id: 3,
 		name: 'Débito Técnico',
 		bar_class: 'bar-debit',
-		icon: './images/icon-3.png',
+		imageIcon: './images/icon-3.png',
 	},
 	{
 		id: 4,

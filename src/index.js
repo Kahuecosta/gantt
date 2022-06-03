@@ -1091,31 +1091,37 @@ export default class Gantt {
 	}
 
 	make_resource_workitem_type(type, el_parent, elY, elX, img_wh) {
-		if (type.icon) {
-			createSVG('image', {
-				x: elX,
-				y: elY,
-				width: img_wh,
-				height: img_wh,
-				class: 'resource-type-icon-img',
-				href: type.icon,
-				clipPath: 'clip_' + type.id,
-				append_to: el_parent,
-			})
+		let tag
+		let x = elX
+		let y = elY
+		let w = img_wh
+		let h = img_wh
+
+		if (type.imageIcon) {
+			tag = `<img title="${type.name}" src="${type.imageIcon}" class="resource-type-icon -img" />`
+		} else if (type.fontIcon) {
+			tag = `<i title="${type.name}" class="resource-type-icon -font ${type.fontIcon} icon"></i>`
+
+			x += 2
+			y += 2
+			w += 4
+			h += 4
 		} else if (type.color) {
-			createSVG('rect', {
-				x: elX,
-				y: elY,
-				rx: img_wh,
-				ry: img_wh,
-				width: img_wh,
-				height: img_wh,
-				class: 'resource-type-icon',
-				style: `fill:${type.color || '#000000'}`,
+			const style = `style="background:${type.color || '#000000'}"`
+			tag = `<spam title="${type.name}" class="resource-type-icon -color" ${style}></spam>`
+		}
+
+		if (!tag) return
+
+		createSVG('foreignObject', {
+			x,
+			y,
+			width: w,
+			height: h,
 				append_to: el_parent,
+			innerHTML: tag,
 			})
 		}
-	}
 
 	make_grid() {
 		this.make_grid_background()
