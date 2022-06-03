@@ -1118,10 +1118,10 @@ export default class Gantt {
 			y,
 			width: w,
 			height: h,
-				append_to: el_parent,
+			append_to: el_parent,
 			innerHTML: tag,
-			})
-		}
+		})
+	}
 
 	make_grid() {
 		this.make_grid_background()
@@ -1855,6 +1855,132 @@ export default class Gantt {
 		})
 
 		this.bind_bar_progress()
+	}
+
+	resource_expand_all() {
+		if (!this.options.resource_collapse_enable) return
+
+		this.hide_popup()
+
+		const is_open = true
+
+		const groups = []
+
+		this.resource_tree.forEach((item, i) => {
+			if (item.type === DATA_TYPE.GROUP) {
+				groups.push({
+					start: i + 1,
+				})
+			} else {
+				groups[groups.length - 1].end = i
+			}
+		})
+
+		const last_group = groups[groups.length - 1]
+
+		if (last_group && last_group.end === 0) {
+			last_group.end = this.resource_tree.length
+		}
+
+		if (last_group.start === last_group.end) {
+			groups.pop()
+		}
+
+		groups.forEach(group => {
+			const first = this.resource_tree[group.start - 1]
+
+			let selector = `[data-group-id="${first.group_id}"]`
+
+			const arrow = document.querySelector(selector + '.resource-arrow')
+
+			this.set_transform_origin_element(arrow)
+
+			selector += ':not(.resource-pointer)'
+
+			const els = document.querySelectorAll(selector)
+
+			const toggle = els[0].getAttribute(DATA_ATTR.TOGGLE)
+
+			if (!toggle || toggle === DATA_OPEN.OPEN) return
+
+			els[0].setAttribute(DATA_ATTR.TOGGLE, DATA_OPEN.OPEN)
+
+			arrow.classList.remove('-close')
+
+			const elements = this.get_open_hide_elements(group.start, group.end)
+
+			this.resource_tree_open_hide({
+				...elements,
+				is_open,
+			})
+			this.reset_index()
+			this.remake_arrows()
+			this.display_arrows()
+			this.vertical_resize_gantt()
+		})
+	}
+
+	resource_collapse_all() {
+		if (!this.options.resource_collapse_enable) return
+
+		this.hide_popup()
+
+		const is_open = false
+
+		const groups = []
+
+		this.resource_tree.forEach((item, i) => {
+			if (item.type === DATA_TYPE.GROUP) {
+				groups.push({
+					start: i + 1,
+				})
+			} else {
+				groups[groups.length - 1].end = i
+			}
+		})
+
+		const last_group = groups[groups.length - 1]
+
+		if (last_group && last_group.end === 0) {
+			last_group.end = this.resource_tree.length
+		}
+
+		if (last_group.start === last_group.end) {
+			groups.pop()
+		}
+
+		groups.forEach(group => {
+			const first = this.resource_tree[group.start]
+
+			let selector = `[data-group-id="${first.group_id}"]`
+
+			const arrow = document.querySelector(selector + '.resource-arrow')
+
+			this.set_transform_origin_element(arrow)
+
+			selector += ':not(.resource-pointer)'
+
+			const els = document.querySelectorAll(selector)
+
+			const toggle = els[0].getAttribute(DATA_ATTR.TOGGLE)
+
+			if (toggle === DATA_OPEN.CLOSE) return
+
+			els[0].setAttribute(DATA_ATTR.TOGGLE, DATA_OPEN.CLOSE)
+
+			arrow.classList.add('-close')
+
+			const elements = this.get_open_hide_elements(group.start, group.end)
+
+			this.resource_tree_open_hide({
+				...elements,
+				is_open,
+			})
+			this.reset_index()
+			this.remake_arrows()
+			this.display_arrows()
+			this.vertical_resize_gantt()
+		})
 	}
 
 	bind_resource_events() {
