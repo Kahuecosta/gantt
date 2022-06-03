@@ -1,3 +1,7 @@
+/* eslint-disable no-undef */
+/* eslint-disable no-unused-vars */
+/* eslint-disable no-console */
+
 const responsables = [
 	{
 		id: 1,
@@ -90,11 +94,6 @@ const types = [
 		color: '#d81e46',
 	},
 ]
-
-const date = new Date()
-const year = date.getFullYear()
-const month = date.getMonth()
-const getDate = day => `${year}-${month + 1}-${day}`
 
 const workitems = [
 	{
@@ -323,7 +322,7 @@ const options = {
 let gantt
 
 const reload = () => {
-	document.getElementById('gantt-target').innerHTML = ''
+	document.getElementsByClassName('gantt-container')[0].remove()
 
 	init()
 }

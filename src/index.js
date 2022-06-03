@@ -263,7 +263,7 @@ export default class Gantt {
 		let index = 0
 
 		this.resource_tree.forEach(item => {
-			if (item.type === 'responsable') {
+			if (item.type === DATA_TYPE.RESPONSABLE) {
 				index++
 			} else {
 				const task = this.get_task(item.task_id)
@@ -279,7 +279,7 @@ export default class Gantt {
 		let index = 0
 
 		this.resource_tree.forEach(item => {
-			if (item.type === 'groups' || item.type === 'sub_group') {
+			if (item.type === DATA_TYPE.GROUP || item.type === DATA_TYPE.SUB_GROUP) {
 				index++
 			} else {
 				const task = this.get_task(item.task_id)
@@ -329,7 +329,7 @@ export default class Gantt {
 		if (groups_enable) {
 			this.groups.forEach(group => {
 				this.resource_tree.push({
-					type: 'groups',
+					type: DATA_TYPE.GROUP,
 					group_id: group.id,
 					group_name: group.name,
 					group_icon: group.icon,
@@ -339,7 +339,7 @@ export default class Gantt {
 				if (group.sub_group) {
 					group.sub_group.forEach(sg => {
 						this.resource_tree.push({
-							type: 'sub_group',
+							type: DATA_TYPE.SUB_GROUP,
 							sub_group_id: sg.id,
 							sub_group_name: sg.name,
 							sub_group_icon: sg.icon,
@@ -361,7 +361,7 @@ export default class Gantt {
 
 		this.responsables.forEach(responsable => {
 			this.resource_tree.push({
-				type: 'responsable',
+				type: DATA_TYPE.RESPONSABLE,
 				responsable_id: responsable.id,
 				responsable_name: responsable.name,
 				responsable_photo: responsable.photo,
@@ -830,7 +830,7 @@ export default class Gantt {
 		this.resource_tree.forEach(tree => {
 			let item
 
-			if (tree.type === 'groups') {
+			if (tree.type === DATA_TYPE.GROUP) {
 				item = {
 					name: tree.group_name,
 					icon: tree.group_icon,
@@ -838,7 +838,7 @@ export default class Gantt {
 					group_id: tree.group_id,
 					is_group: true,
 				}
-			} else if (tree.type === 'sub_group') {
+			} else if (tree.type === DATA_TYPE.SUB_GROUP) {
 				item = {
 					name: tree.sub_group_name,
 					icon: tree.sub_group_icon,
@@ -847,7 +847,7 @@ export default class Gantt {
 					group_id: tree.group_id,
 					is_sub_group: true,
 				}
-			} else if (tree.type === 'responsable') {
+			} else if (tree.type === DATA_TYPE.RESPONSABLE) {
 				item = {
 					name: tree.responsable_name,
 					photo: tree.responsable_photo,

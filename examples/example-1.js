@@ -1,3 +1,7 @@
+/* eslint-disable no-undef */
+/* eslint-disable no-unused-vars */
+/* eslint-disable no-console */
+
 const responsables = [
 	{
 		id: 1,
@@ -290,7 +294,7 @@ const options = {
 let gantt
 
 const reload = () => {
-	document.getElementById('gantt-target').innerHTML = ''
+	document.getElementsByClassName('gantt-container')[0].remove()
 
 	init()
 }
