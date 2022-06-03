@@ -8,6 +8,9 @@
 			font-family: Arial, Helvetica, sans-serif;
 			background: #FFFFFF;
 		}
+		.divisor {
+			margin: 0 15px;
+		}
 		.gantt-target {
 			height: calc(100vh - 150px);
 		}
@@ -17,8 +20,7 @@
 </head>
 <body>
 	<h3>Interactive Gantt Chart entirely made in SVG!</h3>
-	<div>
-		<span>View Mode: </span>
+	<div id="gantt-target" class="gantt-target">
 		<button onclick="gantt.change_view_mode('Hour')">Hour</button>
 		<button onclick="gantt.change_view_mode('Quarter Day')">Quarter Day</button>
 		<button onclick="gantt.change_view_mode('Half Day')">Half Day</button>
@@ -30,10 +32,18 @@
 		<button onclick="gantt.scrolling_today()">Today</button>
 		<span class="divisor"> | </span>
 		<button onclick="reload()">Reload</button>
+		<span class="divisor"> | </span>
+		<button onclick="gantt.zoom_reset()">Zoom Reset</button>
+		<button onclick="gantt.zoom_out()">Zoom Out</button>
+		<button onclick="gantt.zoom_in()">Zoom In</button>
+		<span class="divisor"> | </span>
+		<button onclick="gantt.fullscreen(true)">Fullscreen - On</button>
+		<button onclick="gantt.fullscreen(false)">Fullscreen - Off</button>
+		<span class="divisor"> | </span>
+		<button onclick="gantt.resource_expand_all()">Expandir todos</button>
+		<button onclick="gantt.resource_collapse_all()">Fechar todos</button>
 		<br><br>
 	</div>
-	<div id="gantt-target" class="gantt-target"></div>
-	
 	<script defer src="./example-1.js"></script>
 </body>
 </html>
