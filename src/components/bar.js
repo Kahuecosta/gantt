@@ -291,14 +291,21 @@ export default class Bar {
 			this.gantt.options.language
 		)
 
-		this.gantt.show_popup({
-			target_element: this.$bar,
-			title: `<b>${this.task.name}</b>`,
-			subtitle: '',
-			period: `${start_date} - ${end_date}`,
-			task: this.task,
-			link_detail_text: this.gantt.options.link_detail_text,
-		})
+		if (this.gantt.options.workitems_custom_tooltip) {
+			this.gantt.show_custom_popup({
+				target_element: this.$bar,
+				task: this.task,
+			})
+		} else {
+			this.gantt.show_popup({
+				target_element: this.$bar,
+				title: `<b>${this.task.name}</b>`,
+				subtitle: '',
+				period: `${start_date} - ${end_date}`,
+				task: this.task,
+				link_detail_text: this.gantt.options.link_detail_text,
+			})
+		}
 	}
 
 	update_bar_position({ x = null, width = null }) {

@@ -261,6 +261,17 @@ const workitems = [
 	},
 ]
 
+const tooltips = document.createElement('div')
+tooltips.style.display = 'none'
+document.body.appendChild(tooltips)
+
+workitems.forEach(wi => {
+	const tooltip = document.createElement('div')
+	tooltip.setAttribute('data-gantt-tooltip-id', wi.id)
+	tooltip.innerHTML = `<<<<< ${wi.id} >>>>>><br><br><br><br>`
+	tooltips.appendChild(tooltip)
+})
+
 const options = {
 	on_click: function (workitem) {
 		console.log('on_click', workitem)
@@ -309,6 +320,8 @@ const options = {
 	groups_enable: true,
 	groups_sort_by: 'name',
 	workitems_sort_by: 'name',
+	workitems_custom_tooltip: true,
+	workitems_click_tooltip_open_detail: true,
 	rows_alternate_background: false,
 	grid_ticks: true,
 	bar_color_default: '#FFCC33',

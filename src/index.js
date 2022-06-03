@@ -12,6 +12,7 @@ import {
 	DATA_ATTR,
 } from './constants'
 import GanttUtilities from './utilities/gantt'
+import CustomPopup from './components/custom-popup'
 
 export default class Gantt {
 	constructor(
@@ -137,6 +138,8 @@ export default class Gantt {
 			groups_enable: false,
 			groups_sort_by: 'name',
 			workitems_sort_by: 'name',
+			workitems_custom_tooltip: false,
+			workitems_click_tooltip_open_detail: true,
 			rows_alternate_background: true,
 			grid_ticks: true,
 			bar_color_default: '#FFCC33',
@@ -2543,6 +2546,14 @@ export default class Gantt {
 				this.options.custom_popup_html,
 				this.$container
 			)
+		}
+
+		this.popup.show(options)
+	}
+
+	show_custom_popup(options) {
+		if (!this.popup) {
+			this.popup = new CustomPopup(this, this.popup_wrapper, this.$container)
 		}
 
 		this.popup.show(options)
