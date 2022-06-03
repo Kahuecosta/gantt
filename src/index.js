@@ -26,6 +26,8 @@ export default class Gantt {
 
 		this.VIEW_MODE = VIEW_MODE
 
+		this.zoom_size = 0
+		this.zoom_width = 20
 		this.step = 24
 		this.column_width = 38
 
@@ -140,6 +142,7 @@ export default class Gantt {
 			highlights_past_days: true,
 			link_detail_text: 'Ver detalhes',
 			dir_assets: '../dist/assets',
+			zoom_max: 5,
 		}
 
 		default_options.responsables_default_photo = `${default_options.dir_assets}/responsable-default.png`
@@ -510,10 +513,48 @@ export default class Gantt {
 	}
 
 	change_view_mode(mode = this.options.view_mode) {
+		this.zoom_reset_size()
 		this.update_view_scale(mode)
 		this.setup_dates()
 		this.render()
 		this.trigger_event('view_change', [mode])
+	}
+
+
+	zoom() {
+		this.column_width =
+			this.column_width_original + this.zoom_width * this.zoom_size
+
+		this.setup_dates()
+		this.render()
+	}
+
+	zoom_reset_size() {
+		this.zoom_size = 0
+	}
+
+	zoom_reset() {
+		if (this.zoom_size !== 0) {
+			this.zoom_reset_size()
+
+			this.zoom()
+		}
+	}
+
+	zoom_in() {
+		if (this.zoom_size < this.options.zoom_max) {
+			this.zoom_size++
+
+			this.zoom()
+		}
+	}
+
+	zoom_out() {
+		if (this.zoom_size > 0) {
+			this.zoom_size--
+
+			this.zoom()
+		}
 	}
 
 	update_view_scale(view_mode) {
@@ -522,25 +563,34 @@ export default class Gantt {
 		if (view_mode === VIEW_MODE.HOUR) {
 			this.step = 24 / 24
 			this.column_width = 50
+			this.zoom_width = 20
 		} else if (view_mode === VIEW_MODE.DAY) {
 			this.step = 24
 			this.column_width = 100
+			this.zoom_width = 30
 		} else if (view_mode === VIEW_MODE.HALF_DAY) {
 			this.step = 24 / 2
 			this.column_width = 100
+			this.zoom_width = 30
 		} else if (view_mode === VIEW_MODE.QUARTER_DAY) {
 			this.step = 24 / 4
 			this.column_width = 100
+			this.zoom_width = 50
 		} else if (view_mode === VIEW_MODE.WEEK) {
 			this.step = 24 * 7
 			this.column_width = 200
+			this.zoom_width = 60
 		} else if (view_mode === VIEW_MODE.MONTH) {
 			this.step = 24 * 30
 			this.column_width = 300
+			this.zoom_width = 80
 		} else if (view_mode === VIEW_MODE.YEAR) {
 			this.step = 24 * 365
 			this.column_width = 400
+			this.zoom_width = 100
 		}
+
+		this.column_width_original = this.column_width
 	}
 
 	setup_dates() {

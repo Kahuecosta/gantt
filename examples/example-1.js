@@ -284,6 +284,7 @@ const options = {
 	highlights_past_days: true,
 	link_detail_text: 'Ver detalhes',
 	dir_assets: '../dist/assets',
+	zoom_max: 5,
 }
 
 let gantt

@@ -90,6 +90,7 @@ You can also pass various options to the Gantt constructor:
 | highlights_weekend            | Marcar colunas de finais de semana com fundo diferenciado                                      |
 | highlights_past_days          | Marcar colunas de dias no passado com fundo diferenciado                                       |
 | dir_assets                    | Caminho relativo para assets do componente                                                     |
+| zoom_max                      | Quantidade máxima de vezes que o Zoom pode ser efetuado                                        |
 
 | EVENTOS             | DESCRIÇÃO                                                    |
 | ------------------- | ------------------------------------------------------------ |
@@ -195,6 +196,7 @@ const options = {
 	highlights_past_days: true,
 	link_detail_text: 'Ver detalhes',
 	dir_assets: '../dist/assets',
+	zoom_max: 5,
 }
 
 const gantt = new Gantt(
