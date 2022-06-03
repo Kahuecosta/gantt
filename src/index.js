@@ -82,6 +82,8 @@ export default class Gantt {
 			this.$svg.classList.add('gantt-svg')
 		}
 
+		this.$wrapper = element
+
 		// wrapper element
 		this.$container = document.createElement('div')
 		this.$container.classList.add('gantt-container')
@@ -520,6 +522,13 @@ export default class Gantt {
 		this.trigger_event('view_change', [mode])
 	}
 
+	fullscreen(active = true) {
+		if (active) {
+			this.$wrapper.classList.add('gantt-fullscreen')
+		} else {
+			this.$wrapper.classList.remove('gantt-fullscreen')
+		}
+	}
 
 	zoom() {
 		this.column_width =
