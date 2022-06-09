@@ -291,17 +291,24 @@ export default class Bar {
 			this.gantt.options.language
 		)
 
-		this.gantt.show_popup({
-			target_element: this.$bar,
-			title: `<b>${this.task.name}</b>`,
-			subtitle: '',
-			period: `${start_date} - ${end_date}`,
-			task: this.task,
-			link_detail_text: this.gantt.options.link_detail_text,
-		})
+		if (this.gantt.options.workitems_custom_tooltip) {
+			this.gantt.show_custom_popup({
+				target_element: this.$bar,
+				task: this.task,
+			})
+		} else {
+			this.gantt.show_popup({
+				target_element: this.$bar,
+				title: `<b>${this.task.name}</b>`,
+				subtitle: '',
+				period: `${start_date} - ${end_date}`,
+				task: this.task,
+				link_detail_text: this.gantt.options.link_detail_text,
+			})
+		}
 	}
 
-	update_bar_position({ x = null, width = null }) {
+	update_bar_position({ x = null, width = null, update_original_x = true }) {
 		const bar = this.$bar
 
 		if (x && x >= this.resource_width) {
@@ -319,15 +326,18 @@ export default class Bar {
 			}
 
 			this.update_attr(bar, 'x', x)
+
+			update_original_x && this.update_attr(bar, 'data-original-x', x)
 		}
 
 		if (width && width >= this.gantt.column_width) {
 			this.update_attr(bar, 'width', width)
 		}
 
-		this.update_label_position()
-		this.update_handle_position()
-		this.update_progressbar_position()
+		this.update_label_position(update_original_x)
+		this.update_handle_position(update_original_x)
+		this.update_progressbar_position(update_original_x)
+
 		this.update_arrow_position()
 	}
 
@@ -336,8 +346,9 @@ export default class Bar {
 		const label = this.group.querySelector('.bar-label')
 		const img = this.group.querySelector('.bar-img') || ''
 		const img_mask = this.bar_group.querySelector('.img_mask') || ''
+		const barX = this.$bar.getX()
 
-		let barWidthLimit = this.$bar.getX() + this.$bar.getWidth()
+		let barWidthLimit = barX + this.$bar.getWidth()
 		let newLabelX = label.getX() + x
 		let newImgX = (img && img.getX() + x) || 0
 		let imgWidth = (img && img.getBBox().width + 7) || 7
@@ -347,22 +358,22 @@ export default class Bar {
 		if (label.classList.contains('big')) return
 
 		if (labelEndX < barWidthLimit && x > 0 && labelEndX < viewportCentral) {
-			label.setAttribute('x', newLabelX)
+			this.update_attr(label, 'x', newLabelX)
 
 			if (img) {
-				img.setAttribute('x', newImgX)
-				img_mask.setAttribute('x', newImgX)
+				this.update_attr(img, 'x', newImgX)
+				this.update_attr(img_mask, 'x', newImgX)
 			}
 		} else if (
-			newLabelX - imgWidth > this.$bar.getX() &&
+			newLabelX - imgWidth > barX &&
 			x < 0 &&
 			labelEndX > viewportCentral
 		) {
-			label.setAttribute('x', newLabelX)
+			this.update_attr(label, 'x', newLabelX)
 
 			if (img) {
-				img.setAttribute('x', newImgX)
-				img_mask.setAttribute('x', newImgX)
+				this.update_attr(img, 'x', newImgX)
+				this.update_attr(img_mask, 'x', newImgX)
 			}
 		}
 	}
@@ -407,14 +418,22 @@ export default class Bar {
 	}
 
 	compute_start_end_date() {
+		const resource_line = $('.resource-line')
+
+		const resource_width = resource_line ? resource_line.getX() : 0
+
 		const bar = this.$bar
-		const x_in_units = bar.getX() / this.gantt.column_width
+
+		const x_in_units = (bar.getX() - resource_width) / this.gantt.column_width
+
 		const new_start_date = date_utils.add(
 			this.gantt.gantt_start,
 			x_in_units * this.gantt.step,
 			'hour'
 		)
+
 		const width_in_units = bar.getWidth() / this.gantt.column_width
+
 		const new_end_date = date_utils.add(
 			new_start_date,
 			width_in_units * this.gantt.step,
@@ -493,62 +512,80 @@ export default class Bar {
 		return element
 	}
 
-	update_progressbar_position() {
+	update_progressbar_position(update_original_x) {
 		const w = this.$bar.getWidth() * (this.task.progress / 100)
+		const x = this.$bar.getX()
 
-		this.$bar_progress.setAttribute('x', this.$bar.getX())
-		this.$bar_progress.setAttribute('width', w)
-	}
+		this.update_attr(this.$bar_progress, 'x', x)
+		this.update_attr(this.$bar_progress, 'width', w)
 
-	update_label_position() {
-		const img_mask = this.bar_group.querySelector('.img_mask') || ''
-		const bar = this.$bar,
-			label = this.group.querySelector('.bar-label'),
-			img = this.group.querySelector('.bar-img')
-		const x = bar.getX() + bar.getWidth()
-
-		let padding = 5
-		let x_offset_label_img = this.image_size + 10
-
-		if (
-			this.gantt.options.fixed_label_location ||
-			label.getBBox().width > bar.getWidth()
-		) {
-			label.classList.add('big')
-
-			if (img) {
-				img.setAttribute('x', x + padding)
-				img_mask.setAttribute('x', x + padding)
-				label.setAttribute('x', x + x_offset_label_img)
-			} else {
-				label.setAttribute('x', x + padding)
-			}
-		} else {
-			label.classList.remove('big')
-
-			if (img) {
-				img.setAttribute('x', bar.getX() + padding)
-				img_mask.setAttribute('x', bar.getX() + padding)
-				label.setAttribute('x', bar.getX() + x_offset_label_img)
-			} else {
-				label.setAttribute('x', bar.getX() + padding)
-			}
+		if (update_original_x) {
+			this.update_attr(this.$bar_progress, 'data-original-x', x)
 		}
 	}
 
-	update_handle_position() {
+	update_label_position(update_original_x) {
 		const bar = this.$bar
+		const img_mask = this.bar_group.querySelector('.img_mask') || ''
+		const label = this.group.querySelector('.bar-label')
+		const img = this.group.querySelector('.bar-img')
+		const barX = bar.getX()
+		const barW = bar.getWidth()
+		const labelW = label.getBBox().width
+		const padding = 5
+		const x_offset_label_img = this.image_size + 10
 
-		this.handle_group
-			.querySelector('.handle.left')
-			.setAttribute('x', bar.getX() + 1)
-		this.handle_group
-			.querySelector('.handle.right')
-			.setAttribute('x', bar.getEndX() - 9)
+		let xp
+		let xo
+
+		if (this.gantt.options.fixed_label_location || labelW > barW) {
+			label.classList.add('big')
+
+			const x = barX + barW
+
+			xp = x + padding
+			xo = x + x_offset_label_img
+		} else {
+			label.classList.remove('big')
+
+			xp = barX + padding
+			xo = barX + x_offset_label_img
+		}
+
+		if (img) {
+			this.update_attr(img, 'x', xp)
+			this.update_attr(img_mask, 'x', xp)
+			this.update_attr(label, 'x', xo)
+
+			update_original_x && this.update_attr(img, 'data-original-x', xp)
+			update_original_x && this.update_attr(img_mask, 'data-original-x', xp)
+			update_original_x && this.update_attr(label, 'data-original-x', xo)
+		} else {
+			this.update_attr(label, 'x', xp)
+
+			update_original_x && this.update_attr(label, 'data-original-x', xp)
+		}
+	}
+
+	update_handle_position(update_original_x) {
+		const bar = this.$bar
+		const barX = bar.getX() + 1
+		const barEX = bar.getEndX() - 9
+
+		const hl = this.handle_group.querySelector('.handle.left')
+		const hr = this.handle_group.querySelector('.handle.right')
+
+		this.update_attr(hl, 'x', barX)
+		this.update_attr(hr, 'x', barEX)
+
+		update_original_x && this.update_attr(hl, 'data-original-x', barX)
+		update_original_x && this.update_attr(hr, 'data-original-x', barEX)
 
 		const handle = this.group.querySelector('.handle.progress')
 
-		handle && handle.setAttribute('points', this.get_progress_polygon_points())
+		if (handle) {
+			this.update_attr(handle, 'points', this.get_progress_polygon_points())
+		}
 	}
 
 	update_arrow_position() {

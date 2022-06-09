@@ -43,54 +43,57 @@ Include it in your HTML:
 
 You can also pass various options to the Gantt constructor:
 
-| OPÇÃO                         | DESCRIÇÃO                                                                                      |
-| ----------------------------- | ---------------------------------------------------------------------------------------------- |
-| header_height                 | Altura do cabeçalho                                                                            |
-| column_width                  | Largura padrão das colunas. Obs: Este valor é sobrescrito internamente                         |
-| view_modes                    | Modos de visão do Gantt                                                                        |
-| view_mode                     | Modos de visão inicial do Gantt                                                                |
-| bar_height                    | Altura da barra de representação da demanda                                                    |
-| bar_corner_radius             | Arredondamento da barra de representação da demanda                                            |
-| arrow_curve                   | Curvatura da flecha de dependência                                                             |
-| padding                       | Espaçamento padrão em colunas e linhas                                                         |
-| padding_start                 | Espaçamento padrão do inicio do Gantt                                                          |
-| padding_end                   | Espaçamento padrão no final do Gantt                                                           |
-| date_format                   | Formato padrão de Datas                                                                        |
-| popup_trigger                 | Tipo de evento que abre o Popup                                                                |
-| language                      | Idioma do Gantt. Usado principalmente para tradução de datas                                   |
-| margin_bottom                 | Margem inferior do Gantt                                                                       |
-| disallow_popup                | Desabilitar ou habilitar o popup                                                               |
-| readonly                      | Desabilitar ou habilitar as ações no Gantt                                                     |
-| draggable_bar                 | Desabilitar ou habilitar o drag and drop de PERÍODO nas barras                                 |
-| draggable_bar_handles         | Desabilitar ou habilitar o drag and drop de PROGESSO nas barras                                |
-| hasArrows                     | Desabilitar ou habilitar as linhas de dependências                                             |
-| move_dependent                | Ao mover a posição de uma demanda também mover a posição de demandas dependêntes               |
-| hide_labels                   | Esconder o título da demandas na barra                                                         |
-| fixed_label_location          | Fixar exibião do título da demandas ao lado da barra                                           |
-| horizontal_auto_scroll_labels | Desabilitar ou habilitar que o título da demanda na barra se mova ao rolar o scroll horizontal |
-| handle_bar_color              | Cor padrão dos elementos de redimencionar a barra de demanda                                   |
-| handle_progress_color         | Cor padrão do elemento de progresso da barra de demanda                                        |
-| resource_resize_enable        | Desabilitar ou habilitar a função de redimencionar a árvore de demandas                        |
-| resource_fixed                | Desabilitar ou habilitar tamaho fixo da árvore de demandas                                     |
-| resource_enable               | Desabilitar ou habilitar a árvore de demandas                                                  |
-| resource_collapse_enable      | Desabilitar ou habilitar a função de expandir e recolher os grupos da árvore de demandas       |
-| resource_title                | Título padrão da árvore de demandas                                                            |
-| resource_width                | Largura padrão da árvore de demandas                                                           |
-| responsables_enable           | Desabilitar ou habilitar a exibição do responsável da tarefa                                   |
-| responsables_sort_by          | Ordenação de demandas na árvore por responsável                                                |
-| responsables_default_name     | Nome padrão de responsável para a demanda não possui um responsável                            |
-| responsables_default_photo    | Foto padrão de responsável para a demanda não possui um responsável                            |
-| groups_enable                 | Desabilitar ou habilitar grupos na árvore de demandas                                          |
-| groups_sort_by                | Ordenação de grupos na árvore de demandas                                                      |
-| workitems_sort_by             | Ordenação de tarefas na árvore de demandas                                                     |
-| rows_alternate_background     | Desabilitar ou habilitar linhas zebradas                                                       |
-| grid_ticks                    | Desabilitar ou habilitar as linhas de marcação das colunas                                     |
-| bar_color_default             | Cor padrão das barras para quando a cor não é informada no workitem                            |
-| link_detail_text              | Texto do link dentro do popup para a abertura de detalhes de uma demanda                       |
-| highlights_weekend            | Marcar colunas de finais de semana com fundo diferenciado                                      |
-| highlights_past_days          | Marcar colunas de dias no passado com fundo diferenciado                                       |
-| dir_assets                    | Caminho relativo para assets do componente                                                     |
-| zoom_max                      | Quantidade máxima de vezes que o Zoom pode ser efetuado                                        |
+| OPÇÃO                               | DESCRIÇÃO                                                                                      |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------- |
+| header_height                       | Altura do cabeçalho                                                                            |
+| column_width                        | Largura padrão das colunas. Obs: Este valor é sobrescrito internamente                         |
+| view_modes                          | Modos de visão do Gantt                                                                        |
+| view_mode                           | Modos de visão inicial do Gantt                                                                |
+| bar_height                          | Altura da barra de representação da demanda                                                    |
+| bar_corner_radius                   | Arredondamento da barra de representação da demanda                                            |
+| arrow_curve                         | Curvatura da flecha de dependência                                                             |
+| padding                             | Espaçamento padrão em colunas e linhas                                                         |
+| padding_start                       | Espaçamento padrão do inicio do Gantt                                                          |
+| padding_end                         | Espaçamento padrão no final do Gantt                                                           |
+| date_format                         | Formato padrão de Datas                                                                        |
+| popup_trigger                       | Tipo de evento que abre o Popup                                                                |
+| language                            | Idioma do Gantt. Usado principalmente para tradução de datas                                   |
+| margin_bottom                       | Margem inferior do Gantt                                                                       |
+| disallow_popup                      | Desabilitar ou habilitar o popup                                                               |
+| readonly                            | Desabilitar ou habilitar as ações no Gantt                                                     |
+| draggable_bar                       | Desabilitar ou habilitar o drag and drop de PERÍODO nas barras                                 |
+| draggable_bar_handles               | Desabilitar ou habilitar o drag and drop de PROGESSO nas barras                                |
+| hasArrows                           | Desabilitar ou habilitar as linhas de dependências                                             |
+| move_dependent                      | Ao mover a posição de uma demanda também mover a posição de demandas dependêntes               |
+| hide_labels                         | Esconder o título da demandas na barra                                                         |
+| fixed_label_location                | Fixar exibião do título da demandas ao lado da barra                                           |
+| horizontal_auto_scroll_labels       | Desabilitar ou habilitar que o título da demanda na barra se mova ao rolar o scroll horizontal |
+| handle_bar_color                    | Cor padrão dos elementos de redimencionar a barra de demanda                                   |
+| handle_progress_color               | Cor padrão do elemento de progresso da barra de demanda                                        |
+| resource_resize_enable              | Desabilitar ou habilitar a função de redimencionar a árvore de demandas                        |
+| resource_fixed                      | Desabilitar ou habilitar tamaho fixo da árvore de demandas                                     |
+| resource_enable                     | Desabilitar ou habilitar a árvore de demandas                                                  |
+| resource_collapse_enable            | Desabilitar ou habilitar a função de expandir e recolher os grupos da árvore de demandas       |
+| resource_title                      | Título padrão da árvore de demandas                                                            |
+| resource_width                      | Largura padrão da árvore de demandas                                                           |
+| resource_min_width                  | Largura minima da árvore de demandas                                                           |
+| responsables_enable                 | Desabilitar ou habilitar a exibição do responsável da tarefa                                   |
+| responsables_sort_by                | Ordenação de demandas na árvore por responsável                                                |
+| responsables_default_name           | Nome padrão de responsável para a demanda não possui um responsável                            |
+| responsables_default_photo          | Foto padrão de responsável para a demanda não possui um responsável                            |
+| groups_enable                       | Desabilitar ou habilitar grupos na árvore de demandas                                          |
+| groups_sort_by                      | Ordenação de grupos na árvore de demandas                                                      |
+| workitems_sort_by                   | Ordenação de tarefas na árvore de demandas                                                     |
+| workitems_custom_tooltip            | Habilitar a customização de tooltip                                                            |
+| workitems_click_tooltip_open_detail | Habilitar a abertura dos detallhes da demanda ao clicar no tooltip                             |
+| rows_alternate_background           | Desabilitar ou habilitar linhas zebradas                                                       |
+| grid_ticks                          | Desabilitar ou habilitar as linhas de marcação das colunas                                     |
+| bar_color_default                   | Cor padrão das barras para quando a cor não é informada no workitem                            |
+| link_detail_text                    | Texto do link dentro do popup para a abertura de detalhes de uma demanda                       |
+| highlights_weekend                  | Marcar colunas de finais de semana com fundo diferenciado                                      |
+| highlights_past_days                | Marcar colunas de dias no passado com fundo diferenciado                                       |
+| dir_assets                          | Caminho relativo para assets do componente                                                     |
+| zoom_max                            | Quantidade máxima de vezes que o Zoom pode ser efetuado                                        |
 
 | EVENTOS             | DESCRIÇÃO                                                    |
 | ------------------- | ------------------------------------------------------------ |
@@ -182,6 +185,7 @@ const options = {
 	resource_collapse_enable: true,
 	resource_title: 'Tasks',
 	resource_width: 250,
+	resource_min_width: 300,
 	responsables_enable: true,
 	responsables_sort_by: 'default',
 	responsables_default_name: 'Não atribuido',
@@ -189,6 +193,8 @@ const options = {
 	groups_enable: false,
 	groups_sort_by: 'name',
 	workitems_sort_by: 'name',
+	workitems_custom_tooltip: true,
+	workitems_click_tooltip_open_detail: true,
 	rows_alternate_background: false,
 	grid_ticks: true,
 	bar_color_default: '#f3f2f2',

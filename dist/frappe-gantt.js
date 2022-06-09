@@ -670,14 +670,21 @@ var Gantt = (function () {
 				this.gantt.options.language
 			);
 
-			this.gantt.show_popup({
-				target_element: this.$bar,
-				title: `<b>${this.task.name}</b>`,
-				subtitle: '',
-				period: `${start_date} - ${end_date}`,
-				task: this.task,
-				link_detail_text: this.gantt.options.link_detail_text,
-			});
+			if (this.gantt.options.workitems_custom_tooltip) {
+				this.gantt.show_custom_popup({
+					target_element: this.$bar,
+					task: this.task,
+				});
+			} else {
+				this.gantt.show_popup({
+					target_element: this.$bar,
+					title: `<b>${this.task.name}</b>`,
+					subtitle: '',
+					period: `${start_date} - ${end_date}`,
+					task: this.task,
+					link_detail_text: this.gantt.options.link_detail_text,
+				});
+			}
 		}
 
 		update_bar_position({ x = null, width = null }) {
@@ -1229,6 +1236,99 @@ var Gantt = (function () {
 		}
 	}
 
+	class CustomPopup {
+		constructor(gantt, parent, container) {
+			this.gantt = gantt;
+			this.parent = parent;
+			this.container = container;
+
+			this.make();
+		}
+
+		loadTagPointer() {
+			this.parent.innerHTML = '<div class="pointer"></div>';
+
+			this.pointer = this.parent.querySelector('.pointer');
+		}
+
+		make() {
+			this.loadTagPointer();
+
+			this.hide();
+
+			this.bind_events();
+		}
+
+		bind_events() {
+			if (this.gantt.options.workitems_click_tooltip_open_detail) {
+				$.on(this.parent, 'click', e => {
+					const id = e.target.getAttribute('data-task-id');
+
+					this.gantt.trigger_event('link_open_detail', [id]);
+				});
+			}
+		}
+
+		show(options) {
+			if (!options.target_element) {
+				throw new Error('target_element is required to show popup')
+			}
+
+			this.loadTagPointer();
+
+			const selector = `div[data-gantt-tooltip-id="${options.task.id}"]`;
+			const html = document.querySelector(selector);
+
+			if (!html) return
+
+			this.parent.innerHTML += html.innerHTML;
+
+			if (this.gantt.options.workitems_click_tooltip_open_detail) {
+				this.parent.classList.add('open-detail');
+				this.parent.setAttribute('data-task-id', options.task.id);
+			}
+
+			let position_meta;
+
+			if (options.target_element instanceof HTMLElement) {
+				position_meta = options.target_element.getBoundingClientRect();
+			} else if (options.target_element instanceof SVGElement) {
+				position_meta = options.target_element.getBBox();
+			}
+
+			options.position = options.position || 'left';
+
+			if (options.position === 'left') {
+				const left = position_meta.x + (position_meta.width + 10) + 'px';
+
+				this.parent.style.left = left;
+				this.pointer.style.transform = 'rotateZ(90deg)';
+				this.pointer.style.left = '-7px';
+				this.pointer.style.top = '2px';
+			}
+
+			const bottom = position_meta.y + this.parent.scrollHeight;
+
+			let top = position_meta.y;
+
+			if (bottom > this.container.scrollHeight) {
+				top -= bottom - this.container.scrollHeight + 5;
+
+				this.pointer.style.top = `${bottom - this.container.scrollHeight + 7}px`;
+			}
+
+			this.parent.style.top = `${top}px`;
+			this.parent.style.opacity = 1;
+			this.parent.style.zIndex = 0;
+		}
+
+		hide() {
+			this.parent.style.opacity = 0;
+			this.parent.style.left = 0;
+			this.parent.style.zIndex = -1;
+		}
+	}
+
 	class Gantt {
 		constructor(
 			wrapper,
@@ -1353,6 +1453,8 @@ var Gantt = (function () {
 				groups_enable: false,
 				groups_sort_by: 'name',
 				workitems_sort_by: 'name',
+				workitems_custom_tooltip: false,
+				workitems_click_tooltip_open_detail: true,
 				rows_alternate_background: true,
 				grid_ticks: true,
 				bar_color_default: '#FFCC33',
@@ -3759,6 +3861,14 @@ var Gantt = (function () {
 					this.options.custom_popup_html,
 					this.$container
 				);
+			}
+
+			this.popup.show(options);
+		}
+
+		show_custom_popup(options) {
+			if (!this.popup) {
+				this.popup = new CustomPopup(this, this.popup_wrapper, this.$container);
 			}
 
 			this.popup.show(options);

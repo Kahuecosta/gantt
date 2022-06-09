@@ -12,6 +12,7 @@ import {
 	DATA_ATTR,
 } from './constants'
 import GanttUtilities from './utilities/gantt'
+import CustomPopup from './components/custom-popup'
 
 export default class Gantt {
 	constructor(
@@ -27,11 +28,13 @@ export default class Gantt {
 		this.VIEW_MODE = VIEW_MODE
 
 		this.zoom_size = 0
-		this.zoom_width = 20
+		this.zoom_parts = 25
+		this.zoom_normal = 100
+
 		this.step = 24
 		this.column_width = 38
 
-		const optionsCopy = JSON.parse(JSON.stringify(options))
+		const optionsCopy = options
 		const responsablesCopy = JSON.parse(JSON.stringify(responsables))
 		const groupsCopy = JSON.parse(JSON.stringify(groups))
 		const workItemTypesCopy = JSON.parse(JSON.stringify(workItemTypes))
@@ -96,6 +99,10 @@ export default class Gantt {
 		this.popup_wrapper = document.createElement('div')
 		this.popup_wrapper.classList.add('popup-wrapper')
 		this.$container.appendChild(this.popup_wrapper)
+		// popup wrapper
+		this.popup_wrapper_custom = document.createElement('div')
+		this.popup_wrapper_custom.classList.add('popup-wrapper-custom')
+		this.$container.appendChild(this.popup_wrapper_custom)
 	}
 
 	setup_options(options) {
@@ -131,12 +138,15 @@ export default class Gantt {
 			resource_collapse_enable: false,
 			resource_title: 'Tasks',
 			resource_width: 250,
+			resource_min_width: 220,
 			responsables_enable: false,
 			responsables_sort_by: 'name',
 			responsables_default_name: 'Não atribuido',
 			groups_enable: false,
 			groups_sort_by: 'name',
 			workitems_sort_by: 'name',
+			workitems_custom_tooltip: false,
+			workitems_click_tooltip_open_detail: true,
 			rows_alternate_background: true,
 			grid_ticks: true,
 			bar_color_default: '#FFCC33',
@@ -415,11 +425,10 @@ export default class Gantt {
 
 			// if hours is not set, assume the last day is full day
 			// e.g: 2018-09-09 becomes 2018-09-09 23:59:59
-			const task_end_values = date_utils.get_date_values(task._end)
-
-			if (task_end_values.slice(3).every(d => d === 0)) {
-				task._end = date_utils.add(task._end, 24, 'hour')
-			}
+			// const task_end_values = date_utils.get_date_values(task._end)
+			// if (task_end_values.slice(3).every(d => d === 0)) {
+			// 	task._end = date_utils.add(task._end, 24, 'hour')
+			// }
 
 			// invalid flag
 			if (!task.start || (!task.end && !task.duration)) {
@@ -531,8 +540,11 @@ export default class Gantt {
 	}
 
 	zoom() {
-		this.column_width =
-			this.column_width_original + this.zoom_width * this.zoom_size
+		let percent = this.zoom_parts / 100
+		percent *= this.zoom_size
+		percent += 1
+
+		this.column_width = this.column_width_original * percent
 
 		this.setup_dates()
 		this.render()
@@ -558,6 +570,12 @@ export default class Gantt {
 		}
 	}
 
+	zoom_percent(percent) {
+		this.zoom_size = parseInt(percent, 10) / this.zoom_parts - 4
+
+		this.zoom()
+	}
+
 	zoom_out() {
 		if (this.zoom_size > 0) {
 			this.zoom_size--
@@ -572,31 +590,24 @@ export default class Gantt {
 		if (view_mode === VIEW_MODE.HOUR) {
 			this.step = 24 / 24
 			this.column_width = 50
-			this.zoom_width = 20
 		} else if (view_mode === VIEW_MODE.DAY) {
 			this.step = 24
 			this.column_width = 100
-			this.zoom_width = 30
 		} else if (view_mode === VIEW_MODE.HALF_DAY) {
 			this.step = 24 / 2
 			this.column_width = 100
-			this.zoom_width = 30
 		} else if (view_mode === VIEW_MODE.QUARTER_DAY) {
 			this.step = 24 / 4
 			this.column_width = 100
-			this.zoom_width = 50
 		} else if (view_mode === VIEW_MODE.WEEK) {
 			this.step = 24 * 7
 			this.column_width = 200
-			this.zoom_width = 60
 		} else if (view_mode === VIEW_MODE.MONTH) {
 			this.step = 24 * 30
 			this.column_width = 300
-			this.zoom_width = 80
 		} else if (view_mode === VIEW_MODE.YEAR) {
 			this.step = 24 * 365
 			this.column_width = 400
-			this.zoom_width = 100
 		}
 
 		this.column_width_original = this.column_width
@@ -793,7 +804,7 @@ export default class Gantt {
 			x: 0,
 			y: 0,
 			width: row_width,
-			height: row_height + header_height - 32,
+			height: row_height + header_height - 30,
 			class: 'resource-header-row',
 			append_to: this.resource_header,
 		})
@@ -809,7 +820,7 @@ export default class Gantt {
 
 		this.resource_header_text = createSVG('text', {
 			x: 20,
-			y: row_y - 20,
+			y: row_y - 31,
 			width: row_width,
 			height: row_height,
 			innerHTML: resource_title,
@@ -908,11 +919,11 @@ export default class Gantt {
 
 		if (groups_enable && item.is_group) {
 			if (resource_collapse_enable) {
-				this.make_resource_icon_color(item, el_parent, elY - 14, 18, 25)
+				this.make_resource_icon_color(item, el_parent, elY - 14, 22, 25)
 
-				this.make_resource_arrow(item, el_parent, elY, 3, 12)
+				this.make_resource_arrow(item, el_parent, elY, 6, 12)
 
-				elX += 10
+				elX += 12
 				padding += 14
 			} else {
 				this.make_resource_icon_color(item, el_parent, elY - 14, 10, 25)
@@ -1555,6 +1566,17 @@ export default class Gantt {
 		}
 	}
 
+	update_position_bars(x) {
+		let posX = x - this.resource_width
+		posX -= this.last_resource_pos_x
+
+		this.bars.forEach(bar => {
+			bar.update_bar_position({
+				x: bar.$bar.getX() + posX,
+			})
+		})
+	}
+
 	remake_arrows() {
 		this.arrows = []
 		this.layers.arrow.innerHTML = ''
@@ -1625,13 +1647,13 @@ export default class Gantt {
 
 	bind_grid_events() {
 		const elements = [
-			'.grid',
-			'.grid-row',
-			'.weekend-highlight',
-			'.past-days-highlight',
-			'.arrow path',
-			'.row-line',
-			'.tick',
+			'.gantt-svg .grid',
+			'.gantt-svg .grid-row',
+			'.gantt-svg .weekend-highlight',
+			'.gantt-svg .past-days-highlight',
+			'.gantt-svg .arrow path',
+			'.gantt-svg .row-line',
+			'.gantt-svg .tick',
 		]
 
 		let scrolling_active = false
@@ -1950,6 +1972,8 @@ export default class Gantt {
 		}
 
 		groups.forEach(group => {
+			if (!group.end) return
+
 			const first = this.resource_tree[group.start]
 
 			let selector = `[data-group-id="${first.group_id}"]`
@@ -1995,9 +2019,11 @@ export default class Gantt {
 
 			const bar = this.get_bar(id)
 
-			const grid_row_width = this.resource_header_row.getWidth()
+			const barX = bar.$bar.getX()
 
-			const left = bar.x - (grid_row_width + 50)
+			const resource_width = this.resource_header_row.getWidth()
+
+			const left = barX - (resource_width + 50)
 
 			this.$container.scrollTo(left, this.$container.scrollTop)
 		})
@@ -2082,6 +2108,10 @@ export default class Gantt {
 			let dx
 			let posX
 
+			this.last_resource_pos_x = 0
+
+			const { resource_min_width } = this.options
+
 			$.on(this.$svg, 'mousedown', '.resource-resize', e => {
 				is_resizing = true
 				x_on_start = e.clientX
@@ -2101,6 +2131,7 @@ export default class Gantt {
 				if (
 					!posX ||
 					isNaN(posX) ||
+					posX <= resource_min_width ||
 					posX <= this.column_width ||
 					posX <= this.resource_width - 200 ||
 					posX >= this.resource_width + 200
@@ -2144,6 +2175,12 @@ export default class Gantt {
 				})
 
 				this.set_x_grid_highlights(dx, posX)
+
+				this.update_position_bars(posX)
+				this.remake_arrows()
+				this.display_arrows()
+
+				this.last_resource_pos_x = posX - this.resource_width
 			})
 		}
 	}
@@ -2541,6 +2578,18 @@ export default class Gantt {
 				this,
 				this.popup_wrapper,
 				this.options.custom_popup_html,
+				this.$container
+			)
+		}
+
+		this.popup.show(options)
+	}
+
+	show_custom_popup(options) {
+		if (!this.popup) {
+			this.popup = new CustomPopup(
+				this,
+				this.popup_wrapper_custom,
 				this.$container
 			)
 		}
