@@ -17,7 +17,7 @@ export default class Popup {
 						<div class="tooltip-line type"></div>
             <div class="tooltip-line period"></div>
 						<div class="tooltip-line details"></div>
-            <div class="pointer"></div>
+            <div class="popup-pointer"></div>
         `
 
 		this.hide()
@@ -27,7 +27,7 @@ export default class Popup {
 		this.type = this.parent.querySelector('.type')
 		this.period = this.parent.querySelector('.period')
 		this.details = this.parent.querySelector('.details')
-		this.pointer = this.parent.querySelector('.pointer')
+		this.pointer = this.parent.querySelector('.popup-pointer')
 
 		this.bind_events()
 	}
@@ -55,9 +55,9 @@ export default class Popup {
 
 		if (this.custom_html) {
 			let html = this.custom_html(options.task)
-			html += '<div class="pointer"></div>'
+			html += '<div class="popup-pointer"></div>'
 			this.parent.innerHTML = html
-			this.pointer = this.parent.querySelector('.pointer')
+			this.pointer = this.parent.querySelector('.popup-pointer')
 		} else {
 			// set data
 			this.title.innerHTML = options.title

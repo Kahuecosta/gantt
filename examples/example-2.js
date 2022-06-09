@@ -261,17 +261,6 @@ const workitems = [
 	},
 ]
 
-const tooltips = document.createElement('div')
-tooltips.style.display = 'none'
-document.body.appendChild(tooltips)
-
-workitems.forEach(wi => {
-	const tooltip = document.createElement('div')
-	tooltip.setAttribute('data-gantt-tooltip-id', wi.id)
-	tooltip.innerHTML = `<<<<< ${wi.id} >>>>>><br><br><br><br>`
-	tooltips.appendChild(tooltip)
-})
-
 const options = {
 	on_click: function (workitem) {
 		console.log('on_click', workitem)
@@ -288,7 +277,7 @@ const options = {
 	on_view_change: function (mode) {
 		console.log('on_view_change', mode)
 	},
-	on_link_open_detail: function (id) {
+	on_link_open_detail_2: function (id) {
 		console.log('on_link_open_detail', id)
 	},
 	view_mode: 'Day',
@@ -313,6 +302,7 @@ const options = {
 	resource_collapse_enable: true,
 	resource_title: 'Desenvolvimento Evolutivo',
 	resource_width: 350,
+	resource_min_width: 300,
 	responsables_enable: true,
 	responsables_sort_by: 'name',
 	responsables_default_name: 'Não atribuido',
@@ -349,6 +339,17 @@ const init = () => {
 		groups,
 		options
 	)
+
+	const popupWrapper = document.getElementsByClassName(
+		'popup-wrapper-custom'
+	)[0]
+
+	workitems.forEach(wi => {
+		const tooltip = document.createElement('div')
+		tooltip.setAttribute('data-gantt-tooltip-id', wi.id)
+		tooltip.innerHTML = `<<<<< ${wi.id} >>>>>><br><br><br><br>`
+		popupWrapper.appendChild(tooltip)
+	})
 }
 
 init()

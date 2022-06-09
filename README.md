@@ -76,6 +76,7 @@ You can also pass various options to the Gantt constructor:
 | resource_collapse_enable            | Desabilitar ou habilitar a função de expandir e recolher os grupos da árvore de demandas       |
 | resource_title                      | Título padrão da árvore de demandas                                                            |
 | resource_width                      | Largura padrão da árvore de demandas                                                           |
+| resource_min_width                  | Largura minima da árvore de demandas                                                           |
 | responsables_enable                 | Desabilitar ou habilitar a exibição do responsável da tarefa                                   |
 | responsables_sort_by                | Ordenação de demandas na árvore por responsável                                                |
 | responsables_default_name           | Nome padrão de responsável para a demanda não possui um responsável                            |
@@ -184,6 +185,7 @@ const options = {
 	resource_collapse_enable: true,
 	resource_title: 'Tasks',
 	resource_width: 250,
+	resource_min_width: 300,
 	responsables_enable: true,
 	responsables_sort_by: 'default',
 	responsables_default_name: 'Não atribuido',

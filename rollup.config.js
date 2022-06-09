@@ -21,7 +21,7 @@ const prod = {
 	output: {
 		name: 'Gantt',
 		file: 'dist/frappe-gantt.min.js',
-		sourcemap: true,
+		sourcemap: false,
 		format: 'iife',
 	},
 	plugins: [

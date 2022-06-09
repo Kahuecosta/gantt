@@ -21,39 +21,10 @@ const groups = [
 		id: 1,
 		color: '#e27d02',
 		icon: './images/icon-1.png',
-		sub_group: [
-			{
-				name: 'A fazer',
-				id: 1,
-				color: '#e27d02',
-				icon: './images/icon-1.png',
-			},
-			{
-				name: 'Prioridade',
-				id: 2,
-				color: '#e27d02',
-			},
-			{
-				name: 'Em avaliação',
-				id: 3,
-				icon: './images/icon-2.png',
-			},
-			{
-				name: 'Fazendo',
-				id: 4,
-				color: '#d81e46',
-			},
-			{
-				name: 'Feito',
-				id: 5,
-				icon: './images/icon-3.png',
-			},
-		],
 	},
 	{
 		name: 'Implantação',
 		id: 2,
-		icon: './images/icon-2.png',
 	},
 	{
 		name: 'Produto',
@@ -74,20 +45,20 @@ const types = [
 		name: 'Hotfix',
 		bar_class: 'bar-hotfix',
 		color: '#e27d02',
-		icon: './images/icon-1.png',
+		fontIcon: 'fa-map',
 	},
 	{
 		id: 2,
 		name: 'Task',
 		bar_class: 'bar-task',
 		color: '#0758b3',
-		icon: './images/icon-2.png',
+		imageIcon: './images/icon-2.png',
 	},
 	{
 		id: 3,
 		name: 'Débito Técnico',
 		bar_class: 'bar-debit',
-		icon: './images/icon-3.png',
+		imageIcon: './images/icon-3.png',
 	},
 	{
 		id: 4,
@@ -97,142 +68,167 @@ const types = [
 	},
 ]
 
-const date = new Date()
-const year = date.getFullYear()
-const month = date.getMonth()
-const getDate = day => `${year}-${month + 1}-${day}`
-
-const workitemList = [
+const workitems = [
 	{
-		start: getDate(1),
-		end: getDate(8),
+		bar_color: '#E2445C',
+		dependencies: [],
+		end: '2022-5-8',
+		group_id: 1,
+		id: '1',
 		name: 'Lorem ipsum dolor sit amet',
 		progress: 20,
-		bar_color: '#E2445C',
+		responsable_id: 1,
+		start: '2022-5-1',
+		type_id: 2,
 	},
 	{
-		start: getDate(3),
-		end: getDate(6),
+		bar_color: '#FDAB3D',
+		dependencies: [6],
+		end: '2022-5-6',
+		group_id: 0,
+		id: '2',
 		name: 'Nulla aliquam egestas velit posuere commodo',
 		progress: 5,
-		bar_color: '#FDAB3D',
+		responsable_id: 1,
+		start: '2022-5-3',
+		type_id: 3,
 	},
 	{
-		start: getDate(4),
-		end: getDate(8),
+		bar_color: '#FDAB3D',
+		dependencies: [],
+		end: '2022-5-8',
+		group_id: 0,
+		id: '3',
 		name: 'Duis nec ornare massa. Vestibulum at consectetur arcu',
 		progress: 10,
-		bar_color: '#FDAB3D',
+		responsable_id: 0,
+		start: '2022-5-4',
+		type_id: 0,
 	},
 	{
-		start: getDate(8),
-		end: getDate(9),
+		bar_color: '#579BFC',
+		dependencies: [],
+		end: '2022-5-9',
+		group_id: 1,
+		id: '4',
 		name: 'Aenean maximus, odio sed rhoncus vulputate',
 		progress: 5,
-		bar_color: '#579BFC',
+		responsable_id: 0,
+		start: '2022-5-8',
+		type_id: 2,
 	},
 	{
-		start: getDate(8),
-		end: getDate(10),
-		name: 'Curabitur venenatis ac lorem sed imperdiet',
 		bar_color: '#FDAB3D',
+		dependencies: [9],
+		end: '2022-5-10',
+		group_id: 1,
+		id: '5',
+		name: 'Curabitur venenatis ac lorem sed imperdiet',
 		progress: 0,
+		responsable_id: 2,
+		start: '2022-5-8',
+		type_id: 3,
 	},
 	{
-		start: getDate(11),
+		bar_color: '#579BFC',
+		dependencies: [7],
 		duration: 2,
+		group_id: 1,
+		id: '6',
 		name: 'Quisque porta justo fringilla quam euismod, eu semper libero viverra',
 		progress: 0,
-		bar_color: '#579BFC',
+		responsable_id: 0,
+		start: '2022-5-11',
+		type_id: 0,
 	},
 	{
-		start: getDate(11),
-		end: getDate(16),
+		bar_color: '#9CD326',
+		dependencies: [],
+		end: '2022-5-16',
+		group_id: 3,
+		id: '7',
 		name: 'Maecenas augue nulla, luctus id rutrum at, efficitur id quam!',
 		progress: 20,
-		bar_color: '#9CD326',
+		responsable_id: 0,
+		start: '2022-5-11',
 		thumbnail:
 			'https://www.clipartmax.com/png/middle/85-851687_campfire-icon-14-icon-success-error.png',
+		type_id: 1,
 	},
 	{
-		start: getDate(11),
-		end: getDate(18),
+		bar_color: '#E2445C',
+		dependencies: [],
+		end: '2022-5-18',
+		group_id: 3,
+		id: '8',
 		name: 'Etiam at suscipit ipsum, sollicitudin efficitur purus',
 		progress: 0,
-		bar_color: '#E2445C',
+		responsable_id: 1,
+		start: '2022-5-11',
 		thumbnail:
 			'https://image.similarpng.com/very-thumbnail/2021/06/Attention-sign-icon.png',
+		type_id: 4,
 	},
 	{
-		start: getDate(3),
-		duration: 2,
-		name: 'Ut at mi dictum, bibendum augue quis, sagittis nisi',
 		bar_color: '#579BFC',
+		dependencies: [10],
+		duration: 2,
+		group_id: 3,
+		id: '9',
+		name: 'Ut at mi dictum, bibendum augue quis, sagittis nisi',
 		progress: 10,
+		responsable_id: 2,
+		start: '2022-5-3',
+		type_id: 2,
 	},
 	{
-		start: getDate(5),
+		dependencies: [],
 		duration: 3,
+		group_id: 3,
+		id: '10',
 		name: 'Cras eget ornare leo, non congue leo. Aenean porttitor rutrum enim tincidunt rutrum',
 		progress: 40,
+		responsable_id: 2,
+		start: '2022-5-5',
+		type_id: 1,
 	},
 	{
-		start: getDate(8),
+		bar_color: '#E2445C',
+		dependencies: [],
 		duration: 2,
+		group_id: 1,
+		id: '11',
 		name: 'Proin id faucibus massa',
-		bar_color: '#E2445C',
 		progress: 0,
+		responsable_id: 1,
+		start: '2022-5-8',
+		type_id: 0,
 	},
 	{
-		start: getDate(15),
+		bar_color: '#E2445C',
+		dependencies: [],
 		duration: 5,
+		group_id: 1,
+		id: '12',
 		name: 'Nam condimentum nisl in diam molestie',
-		bar_color: '#E2445C',
 		progress: 0,
+		responsable_id: 0,
+		start: '2022-5-15',
+		type_id: 2,
 	},
 	{
-		start: getDate(1),
-		duration: 6,
-		name: 'Quisque ac neque pulvinar, ullamcorper lorem at, vestibulum lectus',
 		bar_color: '#FDAB3D',
+		dependencies: [],
+		duration: 6,
+		group_id: 3,
+		id: '13',
+		name: 'Quisque ac neque pulvinar, ullamcorper lorem at, vestibulum lectus',
 		progress: 50,
+		responsable_id: 2,
+		start: '2023-5-1',
+		type_id: 4,
 	},
 ]
-
-const workitems = []
-
-for (let index = 0; index < 1; index++) {
-	workitemList.forEach(wi => workitems.push(Object.assign({}, wi)))
-}
-
-console.log('Total de workitems exibidos: ', workitems.length)
-
-workitems.forEach((wi, i) => (wi.id = (i + 1).toString()))
-
-const dependencies = ['2', '5', '6', '9']
-
-workitems.forEach(wi => {
-	wi.group_id = parseInt(Math.random() * (groups.length + 1), 10)
-
-	wi.type_id = parseInt(Math.random() * (types.length + 1), 10)
-
-	wi.responsable_id = parseInt(Math.random() * (responsables.length + 1), 10)
-
-	if (wi.type_id > types.length) wi.type_id = undefined
-
-	if (wi.responsable_id > responsables.length) wi.responsable_id = undefined
-
-	const w_group = groups.find(t => t.id === wi.group_id)
-	if (w_group && w_group.sub_group) {
-		wi.sub_group_id = parseInt(Math.random() * w_group.sub_group.length, 10)
-	}
-
-	if (dependencies.includes(wi.id)) {
-		wi.dependencies = [parseInt(Math.random() * (workitems.length + 1), 10)]
-	}
-})
-
-console.log('Workitems: ', workitems)
 
 const options = {
 	on_click: function (workitem) {
@@ -250,7 +246,7 @@ const options = {
 	on_view_change: function (mode) {
 		console.log('on_view_change', mode)
 	},
-	on_link_open_detail: function (id) {
+	on_link_open_detail_2: function (id) {
 		console.log('on_link_open_detail', id)
 	},
 	view_mode: 'Day',
@@ -283,8 +279,8 @@ const options = {
 	groups_enable: true,
 	groups_sort_by: 'name',
 	workitems_sort_by: 'name',
-	workitems_custom_tooltip: false,
-	workitems_click_tooltip_open_detail: false,
+	workitems_custom_tooltip: true,
+	workitems_click_tooltip_open_detail: true,
 	rows_alternate_background: false,
 	grid_ticks: true,
 	bar_color_default: '#FFCC33',
@@ -312,6 +308,17 @@ const init = () => {
 		groups,
 		options
 	)
+
+	const popupWrapper = document.getElementsByClassName(
+		'popup-wrapper-custom'
+	)[0]
+
+	workitems.forEach(wi => {
+		const tooltip = document.createElement('div')
+		tooltip.setAttribute('data-gantt-tooltip-id', wi.id)
+		tooltip.innerHTML = `<<<<< ${wi.id} >>>>>><br><br><br><br>`
+		popupWrapper.appendChild(tooltip)
+	})
 }
 
 init()
