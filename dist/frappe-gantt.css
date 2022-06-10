@@ -149,7 +149,7 @@
   fill: #e0e0e0;
 }
 .gantt-svg .resource-header-text {
-  font-size: 1.2em;
+  font-size: 1.3em;
   text-anchor: start;
 }
 .gantt-svg .resource-header-text.resource-header-row {
@@ -206,6 +206,19 @@
 .gantt-svg .hide {
   display: none;
 }
+.gantt-svg label.new-workitem {
+  cursor: pointer;
+}
+.gantt-svg label.new-workitem i {
+  font-size: 17px;
+}
+.gantt-svg input.new-workitem {
+  background: none;
+  outline: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
 
 .gantt-fullscreen {
   position: absolute;
@@ -232,16 +245,32 @@
   margin: 0;
   border: 1px solid #e0e0e0;
 }
+.gantt-container .popup-wrapper-custom > div {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border: 0;
+  padding: 0;
+  z-index: -1;
+  min-width: 250px;
+}
+.gantt-container .popup-wrapper-custom > div .popup-pointer {
+  position: absolute;
+  height: 6px;
+  margin: 4px 0 0 -11px;
+  border: 6px solid transparent;
+  border-right-color: #dfdddd;
+}
 .gantt-container .popup-wrapper {
   position: absolute;
   top: 0;
   left: 0;
+  z-index: -1;
   padding: 0 0 8px;
   border-radius: 3px;
   border: 2px solid #dfdddd;
   background: #fbfbfb;
   min-width: 200px;
-  z-index: -1;
 }
 .gantt-container .popup-wrapper .title {
   color: #333;
@@ -261,13 +290,6 @@
   color: #4183c4;
   cursor: pointer;
   text-decoration: underline;
-}
-.gantt-container .popup-wrapper .pointer {
-  position: absolute;
-  height: 5px;
-  margin: 0 0 0 -7px;
-  border: 5px solid transparent;
-  border-top-color: #dfdddd;
 }
 .gantt-container .popup-wrapper span.popup-type-icon {
   background-color: #000000;
@@ -296,4 +318,11 @@
   color: #333;
   display: inline-flex;
   line-height: 18px;
+}
+.gantt-container .popup-wrapper .popup-pointer {
+  position: absolute;
+  height: 5px;
+  margin: 0 0 0 -7px;
+  border: 5px solid transparent;
+  border-top-color: #dfdddd;
 }
