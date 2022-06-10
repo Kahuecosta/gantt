@@ -312,6 +312,8 @@ const options = {
 	workitems_sort_by: 'name',
 	workitems_custom_tooltip: true,
 	workitems_click_tooltip_open_detail: true,
+	new_workitem_enable: true,
+	new_workitem_text: 'Criar tarefa...',
 	rows_alternate_background: false,
 	grid_ticks: true,
 	bar_color_default: '#FFCC33',

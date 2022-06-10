@@ -86,6 +86,8 @@ You can also pass various options to the Gantt constructor:
 | workitems_sort_by                   | Ordenação de tarefas na árvore de demandas                                                     |
 | workitems_custom_tooltip            | Habilitar a customização de tooltip                                                            |
 | workitems_click_tooltip_open_detail | Habilitar a abertura dos detallhes da demanda ao clicar no tooltip                             |
+| new_workitem_enable                 | Habilitar a criação de demanda direto no Gantt                                                 |
+| new_workitem_text                   | Placeholder do campo de criar demanda                                                          |
 | rows_alternate_background           | Desabilitar ou habilitar linhas zebradas                                                       |
 | grid_ticks                          | Desabilitar ou habilitar as linhas de marcação das colunas                                     |
 | bar_color_default                   | Cor padrão das barras para quando a cor não é informada no workitem                            |
@@ -195,6 +197,8 @@ const options = {
 	workitems_sort_by: 'name',
 	workitems_custom_tooltip: true,
 	workitems_click_tooltip_open_detail: true,
+	new_workitem_enable: false,
+	new_workitem_text: 'Criar tarefa...',
 	rows_alternate_background: false,
 	grid_ticks: true,
 	bar_color_default: '#f3f2f2',
