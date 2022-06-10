@@ -147,6 +147,8 @@ export default class Gantt {
 			workitems_sort_by: 'name',
 			workitems_custom_tooltip: false,
 			workitems_click_tooltip_open_detail: true,
+			new_workitem_enable: false,
+			new_workitem_text: 'Criar tarefa...',
 			rows_alternate_background: true,
 			grid_ticks: true,
 			bar_color_default: '#FFCC33',
@@ -288,8 +290,10 @@ export default class Gantt {
 	set_task_index_by_groups() {
 		let index = 0
 
+		const { GROUP, SUB_GROUP, NEW_WORKITEM } = DATA_TYPE
+
 		this.resource_tree.forEach(item => {
-			if (item.type === DATA_TYPE.GROUP || item.type === DATA_TYPE.SUB_GROUP) {
+			if ([GROUP, SUB_GROUP, NEW_WORKITEM].includes(item.type)) {
 				index++
 			} else {
 				const task = this.get_task(item.task_id)
@@ -298,6 +302,17 @@ export default class Gantt {
 
 				index++
 			}
+		})
+	}
+
+	resource_tree_group_push_new_task(idx, group, sub_group) {
+		if (!this.options.new_workitem_enable) return
+
+		this.resource_tree.push({
+			type: DATA_TYPE.NEW_WORKITEM,
+			group_id: group.id,
+			sub_group_id: sub_group ? sub_group.id : null,
+			idx,
 		})
 	}
 
@@ -358,11 +373,22 @@ export default class Gantt {
 						})
 
 						this.resource_tree_group_push_task(group, sg)
+
+						this.resource_tree_group_push_new_task(
+							this.resource_tree.length,
+							group,
+							sg
+						)
 					})
 				} else {
 					group.sub_group = []
 
 					this.resource_tree_group_push_task(group)
+
+					this.resource_tree_group_push_new_task(
+						this.resource_tree.length,
+						group
+					)
 				}
 			})
 
@@ -843,27 +869,35 @@ export default class Gantt {
 
 			if (tree.type === DATA_TYPE.GROUP) {
 				item = {
+					type: DATA_TYPE.GROUP,
 					name: tree.group_name,
 					icon: tree.group_icon,
 					color: tree.color,
 					group_id: tree.group_id,
-					is_group: true,
 				}
 			} else if (tree.type === DATA_TYPE.SUB_GROUP) {
 				item = {
+					type: DATA_TYPE.SUB_GROUP,
 					name: tree.sub_group_name,
 					icon: tree.sub_group_icon,
 					color: tree.color,
 					sub_group_id: tree.sub_group_id,
 					group_id: tree.group_id,
-					is_sub_group: true,
 				}
 			} else if (tree.type === DATA_TYPE.RESPONSABLE) {
 				item = {
+					type: DATA_TYPE.RESPONSABLE,
 					name: tree.responsable_name,
 					photo: tree.responsable_photo,
 					responsable_id: tree.responsable_id,
-					is_responsable: true,
+				}
+			} else if (tree.type === DATA_TYPE.NEW_WORKITEM) {
+				item = {
+					type: DATA_TYPE.NEW_WORKITEM,
+					name: this.options.new_workitem_text,
+					sub_group_id: tree.sub_group_id,
+					group_id: tree.group_id,
+					idx: tree.idx,
 				}
 			} else {
 				item = this.get_task(tree.task_id)
@@ -917,7 +951,7 @@ export default class Gantt {
 
 		el_parent.setAttribute(DATA_ATTR.OPEN, DATA_OPEN.OPEN)
 
-		if (groups_enable && item.is_group) {
+		if (groups_enable && item.type === DATA_TYPE.GROUP) {
 			if (resource_collapse_enable) {
 				this.make_resource_icon_color(item, el_parent, elY - 14, 22, 25)
 
@@ -938,7 +972,7 @@ export default class Gantt {
 			item_title_css += '-group'
 
 			el_parent.setAttribute(DATA_ATTR.TYPE, DATA_TYPE.GROUP)
-		} else if (groups_enable && item.is_sub_group) {
+		} else if (groups_enable && item.type === DATA_TYPE.SUB_GROUP) {
 			if (resource_collapse_enable) {
 				this.make_resource_icon_color(item, el_parent, elY - 10, 30, 18)
 
@@ -962,7 +996,7 @@ export default class Gantt {
 
 			el_parent.setAttribute(DATA_ATTR.TYPE, DATA_TYPE.SUB_GROUP)
 			el_parent.setAttribute(DATA_ATTR.TYPE_PARENT, DATA_TYPE.GROUP)
-		} else if (responsables_enable && item.is_responsable) {
+		} else if (responsables_enable && item.type === DATA_TYPE.RESPONSABLE) {
 			this.make_resource_responsable_photo(
 				item.photo,
 				el_parent,
@@ -977,6 +1011,29 @@ export default class Gantt {
 			item_title_css += '-responsable'
 
 			el_parent.setAttribute(DATA_ATTR.TYPE, DATA_TYPE.RESPONSABLE)
+		} else if (item.type === DATA_TYPE.NEW_WORKITEM) {
+			elX += 20
+			padding += 20
+
+			const i = `<i class="fa fa-plus" aria-hidden="true"></i>`
+			const label = `<label class="new-workitem" for="new-workitem-${item.idx}">${i}</label>`
+
+			createSVG('foreignObject', {
+				x: elX,
+				y: elY - 13,
+				width: 16,
+				height: 16,
+				append_to: el_parent,
+				innerHTML: label,
+			})
+
+			if (item.sub_group_id) {
+				elX += 20
+				padding += 20
+			} else if (item.group_id) {
+				elX += 20
+				padding += 20
+			}
 		} else {
 			item_title_css += '-task'
 
@@ -1018,25 +1075,47 @@ export default class Gantt {
 			}
 		}
 
-		const item_title = createSVG('text', {
-			x: elX,
-			y: elY,
-			[DATA_ATTR.ID]: item.id || '',
-			[DATA_ATTR.GROUP_ID]: item.group_id || '',
-			[DATA_ATTR.SUB_GROUP_ID]: item.sub_group_id || '',
-			class: item_title_css,
-			append_to: el_parent,
-			clipPath: 'clip-resource-background',
-		})
+		let element
+
+		if (item.type === DATA_TYPE.NEW_WORKITEM) {
+			const width = this.options.resource_min_width - 60
+
+			const attr_id = `id="new-workitem-${item.idx}"`
+			const attr_group = item.group_id ? `data-group="${item.group_id}"` : ''
+			const attr_sub_group = item.sub_group_id
+				? `data-sub-group="${item.sub_group_id}"`
+				: ''
+
+			element = createSVG('foreignObject', {
+				x: elX,
+				y: elY - 13,
+				width: row_width,
+				height: 16,
+				append_to: el_parent,
+				innerHTML: `<input ${attr_id} ${attr_group} ${attr_sub_group} type="text" class="new-workitem" placeholder="${item.name}" style="width:${width}px" />`,
+			})
+		} else {
+			element = createSVG('text', {
+				x: elX,
+				y: elY,
+				[DATA_ATTR.ID]: item.id || '',
+				[DATA_ATTR.GROUP_ID]: item.group_id || '',
+				[DATA_ATTR.SUB_GROUP_ID]: item.sub_group_id || '',
+				class: item_title_css,
+				append_to: el_parent,
+				clipPath: 'clip-resource-background',
+			})
+
+			this.utilities.text_ellipsis(element, item.name, row_width - padding)
+		}
 
 		this.resource_item_title_list.push({
-			element: item_title,
+			element,
 			row_width,
 			padding,
 			name: item.name,
+			type: item.type,
 		})
-
-		this.utilities.text_ellipsis(item_title, item.name, row_width - padding)
 	}
 
 	make_resource_responsable_photo(photo, el_parent, elY, elX, img_wh) {
@@ -2028,6 +2107,19 @@ export default class Gantt {
 			this.$container.scrollTo(left, this.$container.scrollTop)
 		})
 
+		$.on(this.$svg, 'keyup', '.new-workitem', event => {
+			if (event.keyCode === 13) {
+				this.trigger_event('new_task', [
+					event.target.value,
+					event.target.dataset,
+				])
+
+				setTimeout(() => {
+					event.target.value = ''
+				}, 200)
+			}
+		})
+
 		if (this.options.resource_collapse_enable) {
 			$.on(
 				this.$svg,
@@ -2159,7 +2251,9 @@ export default class Gantt {
 				is_resizing = false
 
 				this.resource_item_title_list.forEach(x => {
-					const { element, padding, name } = x
+					const { element, padding, name, type } = x
+
+					if (type === DATA_TYPE.NEW_WORKITEM) return
 
 					element.setAttribute('width', posX)
 

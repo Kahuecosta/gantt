@@ -16,6 +16,7 @@ export const DATA_TYPE = {
 	SUB_GROUP: 'sub-group',
 	WORKITEM: 'workitem',
 	RESPONSABLE: 'responsable',
+	NEW_WORKITEM: 'new-workitem',
 }
 
 export const DATA_ATTR = {

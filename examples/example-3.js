@@ -249,6 +249,9 @@ const options = {
 	on_link_open_detail_2: function (id) {
 		console.log('on_link_open_detail', id)
 	},
+	on_new_task: function (text, data) {
+		console.log('on_new_task', text, data)
+	},
 	view_mode: 'Day',
 	language: 'pt-br',
 	margin_bottom: -26,
@@ -281,6 +284,8 @@ const options = {
 	workitems_sort_by: 'name',
 	workitems_custom_tooltip: true,
 	workitems_click_tooltip_open_detail: true,
+	new_workitem_enable: true,
+	new_workitem_text: 'Criar tarefa...',
 	rows_alternate_background: false,
 	grid_ticks: true,
 	bar_color_default: '#FFCC33',
