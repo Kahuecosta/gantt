@@ -1381,7 +1381,7 @@ var Gantt = (function () {
 				svg_element = element;
 			} else {
 				throw new TypeError(
-					'Frappé Gantt only supports usage of a string CSS selector,' +
+					'Simple Gantt only supports usage of a string CSS selector,' +
 						" HTML DOM element or SVG DOM element for the 'element' parameter"
 				)
 			}
@@ -3917,13 +3917,13 @@ var Gantt = (function () {
 
 			while (to_process.length) {
 				const deps = to_process.reduce(
-					(acc, curr) => acc.concat(this.dependency_map[curr]),
+					(acc, curr) => acc.concat(this.dependency_map[curr] || []),
 					[]
 				);
 
-				out = out.concat(deps);
+				to_process = deps.filter(d => !out.includes(d));
 
-				to_process = deps.filter(d => !to_process.includes(d));
+				out = out.concat(to_process);
 			}
 
 			return out.filter(Boolean)

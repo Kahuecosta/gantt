@@ -5,7 +5,7 @@
 const responsables = [
 	{
 		id: 1,
-		name: 'José Santos Oliveira Rodrigues',
+		name: 'John Doe',
 		photo: './images/responsable-1.jpg',
 	},
 	{
@@ -34,7 +34,7 @@ const groups = [
 				color: '#e27d02',
 			},
 			{
-				name: 'Em avaliação',
+				name: 'In Evaluation',
 				id: 3,
 			},
 			{
@@ -50,7 +50,7 @@ const groups = [
 		],
 	},
 	{
-		name: 'Implantação',
+		name: 'Deployment',
 		id: 2,
 	},
 	{
@@ -83,13 +83,13 @@ const types = [
 	},
 	{
 		id: 3,
-		name: 'Débito Técnico',
+		name: 'Technical Debt',
 		bar_class: 'bar-debit',
 		imageIcon: './images/icon-3.png',
 	},
 	{
 		id: 4,
-		name: 'Épico',
+		name: 'Epic',
 		bar_class: 'bar-epic',
 		color: '#d81e46',
 	},
