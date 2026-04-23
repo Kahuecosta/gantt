@@ -1454,20 +1454,20 @@ var Gantt = (function () {
 				resource_min_width: 220,
 				responsables_enable: false,
 				responsables_sort_by: 'name',
-				responsables_default_name: 'Não atribuido',
+				responsables_default_name: 'Unassigned',
 				groups_enable: false,
 				groups_sort_by: 'name',
 				workitems_sort_by: 'name',
 				workitems_custom_tooltip: false,
 				workitems_click_tooltip_open_detail: true,
 				new_workitem_enable: false,
-				new_workitem_text: 'Criar tarefa...',
+				new_workitem_text: 'Create task...',
 				rows_alternate_background: true,
 				grid_ticks: true,
 				bar_color_default: '#FFCC33',
 				highlights_weekend: true,
 				highlights_past_days: true,
-				link_detail_text: 'Ver detalhes',
+				link_detail_text: 'View details',
 				dir_assets: '../dist/assets',
 				zoom_max: 5,
 			};
@@ -4032,4 +4032,4 @@ var Gantt = (function () {
 	return Gantt;
 
 })();
-//# sourceMappingURL=frappe-gantt.js.map
+//# sourceMappingURL=simple-gantt.js.map
