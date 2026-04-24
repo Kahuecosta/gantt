@@ -88,6 +88,7 @@ You can also pass various options to the Gantt constructor:
 | link_detail_text                    | Text for the link inside the popup to open task details                                        |
 | highlights_weekend                  | Highlight weekend columns with a different background                                          |
 | highlights_past_days                | Highlight past day columns with a different background                                         |
+| highlight_critical_path             | Highlight the critical path in red                                                             |
 | dir_assets                          | Relative path for component assets                                                             |
 | zoom_max                            | Maximum zoom level                                                                             |
 

@@ -154,6 +154,7 @@ export default class Gantt {
 			bar_color_default: '#FFCC33',
 			highlights_weekend: true,
 			highlights_past_days: true,
+			highlight_critical_path: false,
 			link_detail_text: 'View details',
 			dir_assets: '../dist/assets',
 			zoom_max: 5,
@@ -531,6 +532,89 @@ export default class Gantt {
 		}
 
 		this.setup_dependencies()
+
+		if (this.options.highlight_critical_path) {
+			this.calculate_critical_path()
+		}
+	}
+
+	calculate_critical_path() {
+		if (!this.tasks.length) return
+
+		const tasks_by_id = this.task_map
+
+		// 1. Forward Pass
+		const order = this.get_topological_order()
+
+		order.forEach(id => {
+			const task = tasks_by_id[id]
+			const duration = date_utils.diff(task._end, task._start, 'hour')
+
+			let max_prev_ef = 0
+			task.dependencies.forEach(dep_id => {
+				const dep = tasks_by_id[dep_id]
+				if (dep && dep.ef > max_prev_ef) {
+					max_prev_ef = dep.ef
+				}
+			})
+
+			task.es = max_prev_ef
+			task.ef = task.es + duration
+		})
+
+		// 2. Backward Pass
+		const project_duration = Math.max(...this.tasks.map(t => t.ef))
+
+		order
+			.slice()
+			.reverse()
+			.forEach(id => {
+				const task = tasks_by_id[id]
+				const duration = date_utils.diff(task._end, task._start, 'hour')
+
+				const successors = this.dependency_map[id] || []
+				if (successors.length === 0) {
+					task.lf = project_duration
+				} else {
+					let min_next_ls = Infinity
+					successors.forEach(succ_id => {
+						const succ = tasks_by_id[succ_id]
+						if (succ && succ.ls < min_next_ls) {
+							min_next_ls = succ.ls
+						}
+					})
+					task.lf = min_next_ls
+				}
+				task.ls = task.lf - duration
+			})
+
+		// 3. Identify Critical Path
+		this.tasks.forEach(task => {
+			task.slack = task.lf - task.ef
+			task.is_critical = task.slack <= 0
+		})
+	}
+
+	get_topological_order() {
+		const visited = new Set()
+		const stack = []
+
+		const visit = task_id => {
+			if (visited.has(task_id)) return
+			visited.add(task_id)
+
+			const successors = this.dependency_map[task_id] || []
+			for (const successor_id of successors) {
+				visit(successor_id)
+			}
+			stack.push(task_id)
+		}
+
+		for (const task of this.tasks) {
+			visit(task.id)
+		}
+
+		return stack.reverse()
 	}
 
 	setup_dependencies() {
@@ -1609,6 +1693,10 @@ export default class Gantt {
 
 			this.bar_map[task.id] = bar
 
+			if (this.options.highlight_critical_path && task.is_critical) {
+				bar.group.classList.add('critical-path')
+			}
+
 			return bar
 		})
 	}
@@ -1634,6 +1722,14 @@ export default class Gantt {
 					if (!from_task || !to_task) return
 
 					const arrow = new Arrow(this, from_task, to_task)
+
+					if (
+						this.options.highlight_critical_path &&
+						from_task.task.is_critical &&
+						to_task.task.is_critical
+					) {
+						arrow.element.classList.add('critical-path')
+					}
 
 					this.layers.arrow.appendChild(arrow.element)
 
