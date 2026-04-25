@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Simple Gantt DOM - Advanced Example</title>
+	<link rel="stylesheet" href="./src/style.css" />
+	<style>
+		body { font-family: Arial, sans-serif; padding: 20px; }
+		.gantt-target { height: 500px; margin-top: 20px; }
+        .controls { margin-bottom: 10px; }
+        button { padding: 5px 10px; cursor: pointer; }
+	</style>
+</head>
+<body>
+	<h3>DOM Version: Advanced Project Plan</h3>
+    <div class="controls">
+		<button onclick="change_view_mode('Hour')">Hour</button>
+		<button onclick="change_view_mode('Day')">Day</button>
+		<button onclick="change_view_mode('Week')">Week</button>
+		<button onclick="change_view_mode('Month')">Month</button>
+    </div>
+	<div id="gantt-target" class="gantt-target"></div>
+	<script type="module" src="./example-advanced.js"></script>
+</body>
+</html>

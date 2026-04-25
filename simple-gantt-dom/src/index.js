@@ -1,91 +1,63 @@
 import date_utils from './utils/date.js';
 
 export default class GanttDOM {
-    constructor(wrapper, tasks, options = {}) {
+    constructor(wrapper, tasks, types = [], responsables = [], groups = [], options = {}) {
         this.setup_wrapper(wrapper);
         this.setup_options(options);
         this.setup_tasks(tasks);
+        this.types = types;
+        this.responsables = responsables;
+        this.groups = groups;
 
         this.render();
     }
 
     setup_wrapper(wrapper) {
-        if (typeof wrapper === 'string') {
-            this.$wrapper = document.querySelector(wrapper);
-        } else {
-            this.$wrapper = wrapper;
-        }
-
-        if (!this.$wrapper) {
-            throw new Error('Wrapper element not found');
-        }
-
+        this.$wrapper = typeof wrapper === 'string' ? document.querySelector(wrapper) : wrapper;
+        if (!this.$wrapper) throw new Error('Wrapper element not found');
+        this.$wrapper.innerHTML = '';
         this.$container = document.createElement('div');
         this.$container.classList.add('gantt-dom-container');
         this.$wrapper.appendChild(this.$container);
     }
 
     setup_options(options) {
-        const default_options = {
+        this.options = Object.assign({
             column_width: 30,
             row_height: 40,
             bar_height: 24,
-            padding: 10,
             view_mode: 'Day',
             language: 'en',
             highlight_critical_path: false,
-        };
-        this.options = Object.assign({}, default_options, options);
+            resource_enable: false,
+            resource_width: 250,
+            resource_title: 'Tasks',
+            workitems_custom_tooltip: false
+        }, options);
     }
 
     setup_tasks(tasks) {
         this.tasks = tasks.map((task) => {
             task._start = date_utils.parse(task.start);
             task._end = date_utils.parse(task.end);
-
-            if (date_utils.diff(task._end, task._start, 'year') > 10) {
-                 task._end = date_utils.add(task._start, 2, 'day');
-            }
-
-            task.invalid = task._end < task._start;
-            task.duration = date_utils.diff(task._end, task._start, 'hour') / 24;
-            task._id = task.id;
-
-            if (!task.dependencies) {
-                task.dependencies = [];
-            } else if (typeof task.dependencies === 'string') {
-                task.dependencies = task.dependencies.split(',').map(d => d.trim()).filter(d => d);
-            }
-
+            task.duration = Math.max(0, date_utils.diff(task._end, task._start, 'hour') / 24);
+            task.dependencies = typeof task.dependencies === 'string' ? task.dependencies.split(',').map(d => d.trim()).filter(d => d) : (task.dependencies || []);
             return task;
         });
-
         this.setup_gantt_dates();
     }
 
     setup_gantt_dates() {
-        this.gantt_start = null;
-        this.gantt_end = null;
-
-        for (let task of this.tasks) {
-            if (!this.gantt_start || task._start < this.gantt_start) {
-                this.gantt_start = task._start;
-            }
-            if (!this.gantt_end || task._end > this.gantt_end) {
-                this.gantt_end = task._end;
-            }
-        }
+        const starts = this.tasks.map(t => t._start);
+        const ends = this.tasks.map(t => t._end);
+        this.gantt_start = starts.length ? new Date(Math.min(...starts)) : new Date();
+        this.gantt_end = ends.length ? new Date(Math.max(...ends)) : new Date();
 
         this.gantt_start = date_utils.add(this.gantt_start, -3, 'day');
         this.gantt_end = date_utils.add(this.gantt_end, 3, 'day');
 
-        this.setup_dates();
-    }
-
-    setup_dates() {
         this.dates = [];
         let cur = date_utils.clone(this.gantt_start);
-
         while (cur <= this.gantt_end) {
             this.dates.push(cur);
             cur = date_utils.add(cur, 1, 'day');
@@ -94,96 +66,128 @@ export default class GanttDOM {
 
     render() {
         this.$container.innerHTML = '';
-
         this.compute_critical_path();
 
-        this.render_header();
-        this.render_body();
+        const main_container = document.createElement('div');
+        main_container.classList.add('gantt-main-container');
+        this.$container.appendChild(main_container);
+
+        if (this.options.resource_enable) {
+            this.render_sidebar(main_container);
+        }
+
+        const timeline_container = document.createElement('div');
+        timeline_container.style.overflowX = 'auto';
+        timeline_container.style.flexGrow = '1';
+        main_container.appendChild(timeline_container);
+
+        this.render_header(timeline_container);
+        this.render_body(timeline_container);
         this.render_bars();
         this.render_dependencies();
         this.bind_events();
+        this.setup_tooltip();
     }
 
-    bind_events() {
-        this.tasks.forEach(task => {
-            const bar = task.$bar;
-            let is_dragging = false;
-            let start_x = 0;
-            let initial_left = 0;
+    render_sidebar(parent) {
+        const sidebar = document.createElement('div');
+        sidebar.classList.add('gantt-sidebar');
+        sidebar.style.width = `${this.options.resource_width}px`;
 
-            bar.addEventListener('mousedown', (e) => {
-                is_dragging = true;
-                start_x = e.clientX;
-                initial_left = parseInt(bar.style.left);
-                bar.style.zIndex = 1000;
+        const header = document.createElement('div');
+        header.classList.add('gantt-sidebar-header');
+        header.innerText = this.options.resource_title;
+        sidebar.appendChild(header);
+
+        if (this.options.groups_enable && this.groups.length) {
+            this.groups.forEach(group => {
+                const group_row = document.createElement('div');
+                group_row.classList.add('gantt-sidebar-row', 'group');
+                group_row.innerText = group.name;
+                sidebar.appendChild(group_row);
+
+                const group_tasks = this.tasks.filter(t => t.group_id === group.id);
+                group_tasks.forEach(task => {
+                    const row = document.createElement('div');
+                    row.classList.add('gantt-sidebar-row');
+                    row.style.paddingLeft = '30px';
+                    row.innerText = task.name;
+                    sidebar.appendChild(row);
+                });
             });
-
-            window.addEventListener('mousemove', (e) => {
-                if (!is_dragging) return;
-                const dx = e.clientX - start_x;
-                const new_left = initial_left + dx;
-
-                // Snap to column
-                const snapped_left = Math.round(new_left / this.options.column_width) * this.options.column_width;
-                bar.style.left = `${new_left}px`;
+        } else {
+            this.tasks.forEach(task => {
+                const row = document.createElement('div');
+                row.classList.add('gantt-sidebar-row');
+                row.innerText = task.name;
+                sidebar.appendChild(row);
             });
+        }
 
-            window.addEventListener('mouseup', (e) => {
-                if (!is_dragging) return;
-                is_dragging = false;
-                bar.style.zIndex = '';
-
-                const final_left = parseInt(bar.style.left);
-                const snapped_left = Math.round(final_left / this.options.column_width) * this.options.column_width;
-                bar.style.left = `${snapped_left}px`;
-
-                // Update task dates
-                const day_diff = (snapped_left - initial_left) / this.options.column_width;
-                if (day_diff !== 0) {
-                    task._start = date_utils.add(task._start, day_diff, 'day');
-                    task._end = date_utils.add(task._end, day_diff, 'day');
-                    this.render();
-                }
-            });
-        });
+        parent.appendChild(sidebar);
     }
 
-    render_header() {
+    render_header(parent) {
         const header = document.createElement('div');
         header.classList.add('gantt-header');
         header.style.width = `${this.dates.length * this.options.column_width}px`;
 
-        for (let date of this.dates) {
+        this.dates.forEach(date => {
             const cell = document.createElement('div');
             cell.classList.add('gantt-cell');
             cell.style.width = `${this.options.column_width}px`;
             cell.innerText = date_utils.format(date, 'D', this.options.language);
             header.appendChild(cell);
-        }
+        });
 
-        this.$container.appendChild(header);
+        parent.appendChild(header);
     }
 
-    render_body() {
+    render_body(parent) {
         this.$body = document.createElement('div');
         this.$body.classList.add('gantt-body');
         this.$body.style.width = `${this.dates.length * this.options.column_width}px`;
 
-        for (let i = 0; i < this.tasks.length; i++) {
+        let row_count = 0;
+        if (this.options.groups_enable && this.groups.length) {
+             this.groups.forEach(group => {
+                 row_count++; // Group row
+                 row_count += this.tasks.filter(t => t.group_id === group.id).length;
+             });
+        } else {
+            row_count = this.tasks.length;
+        }
+
+        for(let i=0; i < row_count; i++) {
             const row = document.createElement('div');
             row.classList.add('gantt-row');
             row.style.height = `${this.options.row_height}px`;
-
-            for (let j = 0; j < this.dates.length; j++) {
+            this.dates.forEach(() => {
                 const cell = document.createElement('div');
                 cell.classList.add('gantt-cell');
                 cell.style.width = `${this.options.column_width}px`;
                 row.appendChild(cell);
-            }
+            });
             this.$body.appendChild(row);
         }
 
-        this.$container.appendChild(this.$body);
+        parent.appendChild(this.$body);
+    }
+
+    get_task_row_index(task) {
+        if (this.options.groups_enable && this.groups.length) {
+            let index = 0;
+            for (const group of this.groups) {
+                index++; // Group row
+                const group_tasks = this.tasks.filter(t => t.group_id === group.id);
+                const task_in_group_index = group_tasks.indexOf(task);
+                if (task_in_group_index !== -1) {
+                    return index + task_in_group_index;
+                }
+                index += group_tasks.length;
+            }
+        }
+        return this.tasks.indexOf(task);
     }
 
     render_bars() {
@@ -191,22 +195,20 @@ export default class GanttDOM {
         this.$bars_container.classList.add('gantt-bars-container');
         this.$body.appendChild(this.$bars_container);
 
-        this.tasks.forEach((task, i) => {
-            const x = date_utils.diff(task._start, this.gantt_start, 'hour') / 24 * this.options.column_width;
-            const y = i * this.options.row_height + (this.options.row_height - this.options.bar_height) / 2;
-            const width = (date_utils.diff(task._end, task._start, 'hour') / 24) * this.options.column_width;
+        this.tasks.forEach((task) => {
+            const i = this.get_task_row_index(task);
+            const x = (date_utils.diff(task._start, this.gantt_start, 'hour') / 24) * this.options.column_width;
+            const width = task.duration * this.options.column_width;
 
-            let bar;
+            const bar = document.createElement('div');
             if (task.duration === 0) {
-                bar = document.createElement('div');
                 bar.classList.add('gantt-milestone');
                 bar.style.left = `${x - 8}px`;
                 bar.style.top = `${i * this.options.row_height + (this.options.row_height - 16) / 2}px`;
             } else {
-                bar = document.createElement('div');
                 bar.classList.add('gantt-task-bar');
                 bar.style.left = `${x}px`;
-                bar.style.top = `${y}px`;
+                bar.style.top = `${i * this.options.row_height + (this.options.row_height - this.options.bar_height) / 2}px`;
                 bar.style.width = `${width}px`;
                 bar.innerText = task.name;
             }
@@ -224,36 +226,30 @@ export default class GanttDOM {
     render_dependencies() {
         this.tasks.forEach(task => {
             task.dependencies.forEach(dep_id => {
-                const dep_task = this.get_task(dep_id);
-                if (!dep_task) return;
-
-                this.draw_dependency_line(dep_task, task);
+                const dep_task = this.tasks.find(t => t.id == dep_id);
+                if (dep_task) this.draw_dependency_line(dep_task, task);
             });
         });
     }
 
     draw_dependency_line(from_task, to_task) {
         const from_x = (date_utils.diff(from_task._end, this.gantt_start, 'hour') / 24) * this.options.column_width;
-        const from_y = this.tasks.indexOf(from_task) * this.options.row_height + this.options.row_height / 2;
-
+        const from_y = this.get_task_row_index(from_task) * this.options.row_height + this.options.row_height / 2;
         const to_x = (date_utils.diff(to_task._start, this.gantt_start, 'hour') / 24) * this.options.column_width;
-        const to_y = this.tasks.indexOf(to_task) * this.options.row_height + this.options.row_height / 2;
+        const to_y = this.get_task_row_index(to_task) * this.options.row_height + this.options.row_height / 2;
 
-        const is_critical_link = this.options.highlight_critical_path && from_task.is_critical && to_task.is_critical && to_task.early_start === from_task.early_finish;
-
+        const is_critical = this.options.highlight_critical_path && from_task.is_critical && to_task.is_critical && to_task.early_start === from_task.early_finish;
         const mid_x = from_x + (to_x - from_x) / 2;
 
         if (to_x > from_x) {
-            // S-shaped curve or straight with mid-point
-            this.create_line(from_x, from_y, mid_x, from_y, is_critical_link);
-            this.create_line(mid_x, from_y, mid_x, to_y, is_critical_link);
-            this.create_line(mid_x, to_y, to_x, to_y, is_critical_link);
+            this.create_line(from_x, from_y, mid_x, from_y, is_critical);
+            this.create_line(mid_x, from_y, mid_x, to_y, is_critical);
+            this.create_line(mid_x, to_y, to_x, to_y, is_critical);
         } else {
-            // Backward link (overlap)
             const offset = 20;
-            this.create_line(from_x, from_y, from_x + offset, from_y, is_critical_link);
-            this.create_line(from_x + offset, from_y, from_x + offset, to_y, is_critical_link);
-            this.create_line(from_x + offset, to_y, to_x, to_y, is_critical_link);
+            this.create_line(from_x, from_y, from_x + offset, from_y, is_critical);
+            this.create_line(from_x + offset, from_y, from_x + offset, to_y, is_critical);
+            this.create_line(from_x + offset, to_y, to_x, to_y, is_critical);
         }
     }
 
@@ -261,90 +257,141 @@ export default class GanttDOM {
         const line = document.createElement('div');
         line.classList.add('dependency-line');
         if (is_critical) line.classList.add('critical');
-
-        const width = Math.abs(x2 - x1) || 2;
-        const height = Math.abs(y2 - y1) || 2;
-
-        line.style.width = `${width}px`;
-        line.style.height = `${height}px`;
+        line.style.width = `${Math.max(2, Math.abs(x2 - x1))}px`;
+        line.style.height = `${Math.max(2, Math.abs(y2 - y1))}px`;
         line.style.left = `${Math.min(x1, x2)}px`;
         line.style.top = `${Math.min(y1, y2)}px`;
-
         this.$bars_container.appendChild(line);
     }
 
-    get_task(id) {
-        return this.tasks.find(task => task.id == id);
+    bind_events() {
+        this.tasks.forEach(task => {
+            const bar = task.$bar;
+
+            bar.onmousedown = (e) => {
+                this.is_dragging = true;
+                this.drag_task = task;
+                this.drag_start_x = e.clientX;
+                this.drag_initial_left = parseFloat(bar.style.left);
+                bar.style.zIndex = 1000;
+                this.hide_tooltip();
+            };
+        });
+
+        if (!this.events_bound) {
+            window.addEventListener('mousemove', (e) => {
+                if (!this.is_dragging || !this.drag_task) return;
+                const dx = e.clientX - this.drag_start_x;
+                this.drag_task.$bar.style.left = `${this.drag_initial_left + dx}px`;
+            });
+
+            window.addEventListener('mouseup', () => {
+                if (!this.is_dragging || !this.drag_task) return;
+                const task = this.drag_task;
+                const bar = task.$bar;
+
+                this.is_dragging = false;
+                this.drag_task = null;
+                bar.style.zIndex = '';
+
+                const final_left = parseFloat(bar.style.left);
+                const day_diff = Math.round((final_left - (date_utils.diff(task._start, this.gantt_start, 'hour') / 24 * this.options.column_width)) / this.options.column_width);
+
+                if (day_diff !== 0) {
+                    task._start = date_utils.add(task._start, day_diff, 'day');
+                    task._end = date_utils.add(task._end, day_diff, 'day');
+                    this.render();
+                } else {
+                    this.render(); // Snap back
+                }
+            });
+            this.events_bound = true;
+        }
+    }
+
+    setup_tooltip() {
+        this.$tooltip = document.createElement('div');
+        this.$tooltip.classList.add('gantt-tooltip');
+        this.$container.appendChild(this.$tooltip);
+
+        this.tasks.forEach(task => {
+            task.$bar.onmouseenter = (e) => {
+                this.show_tooltip(task, e);
+            };
+            task.$bar.onmouseleave = () => {
+                this.hide_tooltip();
+            };
+        });
+    }
+
+    show_tooltip(task, e) {
+        if (this.options.workitems_custom_tooltip) {
+            const custom = document.querySelector(`[data-gantt-tooltip-id="${task.id}"]`);
+            if (custom) {
+                this.$tooltip.innerHTML = custom.innerHTML;
+            } else {
+                this.$tooltip.innerHTML = `<strong>${task.name}</strong>`;
+            }
+        } else {
+            this.$tooltip.innerHTML = `
+                <div style="font-weight: bold">${task.name}</div>
+                <div>Start: ${date_utils.format(task._start, 'YYYY-MM-DD')}</div>
+                <div>End: ${date_utils.format(task._end, 'YYYY-MM-DD')}</div>
+            `;
+        }
+        this.$tooltip.style.display = 'block';
+        this.$tooltip.style.left = `${e.clientX - this.$container.getBoundingClientRect().left + 10}px`;
+        this.$tooltip.style.top = `${e.clientY - this.$container.getBoundingClientRect().top + 10}px`;
+    }
+
+    hide_tooltip() {
+        this.$tooltip.style.display = 'none';
     }
 
     compute_critical_path() {
-        const tasks = this.tasks;
-        tasks.forEach(t => {
-            t.early_start = 0;
-            t.early_finish = 0;
-            t.late_start = 0;
-            t.late_finish = 0;
-            t.slack = 0;
-            t.is_critical = false;
-        });
-
-        // Forward Pass
+        this.tasks.forEach(t => { t.early_start = 0; t.early_finish = 0; t.late_start = 0; t.late_finish = 0; t.slack = 0; t.is_critical = false; });
         const sorted = this.topological_sort();
         sorted.forEach(task => {
             let max_ef = 0;
             task.dependencies.forEach(dep_id => {
-                const dep = this.get_task(dep_id);
-                if (dep && dep.early_finish > max_ef) {
-                    max_ef = dep.early_finish;
-                }
+                const dep = this.tasks.find(t => t.id == dep_id);
+                if (dep && dep.early_finish > max_ef) max_ef = dep.early_finish;
             });
             task.early_start = max_ef;
             task.early_finish = task.early_start + task.duration;
         });
-
-        // Backward Pass
-        const max_duration = Math.max(...tasks.map(t => t.early_finish));
+        const max_duration = Math.max(...this.tasks.map(t => t.early_finish), 0);
         sorted.reverse().forEach(task => {
-            const successors = tasks.filter(t => t.dependencies.includes(task.id));
-            if (successors.length === 0) {
-                task.late_finish = max_duration;
-            } else {
-                task.late_finish = Math.min(...successors.map(s => s.late_start));
-            }
+            const successors = this.tasks.filter(t => t.dependencies.includes(task.id));
+            task.late_finish = successors.length === 0 ? max_duration : Math.min(...successors.map(s => s.late_start));
             task.late_start = task.late_finish - task.duration;
             task.slack = task.late_start - task.early_start;
-            if (task.slack <= 0) {
-                task.is_critical = true;
-            }
+            if (task.slack <= 0) task.is_critical = true;
         });
     }
 
     topological_sort() {
-        const nodes = this.tasks.map(t => t.id);
-        const edges = [];
-        this.tasks.forEach(t => {
-            t.dependencies.forEach(dep => edges.push([dep, t.id]));
-        });
-
-        const sorted = [];
-        const visited = new Set();
-        const visiting = new Set();
-
-        const visit = (id) => {
-            if (visiting.has(id)) return; // Cycle
-            if (!visited.has(id)) {
-                visiting.add(id);
-                const task = this.get_task(id);
-                if (task) {
-                    task.dependencies.forEach(dep => visit(dep));
-                }
-                visiting.delete(id);
-                visited.add(id);
-                sorted.push(id);
+        const sorted = [], visited = new Set(), visiting = new Set();
+        const visit = (task) => {
+            if (visiting.has(task.id)) return;
+            if (!visited.has(task.id)) {
+                visiting.add(task.id);
+                task.dependencies.forEach(dep_id => {
+                    const dep = this.tasks.find(t => t.id == dep_id);
+                    if (dep) visit(dep);
+                });
+                visiting.delete(task.id);
+                visited.add(task.id);
+                sorted.push(task);
             }
         };
+        this.tasks.forEach(t => visit(t));
+        return sorted;
+    }
 
-        nodes.forEach(id => visit(id));
-        return sorted.map(id => this.get_task(id)).filter(t => t);
+    change_view_mode(mode) {
+        this.options.view_mode = mode;
+        // In a real impl, we would change column_width etc.
+        this.render();
     }
 }

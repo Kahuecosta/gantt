@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Simple Gantt DOM - Milestones & Critical Path</title>
+	<link rel="stylesheet" href="./src/style.css" />
+	<style>
+		body { font-family: Arial, sans-serif; padding: 20px; }
+		.gantt-target { height: 400px; margin-top: 20px; }
+	</style>
+</head>
+<body>
+	<h3>DOM Version: Milestones and Critical Path Highlighting</h3>
+	<div id="gantt-target" class="gantt-target"></div>
+	<script type="module">
+		import GanttDOM from './src/index.js';
+		const tasks = [
+			{ id: 'Task 1', name: 'Initial Research', start: '2023-10-01', end: '2023-10-05', progress: 100 },
+			{ id: 'Task 2', name: 'Design Phase', start: '2023-10-06', end: '2023-10-10', progress: 50, dependencies: 'Task 1' },
+			{ id: 'Milestone 1', name: 'Design Approved', start: '2023-10-10', end: '2023-10-10', progress: 0, dependencies: 'Task 2' },
+			{ id: 'Task 3', name: 'Implementation', start: '2023-10-11', end: '2023-10-20', progress: 0, dependencies: 'Milestone 1' },
+			{ id: 'Task 4', name: 'Parallel Task (Non-Critical)', start: '2023-10-06', end: '2023-10-08', progress: 0, dependencies: 'Task 1' }
+		];
+		new GanttDOM("#gantt-target", tasks, [], [], [], {
+			highlight_critical_path: true,
+			view_mode: 'Day',
+			language: 'en'
+		});
+	</script>
+</body>
+</html>
