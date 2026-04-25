@@ -66,6 +66,18 @@
   transition: stroke-width 0.3s ease;
   user-select: none;
 }
+.gantt-svg .bar.milestone {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.gantt-svg .critical-path .bar {
+  stroke: #ff0000 !important;
+  stroke-width: 2 !important;
+}
+.gantt-svg .critical-path.arrow {
+  stroke: #ff0000 !important;
+  stroke-width: 3 !important;
+}
 .gantt-svg .bar-progress {
   fill: #000000;
   opacity: 0.1;

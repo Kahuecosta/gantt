@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Simple Gantt DOM Example</title>
+    <style>
+:root {
+    --gantt-bg: #fff;
+    --gantt-border: #e0e0e0;
+    --gantt-header-bg: #f8f9fa;
+    --gantt-task-bg: #4a90e2;
+    --gantt-task-color: #fff;
+    --gantt-critical-border: #ff4d4f;
+    --gantt-grid-line: #f0f0f0;
+}
+
+.gantt-dom-container {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--gantt-border);
+    overflow: auto;
+    position: relative;
+    font-family: sans-serif;
+    background: var(--gantt-bg);
+}
+
+.gantt-header {
+    display: flex;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--gantt-header-bg);
+    border-bottom: 1px solid var(--gantt-border);
+}
+
+.gantt-body {
+    position: relative;
+}
+
+.gantt-row {
+    display: flex;
+    border-bottom: 1px solid var(--gantt-grid-line);
+    min-height: 40px;
+}
+
+.gantt-cell {
+    flex-shrink: 0;
+    border-right: 1px solid var(--gantt-grid-line);
+    box-sizing: border-box;
+}
+
+.gantt-bars-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.gantt-task-bar {
+    position: absolute;
+    height: 24px;
+    background: var(--gantt-task-bg);
+    color: var(--gantt-task-color);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    font-size: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    pointer-events: auto;
+    cursor: move;
+}
+
+.gantt-task-bar.critical {
+    border: 2px solid var(--gantt-critical-border);
+}
+
+.gantt-milestone {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    background: #ffcc00;
+    transform: rotate(45deg);
+    pointer-events: auto;
+    cursor: move;
+}
+
+.gantt-milestone.critical {
+    border: 2px solid var(--gantt-critical-border);
+}
+
+.dependency-line {
+    position: absolute;
+    background: #ccc;
+    height: 2px;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.dependency-line.critical {
+    background: var(--gantt-critical-border);
+}
+
+        body { padding: 20px; font-family: sans-serif; }
+        #gantt { height: 400px; }
+    </style>
+</head>
+<body>
+    <h2>Simple Gantt - Pure DOM Version</h2>
+    <div id="gantt"></div>
+
+    <script>
+// Mock date_utils
+const YEAR = 'year';
+const MONTH = 'month';
+const DAY = 'day';
+const HOUR = 'hour';
+
+const date_utils = {
+    parse(date, date_separator = '-', time_separator = /[.:]/) {
+        if (date instanceof Date) return date;
+        const parts = date.split(' ');
+        const date_parts = parts[0].split(date_separator).map(v => parseInt(v, 10));
+        date_parts[1] = date_parts[1] - 1;
+        return new Date(...date_parts);
+    },
+    format(date, format_string) {
+        if (format_string === 'D') return date.getDate();
+        return date.toISOString().split('T')[0];
+    },
+    diff(date_a, date_b, scale) {
+        const ms = date_a - date_b;
+        if (scale === 'hour') return ms / (1000 * 60 * 60);
+        if (scale === 'day') return ms / (1000 * 60 * 60 * 24);
+        return ms;
+    },
+    add(date, qty, scale) {
+        const d = new Date(date);
+        if (scale === DAY) d.setDate(d.getDate() + qty);
+        if (scale === HOUR) d.setHours(d.getHours() + qty);
+        return d;
+    },
+    clone(date) { return new Date(date); }
+};
+
+class GanttDOM {
+    constructor(wrapper, tasks, options = {}) {
+        this.setup_wrapper(wrapper);
+        this.setup_options(options);
+        this.setup_tasks(tasks);
+        this.render();
+    }
+
+    setup_wrapper(wrapper) {
+        this.$wrapper = typeof wrapper === 'string' ? document.querySelector(wrapper) : wrapper;
+        this.$container = document.createElement('div');
+        this.$container.classList.add('gantt-dom-container');
+        this.$wrapper.appendChild(this.$container);
+    }
+
+    setup_options(options) {
+        this.options = Object.assign({
+            column_width: 30, row_height: 40, bar_height: 24, view_mode: 'Day', highlight_critical_path: false
+        }, options);
+    }
+
+    setup_tasks(tasks) {
+        this.tasks = tasks.map(task => {
+            task._start = date_utils.parse(task.start);
+            task._end = date_utils.parse(task.end);
+            task.duration = date_utils.diff(task._end, task._start, 'hour') / 24;
+            task.dependencies = typeof task.dependencies === 'string' ? task.dependencies.split(',').map(d => d.trim()) : (task.dependencies || []);
+            return task;
+        });
+        this.setup_gantt_dates();
+    }
+
+    setup_gantt_dates() {
+        this.gantt_start = new Date(Math.min(...this.tasks.map(t => t._start)));
+        this.gantt_end = new Date(Math.max(...this.tasks.map(t => t._end)));
+        this.gantt_start.setDate(this.gantt_start.getDate() - 3);
+        this.gantt_end.setDate(this.gantt_end.getDate() + 3);
+        this.dates = [];
+        let cur = new Date(this.gantt_start);
+        while (cur <= this.gantt_end) {
+            this.dates.push(new Date(cur));
+            cur.setDate(cur.getDate() + 1);
+        }
+    }
+
+    render() {
+        this.$container.innerHTML = '';
+        this.compute_critical_path();
+        this.render_header();
+        this.render_body();
+        this.render_bars();
+        this.render_dependencies();
+        this.bind_events();
+    }
+
+    render_header() {
+        const header = document.createElement('div');
+        header.classList.add('gantt-header');
+        header.style.width = `${this.dates.length * this.options.column_width}px`;
+        this.dates.forEach(date => {
+            const cell = document.createElement('div');
+            cell.classList.add('gantt-cell');
+            cell.style.width = `${this.options.column_width}px`;
+            cell.innerText = date.getDate();
+            header.appendChild(cell);
+        });
+        this.$container.appendChild(header);
+    }
+
+    render_body() {
+        this.$body = document.createElement('div');
+        this.$body.classList.add('gantt-body');
+        this.$body.style.width = `${this.dates.length * this.options.column_width}px`;
+        this.tasks.forEach(() => {
+            const row = document.createElement('div');
+            row.classList.add('gantt-row');
+            row.style.height = `${this.options.row_height}px`;
+            this.dates.forEach(() => {
+                const cell = document.createElement('div');
+                cell.classList.add('gantt-cell');
+                cell.style.width = `${this.options.column_width}px`;
+                row.appendChild(cell);
+            });
+            this.$body.appendChild(row);
+        });
+        this.$container.appendChild(this.$body);
+    }
+
+    render_bars() {
+        this.$bars_container = document.createElement('div');
+        this.$bars_container.classList.add('gantt-bars-container');
+        this.$body.appendChild(this.$bars_container);
+        this.tasks.forEach((task, i) => {
+            const x = date_utils.diff(task._start, this.gantt_start, 'hour') / 24 * this.options.column_width;
+            const width = task.duration * this.options.column_width;
+            const bar = document.createElement('div');
+            if (task.duration === 0) {
+                bar.classList.add('gantt-milestone');
+                bar.style.left = `${x - 8}px`;
+                bar.style.top = `${i * this.options.row_height + (this.options.row_height - 16) / 2}px`;
+            } else {
+                bar.classList.add('gantt-task-bar');
+                bar.style.left = `${x}px`;
+                bar.style.top = `${i * this.options.row_height + (this.options.row_height - this.options.bar_height) / 2}px`;
+                bar.style.width = `${width}px`;
+                bar.innerText = task.name;
+            }
+            if (this.options.highlight_critical_path && task.is_critical) bar.classList.add('critical');
+            this.$bars_container.appendChild(bar);
+            task.$bar = bar;
+        });
+    }
+
+    render_dependencies() {
+        this.tasks.forEach(task => {
+            task.dependencies.forEach(dep_id => {
+                const dep_task = this.tasks.find(t => t.id == dep_id);
+                if (dep_task) this.draw_dependency_line(dep_task, task);
+            });
+        });
+    }
+
+    draw_dependency_line(from_task, to_task) {
+        const from_x = date_utils.diff(from_task._end, this.gantt_start, 'hour') / 24 * this.options.column_width;
+        const from_y = this.tasks.indexOf(from_task) * this.options.row_height + this.options.row_height / 2;
+        const to_x = date_utils.diff(to_task._start, this.gantt_start, 'hour') / 24 * this.options.column_width;
+        const to_y = this.tasks.indexOf(to_task) * this.options.row_height + this.options.row_height / 2;
+        const is_critical = this.options.highlight_critical_path && from_task.is_critical && to_task.is_critical && to_task.early_start === from_task.early_finish;
+        const mid_x = from_x + (to_x - from_x) / 2;
+        if (to_x > from_x) {
+            this.create_line(from_x, from_y, mid_x, from_y, is_critical);
+            this.create_line(mid_x, from_y, mid_x, to_y, is_critical);
+            this.create_line(mid_x, to_y, to_x, to_y, is_critical);
+        } else {
+            const offset = 20;
+            this.create_line(from_x, from_y, from_x + offset, from_y, is_critical);
+            this.create_line(from_x + offset, from_y, from_x + offset, to_y, is_critical);
+            this.create_line(from_x + offset, to_y, to_x, to_y, is_critical);
+        }
+    }
+
+    create_line(x1, y1, x2, y2, is_critical) {
+        const line = document.createElement('div');
+        line.classList.add('dependency-line');
+        if (is_critical) line.classList.add('critical');
+        line.style.width = `${Math.abs(x2 - x1) || 2}px`;
+        line.style.height = `${Math.abs(y2 - y1) || 2}px`;
+        line.style.left = `${Math.min(x1, x2)}px`;
+        line.style.top = `${Math.min(y1, y2)}px`;
+        this.$bars_container.appendChild(line);
+    }
+
+    bind_events() {
+        this.tasks.forEach(task => {
+            const bar = task.$bar;
+            let is_dragging = false, start_x = 0, initial_left = 0;
+            bar.onmousedown = (e) => {
+                is_dragging = true; start_x = e.clientX; initial_left = parseInt(bar.style.left); bar.style.zIndex = 1000;
+            };
+            window.onmousemove = (e) => {
+                if (!is_dragging) return;
+                bar.style.left = `${initial_left + e.clientX - start_x}px`;
+            };
+            window.onmouseup = () => {
+                if (!is_dragging) return;
+                is_dragging = false; bar.style.zIndex = '';
+                const final_left = parseInt(bar.style.left);
+                const day_diff = Math.round((final_left - (date_utils.diff(task._start, this.gantt_start, 'hour') / 24 * this.options.column_width)) / this.options.column_width);
+                if (day_diff !== 0) {
+                    task._start.setDate(task._start.getDate() + day_diff);
+                    task._end.setDate(task._end.getDate() + day_diff);
+                    this.render();
+                } else {
+                   this.render(); // Snap back
+                }
+            };
+        });
+    }
+
+    compute_critical_path() {
+        this.tasks.forEach(t => { t.early_start = 0; t.early_finish = 0; t.late_start = 0; t.late_finish = 0; t.slack = 0; t.is_critical = false; });
+        const sorted = this.topological_sort();
+        sorted.forEach(task => {
+            let max_ef = 0;
+            task.dependencies.forEach(dep_id => {
+                const dep = this.tasks.find(t => t.id == dep_id);
+                if (dep && dep.early_finish > max_ef) max_ef = dep.early_finish;
+            });
+            task.early_start = max_ef;
+            task.early_finish = task.early_start + task.duration;
+        });
+        const max_duration = Math.max(...this.tasks.map(t => t.early_finish), 0);
+        sorted.reverse().forEach(task => {
+            const successors = this.tasks.filter(t => t.dependencies.includes(task.id));
+            task.late_finish = successors.length === 0 ? max_duration : Math.min(...successors.map(s => s.late_start));
+            task.late_start = task.late_finish - task.duration;
+            task.slack = task.late_start - task.early_start;
+            if (task.slack <= 0) task.is_critical = true;
+        });
+    }
+
+    topological_sort() {
+        const sorted = [], visited = new Set(), visiting = new Set();
+        const visit = (task) => {
+            if (visiting.has(task.id)) return;
+            if (!visited.has(task.id)) {
+                visiting.add(task.id);
+                task.dependencies.forEach(dep_id => {
+                    const dep = this.tasks.find(t => t.id == dep_id);
+                    if (dep) visit(dep);
+                });
+                visiting.delete(task.id);
+                visited.add(task.id);
+                sorted.push(task);
+            }
+        };
+        this.tasks.forEach(t => visit(t));
+        return sorted;
+    }
+}
+
+        const tasks = [
+            { id: '1', name: 'Task 1', start: '2023-10-01', end: '2023-10-05' },
+            { id: '2', name: 'Task 2', start: '2023-10-06', end: '2023-10-10', dependencies: '1' },
+            { id: '3', name: 'Milestone 1', start: '2023-10-10', end: '2023-10-10', dependencies: '2' },
+            { id: '4', name: 'Task 3', start: '2023-10-11', end: '2023-10-15', dependencies: '3' },
+            { id: '5', name: 'Task 4 (Parallel)', start: '2023-10-06', end: '2023-10-08', dependencies: '1' }
+        ];
+
+        new GanttDOM('#gantt', tasks, {
+            highlight_critical_path: true
+        });
+    </script>
+</body>
+</html>

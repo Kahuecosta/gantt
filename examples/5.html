@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Simple Gantt - Advanced Example</title>
+	<style>
+		body {
+			font-family: Arial, Helvetica, sans-serif;
+			background: #FFFFFF;
+		}
+		.gantt-target {
+			height: calc(100vh - 150px);
+		}
+        .controls {
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+	</style>
+	<link rel="stylesheet" href="../dist/simple-gantt.css" />
+	<script src="../dist/simple-gantt.js"></script>
+</head>
+<body>
+	<h3>Comprehensive Project Plan: Milestones, Critical Path, and Resource Sidebar</h3>
+    <div class="controls">
+		<button onclick="change_view_mode('Hour')">Hour</button>
+		<button onclick="change_view_mode('Quarter Day')">Quarter Day</button>
+		<button onclick="change_view_mode('Half Day')">Half Day</button>
+		<button onclick="change_view_mode('Day')">Day</button>
+		<button onclick="change_view_mode('Week')">Week</button>
+		<button onclick="change_view_mode('Month')">Month</button>
+		<button onclick="change_view_mode('Year')">Year</button>
+    </div>
+	<div id="gantt-target" class="gantt-target"></div>
+	<script src="./example-5.js"></script>
+</body>
+</html>

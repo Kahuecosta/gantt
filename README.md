@@ -1,5 +1,5 @@
 <div align="center">
-    <h2 align="center">Frappe Gantt customized</h2>
+    <h2 align="center">Simple Gantt</h2>
     <p>A simple, interactive, modern gantt chart library for the web</p>
     <img src="./gantt-1.png" />
 		<br /><br />
@@ -8,10 +8,10 @@
 </div>
 
 <div align="center">
-    <h4>Frappe Gantt</h4>
+    <h4>Simple Gantt</h4>
     <p align="center"> 
         <a href="https://frappe.github.io/gantt">
-            <b>View the demo (frappe version) »</b>
+            <b>View the original demo (Frappe version) »</b>
         </a>
     </p>
     <a href="https://frappe.github.io/gantt">
@@ -20,16 +20,10 @@
      <br /><br /><br /><br />
 </div>
 
-### Install (my version)
+### Install
 
 ```
 npm install github.com/Kahuecosta/gantt
-```
-
-### Install (frappe version)
-
-```
-npm install frappe-gantt
 ```
 
 ### Usage
@@ -37,74 +31,75 @@ npm install frappe-gantt
 Include it in your HTML:
 
 ```
-<script src="frappe-gantt.min.js"></script>
-<link rel="stylesheet" href="frappe-gantt.css">
+<script src="simple-gantt.min.js"></script>
+<link rel="stylesheet" href="simple-gantt.css">
 ```
 
 You can also pass various options to the Gantt constructor:
 
-| OPÇÃO                               | DESCRIÇÃO                                                                                      |
+| OPTION                               | DESCRIPTION                                                                                    |
 | ----------------------------------- | ---------------------------------------------------------------------------------------------- |
-| header_height                       | Altura do cabeçalho                                                                            |
-| column_width                        | Largura padrão das colunas. Obs: Este valor é sobrescrito internamente                         |
-| view_modes                          | Modos de visão do Gantt                                                                        |
-| view_mode                           | Modos de visão inicial do Gantt                                                                |
-| bar_height                          | Altura da barra de representação da demanda                                                    |
-| bar_corner_radius                   | Arredondamento da barra de representação da demanda                                            |
-| arrow_curve                         | Curvatura da flecha de dependência                                                             |
-| padding                             | Espaçamento padrão em colunas e linhas                                                         |
-| padding_start                       | Espaçamento padrão do inicio do Gantt                                                          |
-| padding_end                         | Espaçamento padrão no final do Gantt                                                           |
-| date_format                         | Formato padrão de Datas                                                                        |
-| popup_trigger                       | Tipo de evento que abre o Popup                                                                |
-| language                            | Idioma do Gantt. Usado principalmente para tradução de datas                                   |
-| margin_bottom                       | Margem inferior do Gantt                                                                       |
-| disallow_popup                      | Desabilitar ou habilitar o popup                                                               |
-| readonly                            | Desabilitar ou habilitar as ações no Gantt                                                     |
-| draggable_bar                       | Desabilitar ou habilitar o drag and drop de PERÍODO nas barras                                 |
-| draggable_bar_handles               | Desabilitar ou habilitar o drag and drop de PROGESSO nas barras                                |
-| hasArrows                           | Desabilitar ou habilitar as linhas de dependências                                             |
-| move_dependent                      | Ao mover a posição de uma demanda também mover a posição de demandas dependêntes               |
-| hide_labels                         | Esconder o título da demandas na barra                                                         |
-| fixed_label_location                | Fixar exibião do título da demandas ao lado da barra                                           |
-| horizontal_auto_scroll_labels       | Desabilitar ou habilitar que o título da demanda na barra se mova ao rolar o scroll horizontal |
-| handle_bar_color                    | Cor padrão dos elementos de redimencionar a barra de demanda                                   |
-| handle_progress_color               | Cor padrão do elemento de progresso da barra de demanda                                        |
-| resource_resize_enable              | Desabilitar ou habilitar a função de redimencionar a árvore de demandas                        |
-| resource_fixed                      | Desabilitar ou habilitar tamaho fixo da árvore de demandas                                     |
-| resource_enable                     | Desabilitar ou habilitar a árvore de demandas                                                  |
-| resource_collapse_enable            | Desabilitar ou habilitar a função de expandir e recolher os grupos da árvore de demandas       |
-| resource_title                      | Título padrão da árvore de demandas                                                            |
-| resource_width                      | Largura padrão da árvore de demandas                                                           |
-| resource_min_width                  | Largura minima da árvore de demandas                                                           |
-| responsables_enable                 | Desabilitar ou habilitar a exibição do responsável da tarefa                                   |
-| responsables_sort_by                | Ordenação de demandas na árvore por responsável                                                |
-| responsables_default_name           | Nome padrão de responsável para a demanda não possui um responsável                            |
-| responsables_default_photo          | Foto padrão de responsável para a demanda não possui um responsável                            |
-| groups_enable                       | Desabilitar ou habilitar grupos na árvore de demandas                                          |
-| groups_sort_by                      | Ordenação de grupos na árvore de demandas                                                      |
-| workitems_sort_by                   | Ordenação de tarefas na árvore de demandas                                                     |
-| workitems_custom_tooltip            | Habilitar a customização de tooltip                                                            |
-| workitems_click_tooltip_open_detail | Habilitar a abertura dos detallhes da demanda ao clicar no tooltip                             |
-| new_workitem_enable                 | Habilitar a criação de demanda direto no Gantt                                                 |
-| new_workitem_text                   | Placeholder do campo de criar demanda                                                          |
-| rows_alternate_background           | Desabilitar ou habilitar linhas zebradas                                                       |
-| grid_ticks                          | Desabilitar ou habilitar as linhas de marcação das colunas                                     |
-| bar_color_default                   | Cor padrão das barras para quando a cor não é informada no workitem                            |
-| link_detail_text                    | Texto do link dentro do popup para a abertura de detalhes de uma demanda                       |
-| highlights_weekend                  | Marcar colunas de finais de semana com fundo diferenciado                                      |
-| highlights_past_days                | Marcar colunas de dias no passado com fundo diferenciado                                       |
-| dir_assets                          | Caminho relativo para assets do componente                                                     |
-| zoom_max                            | Quantidade máxima de vezes que o Zoom pode ser efetuado                                        |
+| header_height                       | Header height                                                                                  |
+| column_width                        | Default column width. Note: This value is overwritten internally                               |
+| view_modes                          | Gantt view modes                                                                               |
+| view_mode                           | Initial Gantt view mode                                                                        |
+| bar_height                          | Height of the task bar                                                                         |
+| bar_corner_radius                   | Corner radius of the task bar                                                                  |
+| arrow_curve                         | Curve of the dependency arrow                                                                  |
+| padding                             | Default padding for columns and rows                                                           |
+| padding_start                       | Default padding at the start of the Gantt                                                      |
+| padding_end                         | Default padding at the end of the Gantt                                                        |
+| date_format                         | Default date format                                                                            |
+| popup_trigger                       | Type of event that opens the popup                                                             |
+| language                            | Gantt language. Mainly used for date translation                                               |
+| margin_bottom                       | Bottom margin of the Gantt                                                                     |
+| disallow_popup                      | Disable or enable the popup                                                                    |
+| readonly                            | Disable or enable actions in the Gantt                                                         |
+| draggable_bar                       | Disable or enable drag and drop for PERIOD in bars                                             |
+| draggable_bar_handles               | Disable or enable drag and drop for PROGRESS in bars                                           |
+| hasArrows                           | Disable or enable dependency lines                                                             |
+| move_dependent                      | Move dependent tasks when moving a task                                                        |
+| hide_labels                         | Hide task labels on the bar                                                                    |
+| fixed_label_location                | Fix display of task labels next to the bar                                                     |
+| horizontal_auto_scroll_labels       | Disable or enable task labels moving with horizontal scroll                                    |
+| handle_bar_color                    | Default color for task resize handles                                                          |
+| handle_progress_color               | Default color for task progress handle                                                         |
+| resource_resize_enable              | Disable or enable resizing the resource tree                                                   |
+| resource_fixed                      | Disable or enable fixed size for the resource tree                                             |
+| resource_enable                     | Disable or enable the resource tree                                                            |
+| resource_collapse_enable            | Disable or enable expand/collapse for groups in the resource tree                              |
+| resource_title                      | Default title for the resource tree                                                            |
+| resource_width                      | Default width for the resource tree                                                            |
+| resource_min_width                  | Minimum width for the resource tree                                                            |
+| responsables_enable                 | Disable or enable display of task assignee                                                     |
+| responsables_sort_by                | Sort tasks in the tree by assignee                                                             |
+| responsables_default_name           | Default assignee name when none is provided                                                    |
+| responsables_default_photo          | Default assignee photo when none is provided                                                   |
+| groups_enable                       | Disable or enable groups in the resource tree                                                  |
+| groups_sort_by                      | Sort groups in the resource tree                                                               |
+| workitems_sort_by                   | Sort tasks in the resource tree                                                                |
+| workitems_custom_tooltip            | Enable tooltip customization                                                                   |
+| workitems_click_tooltip_open_detail | Enable opening task details when clicking the tooltip                                          |
+| new_workitem_enable                 | Enable direct task creation in the Gantt                                                       |
+| new_workitem_text                   | Placeholder for the new task field                                                             |
+| rows_alternate_background           | Disable or enable zebra-striped rows                                                           |
+| grid_ticks                          | Disable or enable column markers                                                               |
+| bar_color_default                   | Default bar color when none is provided in workitem                                            |
+| link_detail_text                    | Text for the link inside the popup to open task details                                        |
+| highlights_weekend                  | Highlight weekend columns with a different background                                          |
+| highlights_past_days                | Highlight past day columns with a different background                                         |
+| highlight_critical_path             | Highlight the critical path in red                                                             |
+| dir_assets                          | Relative path for component assets                                                             |
+| zoom_max                            | Maximum zoom level                                                                             |
 
-| EVENTOS             | DESCRIÇÃO                                                    |
+| EVENTS              | DESCRIPTION                                                  |
 | ------------------- | ------------------------------------------------------------ |
-| on_click            | Clique na barra da demanda                                   |
-| on_dblclick         | Clique duplo na barra da demanda                             |
-| on_date_change      | Alteração do período da demanda via drag and drop na barra   |
-| on_progress_change  | Alteração do progresso da demanda via drag and drop na barra |
-| on_view_change      | Alteração do modo de visão do Gantt                          |
-| on_link_open_detail | Clique no link de abertura dos detalhes da demanda           |
+| on_click            | Click on task bar                                            |
+| on_dblclick         | Double click on task bar                                     |
+| on_date_change      | Task period changed via drag and drop                        |
+| on_progress_change  | Task progress changed via drag and drop                      |
+| on_view_change      | Gantt view mode changed                                      |
+| on_link_open_detail | Click on the link to open task details                       |
 
 And start hacking:
 
@@ -190,7 +185,7 @@ const options = {
 	resource_min_width: 300,
 	responsables_enable: true,
 	responsables_sort_by: 'default',
-	responsables_default_name: 'Não atribuido',
+	responsables_default_name: 'Unassigned',
 	responsables_default_photo: './images/responsable-default.png',
 	groups_enable: false,
 	groups_sort_by: 'name',
@@ -198,13 +193,13 @@ const options = {
 	workitems_custom_tooltip: true,
 	workitems_click_tooltip_open_detail: true,
 	new_workitem_enable: false,
-	new_workitem_text: 'Criar tarefa...',
+	new_workitem_text: 'Create task...',
 	rows_alternate_background: false,
 	grid_ticks: true,
 	bar_color_default: '#f3f2f2',
 	highlights_weekend: true,
 	highlights_past_days: true,
-	link_detail_text: 'Ver detalhes',
+	link_detail_text: 'View details',
 	dir_assets: '../dist/assets',
 	zoom_max: 5,
 }
@@ -230,7 +225,7 @@ If you want to contribute enhancements or fixes:
 
 ### Publishing
 
-If you have publishing rights (Frappe Team), follow these steps to publish a new version.
+If you have publishing rights, follow these steps to publish a new version.
 
 Assuming the last commit (or a couple of commits) were enhancements or fixes,
 
@@ -260,4 +255,4 @@ License: MIT
 
 ---
 
-Project maintained by [frappe](https://github.com/frappe)
+Project maintained by [Kahuecosta](https://github.com/Kahuecosta)

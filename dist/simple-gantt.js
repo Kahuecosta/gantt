@@ -414,10 +414,12 @@ var Gantt = (function () {
 			this.width = this.gantt.column_width * this.duration;
 			this.progress_width =
 				this.gantt.column_width * this.duration * (this.task.progress / 100) || 0;
+			this.is_milestone = this.task.start === this.task.end || this.duration === 0;
 			this.group = createSVG('g', {
 				class:
 					'bar-wrapper ' +
-					(this.task._type ? `${this.task._type.bar_class} ` : ''),
+					(this.task._type ? `${this.task._type.bar_class} ` : '') +
+					(this.is_milestone ? 'bar-milestone ' : ''),
 				'data-id': this.task.id,
 				'data-type-id': this.task.type_id,
 			});
@@ -451,28 +453,64 @@ var Gantt = (function () {
 
 		draw() {
 			this.draw_bar();
-			this.draw_progress_bar();
+			if (!this.is_milestone) {
+				this.draw_progress_bar();
+			}
 			this.draw_label();
 			this.draw_thumbnail();
-			this.draw_resize_handles();
+			if (!this.is_milestone) {
+				this.draw_resize_handles();
+			}
 		}
 
 		draw_bar() {
-			this.$bar = createSVG('rect', {
-				x: this.x,
-				y: this.y,
-				width: this.width,
-				height: this.height,
-				rx: this.corner_radius,
-				ry: this.corner_radius,
-				class: 'bar',
-				fill: `${this.task.bar_color || this.gantt.options.bar_color_default}`,
-				append_to: this.bar_group,
-			});
+			if (this.is_milestone) {
+				this.$bar = createSVG('polygon', {
+					points: this.get_milestone_points().join(','),
+					class: 'bar milestone',
+					fill: `${this.task.bar_color || this.gantt.options.bar_color_default}`,
+					append_to: this.bar_group,
+				});
+				// For milestones, we still want getX/getY to work as expected
+				this.$bar.getX = () => this.x;
+				this.$bar.getY = () => this.y;
+				this.$bar.getWidth = () => 0;
+				this.$bar.getHeight = () => this.height;
+			} else {
+				this.$bar = createSVG('rect', {
+					x: this.x,
+					y: this.y,
+					width: this.width,
+					height: this.height,
+					rx: this.corner_radius,
+					ry: this.corner_radius,
+					class: 'bar',
+					fill: `${this.task.bar_color || this.gantt.options.bar_color_default}`,
+					append_to: this.bar_group,
+				});
+			}
 
 			if (this.invalid) {
 				this.$bar.classList.add('bar-invalid');
 			}
+		}
+
+		get_milestone_points() {
+			const { x, y, height } = this;
+			const size = height;
+			const cx = x;
+			const cy = y + height / 2;
+
+			return [
+				cx,
+				cy - size / 2, // top
+				cx + size / 2,
+				cy, // right
+				cx,
+				cy + size / 2, // bottom
+				cx - size / 2,
+				cy, // left
+			]
 		}
 
 		draw_progress_bar() {
@@ -691,6 +729,14 @@ var Gantt = (function () {
 		update_bar_position({ x = null, width = null, update_original_x = true }) {
 			const bar = this.$bar;
 
+			if (this.is_milestone && x) {
+				this.x = x;
+				this.update_attr(bar, 'points', this.get_milestone_points().join(','));
+				this.update_label_position(update_original_x);
+				this.update_arrow_position();
+				return
+			}
+
 			if (x && x >= this.resource_width) {
 				// get all x values of parent task
 				const xs = this.task.dependencies.map(dep =>
@@ -883,13 +929,17 @@ var Gantt = (function () {
 		}
 
 		update_attr(element, attr, value) {
-			value = +value;
-
-			if (!isNaN(value)) {
+			if (typeof value === 'number') {
 				element.setAttribute(attr, value);
+			} else if (typeof value === 'string') {
+				if (!isNaN(+value)) {
+					element.setAttribute(attr, +value);
+				} else {
+					element.setAttribute(attr, value);
+				}
 			}
 
-			return element
+			return element;
 		}
 
 		update_progressbar_position(update_original_x) {
@@ -1381,7 +1431,7 @@ var Gantt = (function () {
 				svg_element = element;
 			} else {
 				throw new TypeError(
-					'Frappé Gantt only supports usage of a string CSS selector,' +
+					'Simple Gantt only supports usage of a string CSS selector,' +
 						" HTML DOM element or SVG DOM element for the 'element' parameter"
 				)
 			}
@@ -1454,20 +1504,21 @@ var Gantt = (function () {
 				resource_min_width: 220,
 				responsables_enable: false,
 				responsables_sort_by: 'name',
-				responsables_default_name: 'Não atribuido',
+				responsables_default_name: 'Unassigned',
 				groups_enable: false,
 				groups_sort_by: 'name',
 				workitems_sort_by: 'name',
 				workitems_custom_tooltip: false,
 				workitems_click_tooltip_open_detail: true,
 				new_workitem_enable: false,
-				new_workitem_text: 'Criar tarefa...',
+				new_workitem_text: 'Create task...',
 				rows_alternate_background: true,
 				grid_ticks: true,
 				bar_color_default: '#FFCC33',
 				highlights_weekend: true,
 				highlights_past_days: true,
-				link_detail_text: 'Ver detalhes',
+				highlight_critical_path: false,
+				link_detail_text: 'View details',
 				dir_assets: '../dist/assets',
 				zoom_max: 5,
 			};
@@ -1844,6 +1895,89 @@ var Gantt = (function () {
 			}
 
 			this.setup_dependencies();
+
+			if (this.options.highlight_critical_path) {
+				this.calculate_critical_path();
+			}
+		}
+
+		calculate_critical_path() {
+			if (!this.tasks.length) return
+
+			const tasks_by_id = this.task_map;
+
+			// 1. Forward Pass
+			const order = this.get_topological_order();
+
+			order.forEach(id => {
+				const task = tasks_by_id[id];
+				const duration = utils.diff(task._end, task._start, 'hour');
+
+				let max_prev_ef = 0;
+				task.dependencies.forEach(dep_id => {
+					const dep = tasks_by_id[dep_id];
+					if (dep && dep.ef > max_prev_ef) {
+						max_prev_ef = dep.ef;
+					}
+				});
+
+				task.es = max_prev_ef;
+				task.ef = task.es + duration;
+			});
+
+			// 2. Backward Pass
+			const project_duration = Math.max(...this.tasks.map(t => t.ef));
+
+			order
+				.slice()
+				.reverse()
+				.forEach(id => {
+					const task = tasks_by_id[id];
+					const duration = utils.diff(task._end, task._start, 'hour');
+
+					const successors = this.dependency_map[id] || [];
+					if (successors.length === 0) {
+						task.lf = project_duration;
+					} else {
+						let min_next_ls = Infinity;
+						successors.forEach(succ_id => {
+							const succ = tasks_by_id[succ_id];
+							if (succ && succ.ls < min_next_ls) {
+								min_next_ls = succ.ls;
+							}
+						});
+						task.lf = min_next_ls;
+					}
+					task.ls = task.lf - duration;
+				});
+
+			// 3. Identify Critical Path
+			this.tasks.forEach(task => {
+				task.slack = task.lf - task.ef;
+				task.is_critical = task.slack <= 0;
+			});
+		}
+
+		get_topological_order() {
+			const visited = new Set();
+			const stack = [];
+
+			const visit = task_id => {
+				if (visited.has(task_id)) return
+				visited.add(task_id);
+
+				const successors = this.dependency_map[task_id] || [];
+				for (const successor_id of successors) {
+					visit(successor_id);
+				}
+				stack.push(task_id);
+			};
+
+			for (const task of this.tasks) {
+				visit(task.id);
+			}
+
+			return stack.reverse()
 		}
 
 		setup_dependencies() {
@@ -2922,6 +3056,10 @@ var Gantt = (function () {
 
 				this.bar_map[task.id] = bar;
 
+				if (this.options.highlight_critical_path && task.is_critical) {
+					bar.group.classList.add('critical-path');
+				}
+
 				return bar
 			});
 		}
@@ -2947,6 +3085,14 @@ var Gantt = (function () {
 						if (!from_task || !to_task) return
 
 						const arrow = new Arrow(this, from_task, to_task);
+
+						if (
+							this.options.highlight_critical_path &&
+							from_task.task.is_critical &&
+							to_task.task.is_critical
+						) {
+							arrow.element.classList.add('critical-path');
+						}
 
 						this.layers.arrow.appendChild(arrow.element);
 
@@ -3917,13 +4063,13 @@ var Gantt = (function () {
 
 			while (to_process.length) {
 				const deps = to_process.reduce(
-					(acc, curr) => acc.concat(this.dependency_map[curr]),
+					(acc, curr) => acc.concat(this.dependency_map[curr] || []),
 					[]
 				);
 
-				out = out.concat(deps);
+				to_process = deps.filter(d => !out.includes(d));
 
-				to_process = deps.filter(d => !to_process.includes(d));
+				out = out.concat(to_process);
 			}
 
 			return out.filter(Boolean)
@@ -4032,4 +4178,4 @@ var Gantt = (function () {
 	return Gantt;
 
 })();
-//# sourceMappingURL=frappe-gantt.js.map
+//# sourceMappingURL=simple-gantt.js.map

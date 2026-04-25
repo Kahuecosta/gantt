@@ -91,6 +91,22 @@ $background: #f0f2f5;
 		stroke-width: 0;
 		transition: stroke-width 0.3s ease;
 		user-select: none;
+
+		&.milestone {
+			transform-box: fill-box;
+			transform-origin: center;
+		}
+	}
+
+	.critical-path {
+		.bar {
+			stroke: #ff0000 !important;
+			stroke-width: 2 !important;
+		}
+		&.arrow {
+			stroke: #ff0000 !important;
+			stroke-width: 3 !important;
+		}
 	}
 
 	.bar-progress {

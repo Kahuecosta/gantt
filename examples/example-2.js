@@ -5,7 +5,7 @@
 const responsables = [
 	{
 		id: 1,
-		name: 'José Santos Oliveira Rodrigues',
+		name: 'John Doe',
 		photo: './images/responsable-1.jpg',
 	},
 	{
@@ -34,7 +34,7 @@ const groups = [
 				color: '#e27d02',
 			},
 			{
-				name: 'Em avaliação',
+				name: 'In Evaluation',
 				id: 3,
 			},
 			{
@@ -50,7 +50,7 @@ const groups = [
 		],
 	},
 	{
-		name: 'Implantação',
+		name: 'Deployment',
 		id: 2,
 	},
 	{
@@ -83,13 +83,13 @@ const types = [
 	},
 	{
 		id: 3,
-		name: 'Débito Técnico',
+		name: 'Technical Debt',
 		bar_class: 'bar-debit',
 		imageIcon: './images/icon-3.png',
 	},
 	{
 		id: 4,
-		name: 'Épico',
+		name: 'Epic',
 		bar_class: 'bar-epic',
 		color: '#d81e46',
 	},
@@ -281,7 +281,7 @@ const options = {
 		console.log('on_link_open_detail', id)
 	},
 	view_mode: 'Day',
-	language: 'pt-br',
+	language: 'en',
 	margin_bottom: -26,
 	disallow_popup: false,
 	arrow_curve: 15,
@@ -300,12 +300,12 @@ const options = {
 	resource_fixed: true,
 	resource_enable: true,
 	resource_collapse_enable: true,
-	resource_title: 'Desenvolvimento Evolutivo',
+	resource_title: 'Development',
 	resource_width: 350,
 	resource_min_width: 300,
 	responsables_enable: true,
 	responsables_sort_by: 'name',
-	responsables_default_name: 'Não atribuido',
+	responsables_default_name: 'Unassigned',
 	responsables_default_photo: './images/responsable-default.png',
 	groups_enable: true,
 	groups_sort_by: 'name',
@@ -313,13 +313,13 @@ const options = {
 	workitems_custom_tooltip: true,
 	workitems_click_tooltip_open_detail: true,
 	new_workitem_enable: true,
-	new_workitem_text: 'Criar tarefa...',
+	new_workitem_text: 'Create task...',
 	rows_alternate_background: false,
 	grid_ticks: true,
 	bar_color_default: '#FFCC33',
 	highlights_weekend: true,
 	highlights_past_days: true,
-	link_detail_text: 'Ver detalhes',
+	link_detail_text: 'View details',
 	dir_assets: '../dist/assets',
 	zoom_max: 5,
 }

@@ -68,7 +68,7 @@ export default class Gantt {
 			svg_element = element
 		} else {
 			throw new TypeError(
-				'Frappé Gantt only supports usage of a string CSS selector,' +
+				'Simple Gantt only supports usage of a string CSS selector,' +
 					" HTML DOM element or SVG DOM element for the 'element' parameter"
 			)
 		}
@@ -141,20 +141,21 @@ export default class Gantt {
 			resource_min_width: 220,
 			responsables_enable: false,
 			responsables_sort_by: 'name',
-			responsables_default_name: 'Não atribuido',
+			responsables_default_name: 'Unassigned',
 			groups_enable: false,
 			groups_sort_by: 'name',
 			workitems_sort_by: 'name',
 			workitems_custom_tooltip: false,
 			workitems_click_tooltip_open_detail: true,
 			new_workitem_enable: false,
-			new_workitem_text: 'Criar tarefa...',
+			new_workitem_text: 'Create task...',
 			rows_alternate_background: true,
 			grid_ticks: true,
 			bar_color_default: '#FFCC33',
 			highlights_weekend: true,
 			highlights_past_days: true,
-			link_detail_text: 'Ver detalhes',
+			highlight_critical_path: false,
+			link_detail_text: 'View details',
 			dir_assets: '../dist/assets',
 			zoom_max: 5,
 		}
@@ -531,6 +532,89 @@ export default class Gantt {
 		}
 
 		this.setup_dependencies()
+
+		if (this.options.highlight_critical_path) {
+			this.calculate_critical_path()
+		}
+	}
+
+	calculate_critical_path() {
+		if (!this.tasks.length) return
+
+		const tasks_by_id = this.task_map
+
+		// 1. Forward Pass
+		const order = this.get_topological_order()
+
+		order.forEach(id => {
+			const task = tasks_by_id[id]
+			const duration = date_utils.diff(task._end, task._start, 'hour')
+
+			let max_prev_ef = 0
+			task.dependencies.forEach(dep_id => {
+				const dep = tasks_by_id[dep_id]
+				if (dep && dep.ef > max_prev_ef) {
+					max_prev_ef = dep.ef
+				}
+			})
+
+			task.es = max_prev_ef
+			task.ef = task.es + duration
+		})
+
+		// 2. Backward Pass
+		const project_duration = Math.max(...this.tasks.map(t => t.ef))
+
+		order
+			.slice()
+			.reverse()
+			.forEach(id => {
+				const task = tasks_by_id[id]
+				const duration = date_utils.diff(task._end, task._start, 'hour')
+
+				const successors = this.dependency_map[id] || []
+				if (successors.length === 0) {
+					task.lf = project_duration
+				} else {
+					let min_next_ls = Infinity
+					successors.forEach(succ_id => {
+						const succ = tasks_by_id[succ_id]
+						if (succ && succ.ls < min_next_ls) {
+							min_next_ls = succ.ls
+						}
+					})
+					task.lf = min_next_ls
+				}
+				task.ls = task.lf - duration
+			})
+
+		// 3. Identify Critical Path
+		this.tasks.forEach(task => {
+			task.slack = task.lf - task.ef
+			task.is_critical = task.slack <= 0
+		})
+	}
+
+	get_topological_order() {
+		const visited = new Set()
+		const stack = []
+
+		const visit = task_id => {
+			if (visited.has(task_id)) return
+			visited.add(task_id)
+
+			const successors = this.dependency_map[task_id] || []
+			for (const successor_id of successors) {
+				visit(successor_id)
+			}
+			stack.push(task_id)
+		}
+
+		for (const task of this.tasks) {
+			visit(task.id)
+		}
+
+		return stack.reverse()
 	}
 
 	setup_dependencies() {
@@ -1609,6 +1693,10 @@ export default class Gantt {
 
 			this.bar_map[task.id] = bar
 
+			if (this.options.highlight_critical_path && task.is_critical) {
+				bar.group.classList.add('critical-path')
+			}
+
 			return bar
 		})
 	}
@@ -1634,6 +1722,14 @@ export default class Gantt {
 					if (!from_task || !to_task) return
 
 					const arrow = new Arrow(this, from_task, to_task)
+
+					if (
+						this.options.highlight_critical_path &&
+						from_task.task.is_critical &&
+						to_task.task.is_critical
+					) {
+						arrow.element.classList.add('critical-path')
+					}
 
 					this.layers.arrow.appendChild(arrow.element)
 
@@ -2604,13 +2700,13 @@ export default class Gantt {
 
 		while (to_process.length) {
 			const deps = to_process.reduce(
-				(acc, curr) => acc.concat(this.dependency_map[curr]),
+				(acc, curr) => acc.concat(this.dependency_map[curr] || []),
 				[]
 			)
 
-			out = out.concat(deps)
+			to_process = deps.filter(d => !out.includes(d))
 
-			to_process = deps.filter(d => !to_process.includes(d))
+			out = out.concat(to_process)
 		}
 
 		return out.filter(Boolean)

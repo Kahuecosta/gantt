@@ -34,10 +34,12 @@ export default class Bar {
 		this.width = this.gantt.column_width * this.duration
 		this.progress_width =
 			this.gantt.column_width * this.duration * (this.task.progress / 100) || 0
+		this.is_milestone = this.task.start === this.task.end || this.duration === 0
 		this.group = createSVG('g', {
 			class:
 				'bar-wrapper ' +
-				(this.task._type ? `${this.task._type.bar_class} ` : ''),
+				(this.task._type ? `${this.task._type.bar_class} ` : '') +
+				(this.is_milestone ? 'bar-milestone ' : ''),
 			'data-id': this.task.id,
 			'data-type-id': this.task.type_id,
 		})
@@ -71,28 +73,64 @@ export default class Bar {
 
 	draw() {
 		this.draw_bar()
-		this.draw_progress_bar()
+		if (!this.is_milestone) {
+			this.draw_progress_bar()
+		}
 		this.draw_label()
 		this.draw_thumbnail()
-		this.draw_resize_handles()
+		if (!this.is_milestone) {
+			this.draw_resize_handles()
+		}
 	}
 
 	draw_bar() {
-		this.$bar = createSVG('rect', {
-			x: this.x,
-			y: this.y,
-			width: this.width,
-			height: this.height,
-			rx: this.corner_radius,
-			ry: this.corner_radius,
-			class: 'bar',
-			fill: `${this.task.bar_color || this.gantt.options.bar_color_default}`,
-			append_to: this.bar_group,
-		})
+		if (this.is_milestone) {
+			this.$bar = createSVG('polygon', {
+				points: this.get_milestone_points().join(','),
+				class: 'bar milestone',
+				fill: `${this.task.bar_color || this.gantt.options.bar_color_default}`,
+				append_to: this.bar_group,
+			})
+			// For milestones, we still want getX/getY to work as expected
+			this.$bar.getX = () => this.x
+			this.$bar.getY = () => this.y
+			this.$bar.getWidth = () => 0
+			this.$bar.getHeight = () => this.height
+		} else {
+			this.$bar = createSVG('rect', {
+				x: this.x,
+				y: this.y,
+				width: this.width,
+				height: this.height,
+				rx: this.corner_radius,
+				ry: this.corner_radius,
+				class: 'bar',
+				fill: `${this.task.bar_color || this.gantt.options.bar_color_default}`,
+				append_to: this.bar_group,
+			})
+		}
 
 		if (this.invalid) {
 			this.$bar.classList.add('bar-invalid')
 		}
+	}
+
+	get_milestone_points() {
+		const { x, y, height } = this
+		const size = height
+		const cx = x
+		const cy = y + height / 2
+
+		return [
+			cx,
+			cy - size / 2, // top
+			cx + size / 2,
+			cy, // right
+			cx,
+			cy + size / 2, // bottom
+			cx - size / 2,
+			cy, // left
+		]
 	}
 
 	draw_progress_bar() {
@@ -311,6 +349,14 @@ export default class Bar {
 	update_bar_position({ x = null, width = null, update_original_x = true }) {
 		const bar = this.$bar
 
+		if (this.is_milestone && x) {
+			this.x = x
+			this.update_attr(bar, 'points', this.get_milestone_points().join(','))
+			this.update_label_position(update_original_x)
+			this.update_arrow_position()
+			return
+		}
+
 		if (x && x >= this.resource_width) {
 			// get all x values of parent task
 			const xs = this.task.dependencies.map(dep =>
@@ -503,13 +549,17 @@ export default class Bar {
 	}
 
 	update_attr(element, attr, value) {
-		value = +value
-
-		if (!isNaN(value)) {
-			element.setAttribute(attr, value)
+		if (typeof value === 'number') {
+			element.setAttribute(attr, value);
+		} else if (typeof value === 'string') {
+			if (!isNaN(+value)) {
+				element.setAttribute(attr, +value);
+			} else {
+				element.setAttribute(attr, value);
+			}
 		}
 
-		return element
+		return element;
 	}
 
 	update_progressbar_position(update_original_x) {
